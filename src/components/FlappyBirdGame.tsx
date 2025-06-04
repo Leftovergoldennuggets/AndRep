@@ -1068,115 +1068,305 @@ export default function FlappyBirdGame() {
     const size = GAME_CONFIG.enemy.size;
     
     if (enemy.type === 'guard') {
-      // BADASS GUARD - Military tactical style
+      // DANGEROUS HUMAN GUARD - Realistic and intimidating
       
       // Draw shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-      ctx.fillRect(screenX, enemy.y + size + 2, size, 4);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+      ctx.fillRect(screenX, enemy.y + size + 2, size, 6);
       
-      // Draw TACTICAL ARMOR body
-      const armorGradient = ctx.createLinearGradient(screenX, enemy.y, screenX, enemy.y + size);
-      armorGradient.addColorStop(0, "#2d4a2d");
-      armorGradient.addColorStop(0.5, "#1a2e1a");
-      armorGradient.addColorStop(1, "#0f1f0f");
-      ctx.fillStyle = armorGradient;
-      ctx.fillRect(screenX + 2, enemy.y + 6, size - 4, size - 8);
+      // HUMAN HEAD - Realistic proportions
+      ctx.fillStyle = "#d4a574"; // Skin tone
+      ctx.fillRect(screenX + 6, enemy.y + 2, 16, 12); // Head
       
-      // Armor plates and details
-      ctx.fillStyle = "#4a4a4a";
-      ctx.fillRect(screenX + 4, enemy.y + 8, size - 8, 2);
-      ctx.fillRect(screenX + 4, enemy.y + 12, size - 8, 2);
-      ctx.fillRect(screenX + 4, enemy.y + 16, size - 8, 2);
+      // MENACING FACE FEATURES
+      // Eyes - cold and calculating
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(screenX + 8, enemy.y + 5, 3, 2);
+      ctx.fillRect(screenX + 13, enemy.y + 5, 3, 2);
+      ctx.fillStyle = "#000000"; // Dark pupils
+      ctx.fillRect(screenX + 9, enemy.y + 5, 1, 2);
+      ctx.fillRect(screenX + 14, enemy.y + 5, 1, 2);
       
-      // Draw TACTICAL HELMET
+      // Angry eyebrows
+      ctx.fillStyle = "#8b4513";
+      ctx.fillRect(screenX + 7, enemy.y + 4, 4, 1);
+      ctx.fillRect(screenX + 13, enemy.y + 4, 4, 1);
+      
+      // Nose
+      ctx.fillStyle = "#c19660";
+      ctx.fillRect(screenX + 11, enemy.y + 7, 2, 3);
+      
+      // Grim mouth
+      ctx.fillStyle = "#8b0000";
+      ctx.fillRect(screenX + 10, enemy.y + 10, 4, 1);
+      
+      // Facial hair/stubble for menacing look
+      ctx.fillStyle = "#2f1b14";
+      ctx.fillRect(screenX + 8, enemy.y + 11, 8, 2);
+      
+      // TACTICAL HELMET - Military style
       ctx.fillStyle = "#1a1a1a";
-      ctx.fillRect(screenX + 3, enemy.y + 2, size - 6, 8);
+      ctx.fillRect(screenX + 5, enemy.y + 1, 18, 4); // Helmet rim
+      ctx.fillRect(screenX + 4, enemy.y, 20, 3); // Helmet top
       
-      // Helmet visor/goggles - BADASS
+      // Night vision goggles - HIGH-TECH THREAT
       ctx.fillStyle = "#000000";
-      ctx.fillRect(screenX + 4, enemy.y + 4, size - 8, 4);
-      // Visor reflection
-      ctx.fillStyle = "#333333";
-      ctx.fillRect(screenX + 5, enemy.y + 5, 2, 1);
-      ctx.fillRect(screenX + size - 7, enemy.y + 5, 2, 1);
+      ctx.fillRect(screenX + 7, enemy.y + 3, 5, 3);
+      ctx.fillRect(screenX + 14, enemy.y + 3, 5, 3);
+      ctx.fillStyle = "#00ff00"; // Green glow
+      ctx.fillRect(screenX + 8, enemy.y + 4, 3, 1);
+      ctx.fillRect(screenX + 15, enemy.y + 4, 3, 1);
       
-      // Draw TACTICAL WEAPON
-      ctx.fillStyle = "#2a2a2a";
-      ctx.fillRect(screenX - 8, enemy.y + 10, 12, 4);
+      // HUMAN BODY - Muscular and armored
+      const bodyGradient = ctx.createLinearGradient(screenX, enemy.y + 14, screenX, enemy.y + size);
+      bodyGradient.addColorStop(0, "#2a3a2a"); // Dark tactical gear
+      bodyGradient.addColorStop(0.5, "#1a2a1a");
+      bodyGradient.addColorStop(1, "#0a1a0a");
+      ctx.fillStyle = bodyGradient;
+      ctx.fillRect(screenX + 4, enemy.y + 14, 20, size - 16);
+      
+      // BODY ARMOR DETAILS
+      ctx.fillStyle = "#4a4a4a"; // Armor plates
+      ctx.fillRect(screenX + 6, enemy.y + 16, 16, 3); // Chest plate
+      ctx.fillRect(screenX + 6, enemy.y + 21, 16, 2); // Armor segments
+      ctx.fillRect(screenX + 6, enemy.y + 25, 16, 2);
+      
+      // Tactical vest details
       ctx.fillStyle = "#666666";
-      ctx.fillRect(screenX - 6, enemy.y + 11, 2, 2);
+      ctx.fillRect(screenX + 5, enemy.y + 17, 2, 8); // Side straps
+      ctx.fillRect(screenX + 21, enemy.y + 17, 2, 8);
       
-      // Combat boots
+      // Equipment pouches
+      ctx.fillStyle = "#3a3a3a";
+      ctx.fillRect(screenX + 3, enemy.y + 19, 3, 4);
+      ctx.fillRect(screenX + 22, enemy.y + 19, 3, 4);
+      
+      // HUMAN ARMS - Realistic positioning
+      ctx.fillStyle = "#d4a574"; // Skin for hands
+      ctx.fillRect(screenX + 1, enemy.y + 18, 3, 6); // Left arm
+      ctx.fillRect(screenX + 24, enemy.y + 18, 3, 6); // Right arm
+      
+      // ASSAULT RIFLE - More detailed and threatening
       ctx.fillStyle = "#1a1a1a";
-      ctx.fillRect(screenX + 4, enemy.y + size - 2, 4, 6);
-      ctx.fillRect(screenX + size - 8, enemy.y + size - 2, 4, 6);
+      ctx.fillRect(screenX - 10, enemy.y + 16, 16, 3); // Main barrel
+      ctx.fillRect(screenX - 8, enemy.y + 19, 12, 2); // Stock
+      ctx.fillStyle = "#666666";
+      ctx.fillRect(screenX - 12, enemy.y + 17, 3, 1); // Muzzle
+      ctx.fillRect(screenX - 5, enemy.y + 15, 2, 2); // Scope
+      ctx.fillStyle = "#ff0000"; // Laser sight
+      ctx.fillRect(screenX - 4, enemy.y + 16, 1, 1);
+      
+      // HUMAN LEGS - Realistic proportions
+      ctx.fillStyle = "#2a3a2a"; // Tactical pants
+      ctx.fillRect(screenX + 6, enemy.y + size - 6, 6, 8); // Left leg
+      ctx.fillRect(screenX + 16, enemy.y + size - 6, 6, 8); // Right leg
+      
+      // COMBAT BOOTS - Military grade
+      ctx.fillStyle = "#0a0a0a";
+      ctx.fillRect(screenX + 5, enemy.y + size - 2, 8, 4); // Left boot
+      ctx.fillRect(screenX + 15, enemy.y + size - 2, 8, 4); // Right boot
+      ctx.fillStyle = "#333333"; // Boot details
+      ctx.fillRect(screenX + 6, enemy.y + size - 1, 6, 1);
+      ctx.fillRect(screenX + 16, enemy.y + size - 1, 6, 1);
       
     } else if (enemy.type === 'dog') {
-      // BADASS GUARD DOG - Cybernetic style
+      // DANGEROUS K9 HANDLER - Human with attack dog
       
       // Draw shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-      ctx.fillRect(screenX, enemy.y + size, size, 3);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+      ctx.fillRect(screenX, enemy.y + size + 2, size + 8, 6);
       
-      // Draw cybernetic dog body
-      const dogGradient = ctx.createLinearGradient(screenX, enemy.y, screenX, enemy.y + size);
-      dogGradient.addColorStop(0, "#4a4a4a");
-      dogGradient.addColorStop(0.5, "#2a2a2a");
-      dogGradient.addColorStop(1, "#1a1a1a");
-      ctx.fillStyle = dogGradient;
-      ctx.fillRect(screenX, enemy.y, size, size - 4);
+      // K9 HANDLER HEAD - Specialized unit
+      ctx.fillStyle = "#d4a574"; // Skin tone
+      ctx.fillRect(screenX + 8, enemy.y + 2, 12, 10);
       
-      // Cybernetic implants
-      ctx.fillStyle = "#ff4444";
-      ctx.fillRect(screenX + 2, enemy.y + 2, 2, 2);
-      ctx.fillRect(screenX + size - 4, enemy.y + 2, 2, 2);
+      // INTIMIDATING FACE
+      // Cold eyes
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(screenX + 10, enemy.y + 4, 2, 2);
+      ctx.fillRect(screenX + 14, enemy.y + 4, 2, 2);
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(screenX + 10, enemy.y + 4, 1, 2);
+      ctx.fillRect(screenX + 14, enemy.y + 4, 1, 2);
       
-      // Draw robotic head
-      ctx.fillStyle = "#333333";
-      ctx.fillRect(screenX + 2, enemy.y - 4, size - 4, 8);
+      // Scar across face - battle-hardened
+      ctx.fillStyle = "#8b0000";
+      ctx.fillRect(screenX + 9, enemy.y + 3, 1, 6);
       
-      // Glowing red eyes
-      ctx.fillStyle = "#ff0000";
-      ctx.fillRect(screenX + 4, enemy.y - 2, 3, 3);
-      ctx.fillRect(screenX + size - 7, enemy.y - 2, 3, 3);
+      // Grim expression
+      ctx.fillStyle = "#8b0000";
+      ctx.fillRect(screenX + 11, enemy.y + 8, 3, 1);
       
-      // Mechanical ears
+      // K9 HANDLER HELMET - Different from regular guards
+      ctx.fillStyle = "#2a2a2a";
+      ctx.fillRect(screenX + 7, enemy.y + 1, 14, 3);
+      ctx.fillRect(screenX + 6, enemy.y, 16, 2);
+      
+      // Radio headset
       ctx.fillStyle = "#666666";
-      ctx.fillRect(screenX + 1, enemy.y - 3, 3, 2);
-      ctx.fillRect(screenX + size - 4, enemy.y - 3, 3, 2);
+      ctx.fillRect(screenX + 20, enemy.y + 3, 2, 4);
+      ctx.fillStyle = "#ff0000"; // Active radio
+      ctx.fillRect(screenX + 21, enemy.y + 4, 1, 1);
+      
+      // BODY - K9 handler uniform
+      const handlerGradient = ctx.createLinearGradient(screenX, enemy.y + 12, screenX, enemy.y + size);
+      handlerGradient.addColorStop(0, "#1a3a1a"); // Darker green uniform
+      handlerGradient.addColorStop(0.5, "#0a2a0a");
+      handlerGradient.addColorStop(1, "#051a05");
+      ctx.fillStyle = handlerGradient;
+      ctx.fillRect(screenX + 6, enemy.y + 12, 16, size - 14);
+      
+      // K9 UNIT PATCHES
+      ctx.fillStyle = "#ffff00";
+      ctx.fillRect(screenX + 8, enemy.y + 14, 4, 3); // Left shoulder patch
+      ctx.fillStyle = "#ff0000";
+      ctx.fillRect(screenX + 16, enemy.y + 14, 4, 3); // Right shoulder patch
+      
+      // Equipment belt
+      ctx.fillStyle = "#2a2a2a";
+      ctx.fillRect(screenX + 7, enemy.y + 20, 14, 3);
+      
+      // Dog leash and control equipment
+      ctx.fillStyle = "#4a4a4a";
+      ctx.fillRect(screenX + 4, enemy.y + 18, 2, 6);
+      
+      // ATTACK DOG - Aggressive German Shepherd
+      // Dog body - positioned next to handler
+      ctx.fillStyle = "#8b4513"; // Brown dog fur
+      ctx.fillRect(screenX - 6, enemy.y + 15, 12, 8);
+      
+      // Dog head - snarling
+      ctx.fillStyle = "#654321";
+      ctx.fillRect(screenX - 8, enemy.y + 12, 8, 6);
+      
+      // Menacing dog eyes
+      ctx.fillStyle = "#ff0000";
+      ctx.fillRect(screenX - 7, enemy.y + 13, 1, 1);
+      ctx.fillRect(screenX - 4, enemy.y + 13, 1, 1);
+      
+      // Dog teeth showing - aggressive
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(screenX - 6, enemy.y + 16, 1, 2);
+      ctx.fillRect(screenX - 4, enemy.y + 16, 1, 2);
+      
+      // Dog ears - alert
+      ctx.fillStyle = "#654321";
+      ctx.fillRect(screenX - 9, enemy.y + 11, 2, 3);
+      ctx.fillRect(screenX - 2, enemy.y + 11, 2, 3);
+      
+      // HANDLER ARMS - controlling the dog
+      ctx.fillStyle = "#d4a574";
+      ctx.fillRect(screenX + 2, enemy.y + 16, 4, 6); // Left arm holding leash
+      ctx.fillRect(screenX + 22, enemy.y + 16, 4, 6); // Right arm
+      
+      // Taser/control weapon
+      ctx.fillStyle = "#ffff00";
+      ctx.fillRect(screenX + 23, enemy.y + 17, 3, 2);
+      ctx.fillStyle = "#0000ff"; // Electric sparks
+      ctx.fillRect(screenX + 24, enemy.y + 16, 1, 1);
+      
+      // LEGS
+      ctx.fillStyle = "#1a3a1a";
+      ctx.fillRect(screenX + 8, enemy.y + size - 6, 5, 8);
+      ctx.fillRect(screenX + 15, enemy.y + size - 6, 5, 8);
+      
+      // BOOTS
+      ctx.fillStyle = "#0a0a0a";
+      ctx.fillRect(screenX + 7, enemy.y + size - 2, 6, 4);
+      ctx.fillRect(screenX + 15, enemy.y + size - 2, 6, 4);
       
     } else if (enemy.type === 'camera') {
-      // BADASS SECURITY CAMERA - High-tech surveillance
+      // DEADLY SNIPER - Human marksman in ghillie suit
       
-      // Draw mounting bracket
-      ctx.fillStyle = "#2a2a2a";
-      ctx.fillRect(screenX + size/2 - 2, enemy.y - 4, 4, 8);
+      // Draw shadow
+      ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+      ctx.fillRect(screenX, enemy.y + size + 2, size, 6);
       
-      // Draw main camera body - sleek design
-      const cameraGradient = ctx.createLinearGradient(screenX, enemy.y, screenX + size, enemy.y);
-      cameraGradient.addColorStop(0, "#1a1a1a");
-      cameraGradient.addColorStop(0.5, "#000000");
-      cameraGradient.addColorStop(1, "#333333");
-      ctx.fillStyle = cameraGradient;
-      ctx.fillRect(screenX, enemy.y, size, size - 6);
+      // SNIPER HEAD - Partially concealed
+      ctx.fillStyle = "#d4a574"; // Skin tone
+      ctx.fillRect(screenX + 8, enemy.y + 3, 12, 9);
       
-      // Draw large surveillance lens
-      ctx.fillStyle = "#ff0000";
-      ctx.fillRect(screenX + 3, enemy.y + 2, size - 6, size - 10);
+      // COLD SNIPER EYES - One visible through scope
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(screenX + 9, enemy.y + 5, 2, 2);
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(screenX + 9, enemy.y + 5, 1, 2);
       
-      // Lens reflection/glare
-      ctx.fillStyle = "#ff6666";
-      ctx.fillRect(screenX + 4, enemy.y + 3, 3, 2);
+      // Other eye hidden behind scope
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(screenX + 13, enemy.y + 4, 4, 4); // Scope
+      ctx.fillStyle = "#ff0000"; // Scope glint - deadly aim
+      ctx.fillRect(screenX + 14, enemy.y + 5, 2, 2);
       
-      // Additional sensors
-      ctx.fillStyle = "#00ff00";
-      ctx.fillRect(screenX + 1, enemy.y + 1, 2, 2);
-      ctx.fillRect(screenX + size - 3, enemy.y + 1, 2, 2);
+      // Camouflage face paint
+      ctx.fillStyle = "#2d5a2d";
+      ctx.fillRect(screenX + 10, enemy.y + 7, 2, 1);
+      ctx.fillRect(screenX + 14, enemy.y + 9, 3, 1);
       
-      // Warning lights
-      ctx.fillStyle = "#ffaa00";
-      ctx.fillRect(screenX + 2, enemy.y + size - 4, 2, 1);
-      ctx.fillRect(screenX + size - 4, enemy.y + size - 4, 2, 1);
+      // GHILLIE SUIT - Camouflaged sniper
+      const ghillieGradient = ctx.createLinearGradient(screenX, enemy.y + 12, screenX, enemy.y + size);
+      ghillieGradient.addColorStop(0, "#3d5a3d"); // Forest colors
+      ghillieGradient.addColorStop(0.5, "#2d4a2d");
+      ghillieGradient.addColorStop(1, "#1d3a1d");
+      ctx.fillStyle = ghillieGradient;
+      ctx.fillRect(screenX + 4, enemy.y + 12, 20, size - 14);
+      
+      // Ghillie suit vegetation details
+      ctx.fillStyle = "#4d6a4d";
+      ctx.fillRect(screenX + 3, enemy.y + 14, 2, 3);
+      ctx.fillRect(screenX + 7, enemy.y + 16, 2, 2);
+      ctx.fillRect(screenX + 12, enemy.y + 15, 2, 3);
+      ctx.fillRect(screenX + 17, enemy.y + 17, 2, 2);
+      ctx.fillRect(screenX + 21, enemy.y + 14, 2, 4);
+      
+      // SNIPER HELMET - Specialized gear
+      ctx.fillStyle = "#2a3a2a";
+      ctx.fillRect(screenX + 6, enemy.y + 1, 16, 4);
+      ctx.fillRect(screenX + 5, enemy.y, 18, 2);
+      
+      // Communication equipment
+      ctx.fillStyle = "#666666";
+      ctx.fillRect(screenX + 22, enemy.y + 2, 2, 5);
+      ctx.fillStyle = "#ffff00"; // Active comms
+      ctx.fillRect(screenX + 23, enemy.y + 3, 1, 1);
+      
+      // PRONE POSITION ARMS - Realistic sniper pose
+      ctx.fillStyle = "#d4a574";
+      ctx.fillRect(screenX + 1, enemy.y + 14, 4, 3); // Left arm supporting
+      ctx.fillRect(screenX + 23, enemy.y + 16, 4, 3); // Right arm on trigger
+      
+      // SNIPER RIFLE - High-powered precision weapon
+      ctx.fillStyle = "#1a1a1a";
+      ctx.fillRect(screenX - 12, enemy.y + 12, 20, 2); // Main barrel
+      ctx.fillRect(screenX - 8, enemy.y + 15, 14, 2); // Stock
+      
+      // Rifle details - scope and bipod
+      ctx.fillStyle = "#666666";
+      ctx.fillRect(screenX - 14, enemy.y + 13, 2, 1); // Muzzle brake
+      ctx.fillRect(screenX - 6, enemy.y + 10, 3, 3); // Scope mount
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(screenX - 5, enemy.y + 11, 2, 1); // Scope lens
+      
+      // Bipod legs
+      ctx.fillStyle = "#4a4a4a";
+      ctx.fillRect(screenX - 4, enemy.y + 17, 1, 4);
+      ctx.fillRect(screenX - 1, enemy.y + 17, 1, 4);
+      
+      // LEGS - Prone sniper position
+      ctx.fillStyle = "#3d5a3d";
+      ctx.fillRect(screenX + 8, enemy.y + size - 4, 6, 6);
+      ctx.fillRect(screenX + 16, enemy.y + size - 4, 6, 6);
+      
+      // Combat boots
+      ctx.fillStyle = "#0a0a0a";
+      ctx.fillRect(screenX + 7, enemy.y + size - 1, 7, 3);
+      ctx.fillRect(screenX + 16, enemy.y + size - 1, 7, 3);
+      
+      // Laser sight dot - indicating active targeting
+      if (Math.random() > 0.7) { // Intermittent laser
+        ctx.fillStyle = "#ff0000";
+        ctx.fillRect(screenX - 15, enemy.y + 13, 1, 1);
+      }
       
     } else if (enemy.type === 'boss') {
       // EPIC BOSS RENDERING - Different for each boss type
@@ -1209,33 +1399,94 @@ export default function FlappyBirdGame() {
       
       switch (enemy.bossType) {
         case 'warden':
-          // PRISON WARDEN - Large, imposing authority figure
-          // Body - dark uniform
-          const wardenGradient = ctx.createLinearGradient(screenX, enemy.y, screenX, enemy.y + bossSize);
-          wardenGradient.addColorStop(0, "#1a1a1a");
+          // CORRUPT PRISON WARDEN - Massive, intimidating human authority
+          
+          // LARGE HUMAN HEAD - Menacing features
+          ctx.fillStyle = "#d4a574"; // Skin tone
+          ctx.fillRect(screenX + 8, enemy.y + 2, 24, 18);
+          
+          // COLD, CRUEL EYES
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(screenX + 12, enemy.y + 7, 4, 3);
+          ctx.fillRect(screenX + 20, enemy.y + 7, 4, 3);
+          ctx.fillStyle = "#000000"; // Dark pupils
+          ctx.fillRect(screenX + 13, enemy.y + 8, 2, 2);
+          ctx.fillRect(screenX + 21, enemy.y + 8, 2, 2);
+          
+          // Angry, threatening eyebrows
+          ctx.fillStyle = "#8b4513";
+          ctx.fillRect(screenX + 11, enemy.y + 6, 5, 1);
+          ctx.fillRect(screenX + 20, enemy.y + 6, 5, 1);
+          
+          // Large, cruel nose
+          ctx.fillStyle = "#c19660";
+          ctx.fillRect(screenX + 16, enemy.y + 10, 4, 5);
+          
+          // Sinister grin showing teeth
+          ctx.fillStyle = "#8b0000";
+          ctx.fillRect(screenX + 14, enemy.y + 15, 8, 2);
+          ctx.fillStyle = "#ffffff"; // Menacing teeth
+          ctx.fillRect(screenX + 15, enemy.y + 16, 1, 1);
+          ctx.fillRect(screenX + 17, enemy.y + 16, 1, 1);
+          ctx.fillRect(screenX + 19, enemy.y + 16, 1, 1);
+          ctx.fillRect(screenX + 21, enemy.y + 16, 1, 1);
+          
+          // Scars and battle damage
+          ctx.fillStyle = "#8b0000";
+          ctx.fillRect(screenX + 10, enemy.y + 5, 1, 8); // Face scar
+          ctx.fillRect(screenX + 25, enemy.y + 12, 1, 6); // Another scar
+          
+          // WARDEN CAP - Authority symbol
+          ctx.fillStyle = "#1a1a1a";
+          ctx.fillRect(screenX + 6, enemy.y, 28, 5);
+          ctx.fillRect(screenX + 8, enemy.y - 2, 24, 3);
+          
+          // Cap badge - authority symbol
+          ctx.fillStyle = "#ffd700";
+          ctx.fillRect(screenX + 18, enemy.y + 1, 4, 3);
+          
+          // MASSIVE BODY - Imposing uniform
+          const wardenGradient = ctx.createLinearGradient(screenX, enemy.y + 20, screenX, enemy.y + bossSize);
+          wardenGradient.addColorStop(0, "#1a1a1a"); // Dark uniform
           wardenGradient.addColorStop(0.5, "#333333");
           wardenGradient.addColorStop(1, "#1a1a1a");
           ctx.fillStyle = wardenGradient;
-          ctx.fillRect(screenX + 5, enemy.y + 10, bossSize - 10, bossSize - 15);
+          ctx.fillRect(screenX + 5, enemy.y + 20, bossSize - 10, bossSize - 25);
           
-          // Authority badges and buttons
+          // AUTHORITY INSIGNIA and badges
           ctx.fillStyle = "#ffd700";
-          ctx.fillRect(screenX + 8, enemy.y + 15, 4, 4);
-          ctx.fillRect(screenX + 8, enemy.y + 22, 4, 4);
-          ctx.fillRect(screenX + bossSize - 12, enemy.y + 15, 4, 4);
+          ctx.fillRect(screenX + 8, enemy.y + 25, 6, 6); // Left badge
+          ctx.fillRect(screenX + 8, enemy.y + 35, 6, 6); // Left medal
+          ctx.fillRect(screenX + bossSize - 14, enemy.y + 25, 6, 6); // Right badge
           
-          // Intimidating head
-          ctx.fillStyle = "#2a2a2a";
-          ctx.fillRect(screenX + 10, enemy.y + 2, bossSize - 20, 12);
-          
-          // Evil eyes
+          // Name tag and rank insignia
+          ctx.fillStyle = "#888888";
+          ctx.fillRect(screenX + 16, enemy.y + 22, 8, 3);
           ctx.fillStyle = "#ff0000";
-          ctx.fillRect(screenX + 15, enemy.y + 5, 3, 2);
-          ctx.fillRect(screenX + bossSize - 18, enemy.y + 5, 3, 2);
+          ctx.fillRect(screenX + 17, enemy.y + 23, 6, 1); // WARDEN text
           
-          // Large weapon
-          ctx.fillStyle = "#444444";
-          ctx.fillRect(screenX + bossSize - 8, enemy.y + 20, 6, 20);
+          // MUSCULAR ARMS - Intimidating physique
+          ctx.fillStyle = "#d4a574";
+          ctx.fillRect(screenX + 1, enemy.y + 26, 6, 12); // Left arm
+          ctx.fillRect(screenX + bossSize - 7, enemy.y + 26, 6, 12); // Right arm
+          
+          // MASSIVE SHOTGUN - Warden's weapon of choice
+          ctx.fillStyle = "#1a1a1a";
+          ctx.fillRect(screenX - 15, enemy.y + 28, 20, 4); // Main barrel
+          ctx.fillRect(screenX - 12, enemy.y + 33, 16, 3); // Stock
+          ctx.fillStyle = "#666666";
+          ctx.fillRect(screenX - 17, enemy.y + 29, 3, 2); // Muzzle
+          ctx.fillRect(screenX - 8, enemy.y + 26, 3, 3); // Sight
+          
+          // MASSIVE LEGS - Imposing stance
+          ctx.fillStyle = "#1a1a1a";
+          ctx.fillRect(screenX + 8, enemy.y + bossSize - 12, 10, 14);
+          ctx.fillRect(screenX + 22, enemy.y + bossSize - 12, 10, 14);
+          
+          // Heavy boots
+          ctx.fillStyle = "#0a0a0a";
+          ctx.fillRect(screenX + 6, enemy.y + bossSize - 4, 14, 6);
+          ctx.fillRect(screenX + 20, enemy.y + bossSize - 4, 14, 6);
           break;
           
         case 'captain':
