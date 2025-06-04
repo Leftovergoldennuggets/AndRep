@@ -101,7 +101,7 @@ export default function FlappyBirdGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameStateRef = useRef<GameState>({
     player: {
-      x: 150, // Fixed horizontal position (relative to camera)
+      x: 400, // World position (not relative to camera)
       y: GAME_CONFIG.world.groundLevel - GAME_CONFIG.player.size,
       velocityY: 0,
       health: GAME_CONFIG.player.maxHealth,
@@ -133,7 +133,7 @@ export default function FlappyBirdGame() {
   const resetGame = useCallback(() => {
     gameStateRef.current = {
       player: {
-        x: 150,
+        x: 400,
         y: GAME_CONFIG.world.groundLevel - GAME_CONFIG.player.size,
         velocityY: 0,
         health: GAME_CONFIG.player.maxHealth,
@@ -258,10 +258,11 @@ export default function FlappyBirdGame() {
     state.gameState = "playing";
     setGameState("playing");
     
-    // Generate initial world content
-    const newObstacles = generateObstacles(0, 2000);
-    const newEnemies = generateEnemies(400, 2000);
-    const newPowerups = generatePowerups(200, 2000);
+    // Generate large static world content (much bigger area)
+    const worldSize = 5000; // 5000 units wide world
+    const newObstacles = generateObstacles(-worldSize/2, worldSize/2);
+    const newEnemies = generateEnemies(-worldSize/2 + 400, worldSize/2 - 400);
+    const newPowerups = generatePowerups(-worldSize/2 + 200, worldSize/2 - 200);
     
     state.obstacles = newObstacles;
     state.enemies = newEnemies;
@@ -299,7 +300,7 @@ export default function FlappyBirdGame() {
       for (let i = 0; i < 5; i++) {
         const spread = (Math.random() - 0.5) * weapon.spread;
         state.bullets.push({
-          x: state.player.x + state.camera.x + GAME_CONFIG.player.size,
+          x: state.player.x + GAME_CONFIG.player.size,
           y: state.player.y + GAME_CONFIG.player.size / 2,
           velocityX: bulletSpeed + spread * 2,
           velocityY: spread,
@@ -309,7 +310,7 @@ export default function FlappyBirdGame() {
     } else {
       const spread = (Math.random() - 0.5) * weapon.spread;
       state.bullets.push({
-        x: state.player.x + state.camera.x + GAME_CONFIG.player.size,
+        x: state.player.x + GAME_CONFIG.player.size,
         y: state.player.y + GAME_CONFIG.player.size / 2,
         velocityX: bulletSpeed,
         velocityY: spread,
@@ -420,18 +421,18 @@ export default function FlappyBirdGame() {
     const state = gameStateRef.current;
 
     if (state.gameState === "playing") {
-      // Move camera forward (endless scrolling)
-      state.camera.x += GAME_CONFIG.player.scrollSpeed;
-      state.distance = Math.floor(state.camera.x / 10);
-      setDistance(state.distance);
-
-      // Handle player horizontal movement (limited)
+      // Handle player horizontal movement (unlimited)
       if (keysRef.current.has('ArrowLeft') || keysRef.current.has('KeyA')) {
-        state.player.x = Math.max(50, state.player.x - GAME_CONFIG.player.moveSpeed);
+        state.player.x -= GAME_CONFIG.player.moveSpeed;
       }
       if (keysRef.current.has('ArrowRight') || keysRef.current.has('KeyD')) {
-        state.player.x = Math.min(300, state.player.x + GAME_CONFIG.player.moveSpeed);
+        state.player.x += GAME_CONFIG.player.moveSpeed;
       }
+
+      // Camera follows player (keep player centered)
+      state.camera.x = state.player.x - GAME_CONFIG.canvas.width / 2;
+      state.distance = Math.floor(Math.abs(state.player.x - 400) / 10);
+      setDistance(state.distance);
 
       // Apply gravity to player
       applyGravity(state.player);
@@ -488,7 +489,7 @@ export default function FlappyBirdGame() {
         }
         
         const screenX = enemy.x - state.camera.x;
-        const dx = (state.player.x + state.camera.x) - enemy.x;
+        const dx = state.player.x - enemy.x;
         const dy = state.player.y - enemy.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
@@ -506,9 +507,6 @@ export default function FlappyBirdGame() {
           }
         }
       });
-
-      // Remove enemies that are far behind camera
-      state.enemies = state.enemies.filter(enemy => enemy.x > state.camera.x - 200);
 
       // Update enemy bullets
       state.enemyBullets.forEach((bullet) => {
@@ -545,11 +543,11 @@ export default function FlappyBirdGame() {
       // Check enemy bullet-player collisions
       for (let i = state.enemyBullets.length - 1; i >= 0; i--) {
         const bullet = state.enemyBullets[i];
-        const playerWorldX = state.player.x + state.camera.x;
-        if (checkCollision(
-          { x: playerWorldX, y: state.player.y, size: GAME_CONFIG.player.size },
-          { x: bullet.x, y: bullet.y, size: GAME_CONFIG.bullet.size }
-        )) {
+        
+        const playerRect = { x: state.player.x, y: state.player.y, width: GAME_CONFIG.player.size, height: GAME_CONFIG.player.size };
+        const bulletRect = { x: bullet.x, y: bullet.y, width: GAME_CONFIG.bullet.size, height: GAME_CONFIG.bullet.size };
+        
+        if (checkCollision(playerRect, bulletRect)) {
           state.player.health -= 10;
           state.enemyBullets.splice(i, 1);
           
@@ -563,9 +561,8 @@ export default function FlappyBirdGame() {
       // Check powerup collisions
       for (let i = state.powerups.length - 1; i >= 0; i--) {
         const powerup = state.powerups[i];
-        const playerWorldX = state.player.x + state.camera.x;
         if (checkCollision(
-          { x: playerWorldX, y: state.player.y, size: GAME_CONFIG.player.size },
+          { x: state.player.x, y: state.player.y, size: GAME_CONFIG.player.size },
           { x: powerup.x, y: powerup.y, width: 12, height: 12 }
         )) {
           if (powerup.type === 'health') {
@@ -580,23 +577,7 @@ export default function FlappyBirdGame() {
         }
       }
 
-      // Remove powerups that are far behind camera
-      state.powerups = state.powerups.filter(powerup => powerup.x > state.camera.x - 100);
-
-      // Generate new world content ahead of camera
-      const worldEnd = state.obstacles.length > 0 ? Math.max(...state.obstacles.map(o => o.x)) + 100 : 0;
-      if (worldEnd < state.camera.x + GAME_CONFIG.canvas.width + 1000) {
-        const newObstacles = generateObstacles(worldEnd, worldEnd + 1000);
-        const newEnemies = generateEnemies(worldEnd, worldEnd + 1000);
-        const newPowerups = generatePowerups(worldEnd, worldEnd + 1000);
-        
-        state.obstacles.push(...newObstacles);
-        state.enemies.push(...newEnemies);
-        state.powerups.push(...newPowerups);
-      }
-
-      // Remove old obstacles behind camera
-      state.obstacles = state.obstacles.filter(obstacle => obstacle.x > state.camera.x - 200);
+      // No need to generate or remove content - static world
     }
 
     // Clear canvas
@@ -664,7 +645,8 @@ export default function FlappyBirdGame() {
       });
 
       // Draw player
-      drawPlayer(ctx, state.player.x, state.player.y);
+      const playerScreenX = state.player.x - state.camera.x;
+      drawPlayer(ctx, playerScreenX, state.player.y);
 
       // Draw enemies
       state.enemies.forEach((enemy) => {
