@@ -36,6 +36,129 @@ const GAME_CONFIG = {
   },
 };
 
+// Van Gogh inspired color palette
+const VAN_GOGH_COLORS = [
+  "#FFD700", // Sunflower yellow
+  "#FF6347", // Vibrant orange-red
+  "#4169E1", // Royal blue
+  "#32CD32", // Lime green
+  "#FF1493", // Deep pink
+  "#8A2BE2", // Blue violet
+  "#FF4500", // Orange red
+  "#1E90FF", // Dodger blue
+  "#FFFF00", // Pure yellow
+  "#FF69B4", // Hot pink
+  "#00CED1", // Dark turquoise
+  "#9370DB", // Medium purple
+  "#FF8C00", // Dark orange
+  "#7B68EE", // Medium slate blue
+  "#00FF7F", // Spring green
+];
+
+function drawVanGoghKaleidoscope(ctx: CanvasRenderingContext2D, width: number, height: number) {
+  const time = Date.now() * 0.001; // Time in seconds for animation
+  const centerX = width / 2;
+  const centerY = height / 2;
+  
+  // Create multiple layers of swirling patterns
+  for (let layer = 0; layer < 8; layer++) {
+    const radius = (layer + 1) * 30 + Math.sin(time + layer) * 15;
+    const segments = 12 + layer * 2;
+    const rotation = time * (0.5 + layer * 0.1);
+    
+    for (let i = 0; i < segments; i++) {
+      const angle = (i / segments) * Math.PI * 2 + rotation;
+      const nextAngle = ((i + 1) / segments) * Math.PI * 2 + rotation;
+      
+      // Calculate swirl effect
+      const swirlFactor = Math.sin(time * 2 + layer + i * 0.5) * 0.3;
+      const adjustedRadius = radius + swirlFactor * 20;
+      
+      // Create gradient for each segment
+      const gradient = ctx.createRadialGradient(
+        centerX, centerY, 0,
+        centerX, centerY, adjustedRadius
+      );
+      
+      const colorIndex1 = (i + layer + Math.floor(time * 2)) % VAN_GOGH_COLORS.length;
+      const colorIndex2 = (i + layer + Math.floor(time * 2) + 3) % VAN_GOGH_COLORS.length;
+      
+      gradient.addColorStop(0, VAN_GOGH_COLORS[colorIndex1] + "80"); // Semi-transparent
+      gradient.addColorStop(1, VAN_GOGH_COLORS[colorIndex2] + "40"); // More transparent
+      
+      ctx.fillStyle = gradient;
+      
+      // Draw swirling segment
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      
+      // Create curved, organic shapes inspired by Van Gogh's brushstrokes
+      const numCurvePoints = 8;
+      for (let j = 0; j <= numCurvePoints; j++) {
+        const t = j / numCurvePoints;
+        const segmentAngle = angle + (nextAngle - angle) * t;
+        
+        // Add organic variation to radius
+        const variation = Math.sin(segmentAngle * 3 + time * 3 + layer) * 10;
+        const pointRadius = adjustedRadius + variation;
+        
+        const x = centerX + Math.cos(segmentAngle) * pointRadius;
+        const y = centerY + Math.sin(segmentAngle) * pointRadius;
+        
+        if (j === 0) {
+          ctx.lineTo(x, y);
+        } else {
+          // Create smooth curves
+          const prevT = (j - 1) / numCurvePoints;
+          const prevAngle = angle + (nextAngle - angle) * prevT;
+          const prevVariation = Math.sin(prevAngle * 3 + time * 3 + layer) * 10;
+          const prevRadius = adjustedRadius + prevVariation;
+          const prevX = centerX + Math.cos(prevAngle) * prevRadius;
+          const prevY = centerY + Math.sin(prevAngle) * prevRadius;
+          
+          const cpX = (prevX + x) / 2 + Math.sin(time + i + j) * 5;
+          const cpY = (prevY + y) / 2 + Math.cos(time + i + j) * 5;
+          
+          ctx.quadraticCurveTo(cpX, cpY, x, y);
+        }
+      }
+      
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+  
+  // Add swirling brushstroke effects
+  for (let i = 0; i < 20; i++) {
+    const angle = (i / 20) * Math.PI * 2 + time;
+    const distance = 50 + Math.sin(time + i) * 30;
+    
+    ctx.strokeStyle = VAN_GOGH_COLORS[i % VAN_GOGH_COLORS.length] + "60";
+    ctx.lineWidth = 2 + Math.sin(time * 2 + i) * 1;
+    
+    ctx.beginPath();
+    const startX = centerX + Math.cos(angle) * distance;
+    const startY = centerY + Math.sin(angle) * distance;
+    
+    for (let j = 0; j < 10; j++) {
+      const t = j / 10;
+      const swirl = angle + t * Math.PI * 2 + Math.sin(time + i) * 2;
+      const r = distance + t * 40 + Math.sin(time * 3 + j) * 15;
+      
+      const x = centerX + Math.cos(swirl) * r;
+      const y = centerY + Math.sin(swirl) * r;
+      
+      if (j === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    
+    ctx.stroke();
+  }
+}
+
 export default function FlappyBirdGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameStateRef = useRef<GameState>({
@@ -162,12 +285,8 @@ export default function FlappyBirdGame() {
     // Clear canvas
     ctx.clearRect(0, 0, GAME_CONFIG.canvas.width, GAME_CONFIG.canvas.height);
 
-    // Draw background
-    const gradient = ctx.createLinearGradient(0, 0, 0, GAME_CONFIG.canvas.height);
-    gradient.addColorStop(0, "#87CEEB");
-    gradient.addColorStop(1, "#98D8E8");
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, GAME_CONFIG.canvas.width, GAME_CONFIG.canvas.height);
+    // Draw Van Gogh kaleidoscope background
+    drawVanGoghKaleidoscope(ctx, GAME_CONFIG.canvas.width, GAME_CONFIG.canvas.height);
 
     // Draw pipes (only if playing or game over)
     if (state.gameState !== "start") {
