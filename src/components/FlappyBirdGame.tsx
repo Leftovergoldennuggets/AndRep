@@ -160,7 +160,7 @@ const LEVELS = {
     boss: {
       type: 'warden' as const,
       name: "Prison Warden",
-      health: 300,
+      health: 120,
       size: 60,
       attackPattern: "charge_and_shoot",
       description: "The corrupt warden blocks your escape!",
@@ -173,7 +173,7 @@ const LEVELS = {
     boss: {
       type: 'captain' as const,
       name: "Riot Captain",
-      health: 450,
+      health: 180,
       size: 55,
       attackPattern: "shield_slam",
       description: "The riot captain won't let you pass!",
@@ -186,7 +186,7 @@ const LEVELS = {
     boss: {
       type: 'chief' as const,
       name: "Security Chief",
-      health: 600,
+      health: 240,
       size: 50,
       attackPattern: "tech_assault",
       description: "The security chief activates all defenses!",
@@ -199,7 +199,7 @@ const LEVELS = {
     boss: {
       type: 'helicopter' as const,
       name: "Pursuit Helicopter",
-      health: 800,
+      health: 300,
       size: 80,
       attackPattern: "aerial_barrage",
       description: "A helicopter blocks your final escape!",
@@ -618,16 +618,16 @@ export default function FlappyBirdGame() {
     switch (boss.bossType) {
       case 'warden': // Charge and shoot
         if (playerInRange) {
-          // Charge towards player
+          // Charge towards player (slower)
           const direction = player.x > boss.x ? 1 : -1;
-          boss.x += direction * 4;
+          boss.x += direction * 2;
           
-          // Rapid fire when close
-          if (Date.now() - boss.lastShotTime > 200) {
+          // Slower fire rate when close
+          if (Date.now() - boss.lastShotTime > 800) {
             state.enemyBullets.push({
               x: boss.x,
               y: boss.y + 20,
-              velocityX: direction * 10,
+              velocityX: direction * 8,
               velocityY: -2 + Math.random() * 4,
             });
             boss.lastShotTime = Date.now();
@@ -639,16 +639,16 @@ export default function FlappyBirdGame() {
         if (playerInRange) {
           // Move towards player but slower
           const direction = player.x > boss.x ? 1 : -1;
-          boss.x += direction * 2;
+          boss.x += direction * 1.5;
           
-          // Slam attack every 2 seconds
-          if (Date.now() - boss.lastShotTime > 2000) {
-            // Multi-shot slam
-            for (let i = -2; i <= 2; i++) {
+          // Slam attack every 3 seconds (slower)
+          if (Date.now() - boss.lastShotTime > 3000) {
+            // Fewer shots in slam (3 instead of 5)
+            for (let i = -1; i <= 1; i++) {
               state.enemyBullets.push({
                 x: boss.x,
                 y: boss.y + 20,
-                velocityX: direction * 8 + i * 2,
+                velocityX: direction * 6 + i * 2,
                 velocityY: -3 + Math.random() * 6,
               });
             }
@@ -662,19 +662,19 @@ export default function FlappyBirdGame() {
           // Stay at distance and coordinate attacks
           const direction = player.x > boss.x ? 1 : -1;
           if (distanceToPlayer < 250) {
-            boss.x -= direction * 2; // Back away
+            boss.x -= direction * 1.5; // Back away slower
           }
           
-          // Tech barrage every 1.5 seconds
-          if (Date.now() - boss.lastShotTime > 1500) {
-            // Homing-style bullets
-            for (let i = 0; i < 5; i++) {
-              const angle = (Math.PI / 4) * (i - 2) / 2;
+          // Tech barrage every 2.5 seconds (slower)
+          if (Date.now() - boss.lastShotTime > 2500) {
+            // Fewer bullets (3 instead of 5)
+            for (let i = 0; i < 3; i++) {
+              const angle = (Math.PI / 6) * (i - 1);
               state.enemyBullets.push({
                 x: boss.x,
                 y: boss.y + 20,
-                velocityX: Math.cos(angle) * 8 * direction,
-                velocityY: Math.sin(angle) * 8,
+                velocityX: Math.cos(angle) * 6 * direction,
+                velocityY: Math.sin(angle) * 6,
               });
             }
             boss.lastShotTime = Date.now();
@@ -687,19 +687,19 @@ export default function FlappyBirdGame() {
         boss.y = GAME_CONFIG.world.groundLevel - 150;
         
         if (playerInRange) {
-          // Follow player horizontally
+          // Follow player horizontally (slower)
           const direction = player.x > boss.x ? 1 : -1;
-          boss.x += direction * 3;
+          boss.x += direction * 2;
           
-          // Carpet bomb every 800ms
-          if (Date.now() - boss.lastShotTime > 800) {
-            // Drop bombs
-            for (let i = 0; i < 3; i++) {
+          // Carpet bomb every 1.8 seconds (much slower)
+          if (Date.now() - boss.lastShotTime > 1800) {
+            // Drop fewer bombs (2 instead of 3)
+            for (let i = 0; i < 2; i++) {
               state.enemyBullets.push({
-                x: boss.x + (i - 1) * 30,
+                x: boss.x + (i - 0.5) * 40,
                 y: boss.y + 30,
-                velocityX: (i - 1) * 2,
-                velocityY: 6, // Fall down
+                velocityX: (i - 0.5) * 2,
+                velocityY: 5, // Fall down slower
               });
             }
             boss.lastShotTime = Date.now();
@@ -841,21 +841,24 @@ export default function FlappyBirdGame() {
     // Add camera shake
     state.camera.shake = 3;
     
-    // Create muzzle flash particles
-    const muzzleX = state.player.x + GAME_CONFIG.player.size;
+    // Create muzzle flash particles based on direction
+    const directionMultiplier = state.player.direction === 'right' ? 1 : -1;
+    const muzzleX = state.player.direction === 'right' ? 
+      state.player.x + GAME_CONFIG.player.size : 
+      state.player.x;
     const muzzleY = state.player.y + GAME_CONFIG.player.size / 2;
     createParticles(muzzleX, muzzleY, 'spark', 3);
     
-    const bulletSpeed = GAME_CONFIG.bullet.speed;
+    const bulletSpeed = GAME_CONFIG.bullet.speed * directionMultiplier;
     
     if (state.player.weapon === 'shotgun') {
-      // Shotgun fires multiple pellets
+      // Shotgun fires multiple pellets in the facing direction
       for (let i = 0; i < 5; i++) {
         const spread = (Math.random() - 0.5) * weapon.spread;
         state.bullets.push({
           x: muzzleX,
           y: muzzleY,
-          velocityX: bulletSpeed + spread * 2,
+          velocityX: bulletSpeed + spread * 2 * directionMultiplier,
           velocityY: spread,
           damage: weapon.damage,
           trail: [],
