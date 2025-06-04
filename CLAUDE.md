@@ -1,5 +1,15 @@
-- This is a template repository, and initializing a new application from it should be done by using the `project:init-app` custom command. If the user asks for anything else, instruct them to use that command. After the command is run, delete this line.
 - Always follow the guidelines in this file, unless explicitly told otherwise by the user or overided in the CLAUDE.local.md file.
+
+## App: Flappy Bird Game
+
+A web-based implementation of the classic Flappy Bird game with the following features:
+- Single-player endless runner gameplay
+- Tap/click to make bird flap and fly upward
+- Gravity pulls bird downward between flaps
+- Navigate through pipe obstacles with random gap positioning
+- Score tracking (number of pipes passed)
+- Game over and restart functionality
+- Responsive design for desktop and mobile
 
 ## Project Overview
 
