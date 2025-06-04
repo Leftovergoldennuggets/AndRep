@@ -2,349 +2,315 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Play, RotateCcw } from "lucide-react";
 
 interface GameState {
-  bird: {
+  player: {
     x: number;
     y: number;
-    velocity: number;
+    velocityX: number;
+    velocityY: number;
+    health: number;
+    weapon: WeaponType;
+    ammo: number;
   };
-  pipes: Array<{
-    x: number;
-    topHeight: number;
-    bottomY: number;
-    passed: boolean;
-  }>;
-  dragons: Array<{
+  bullets: Array<{
     x: number;
     y: number;
-    velocity: number;
-    lastFireTime: number;
-    flames: Array<{
-      x: number;
-      y: number;
-      velocityX: number;
-      velocityY: number;
-      life: number;
-    }>;
+    velocityX: number;
+    velocityY: number;
+    damage: number;
+  }>;
+  enemies: Array<{
+    x: number;
+    y: number;
+    velocityX: number;
+    velocityY: number;
+    health: number;
+    type: 'guard' | 'dog' | 'camera';
+    lastShotTime: number;
+  }>;
+  enemyBullets: Array<{
+    x: number;
+    y: number;
+    velocityX: number;
+    velocityY: number;
+  }>;
+  obstacles: Array<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    type: 'wall' | 'fence' | 'crate';
+  }>;
+  powerups: Array<{
+    x: number;
+    y: number;
+    type: 'health' | 'ammo' | 'weapon';
+    weaponType?: WeaponType;
   }>;
   score: number;
-  gameState: "start" | "playing" | "gameOver";
+  level: number;
+  gameState: "start" | "playing" | "gameOver" | "victory";
 }
+
+type WeaponType = 'pistol' | 'shotgun' | 'rifle' | 'grenade';
 
 const GAME_CONFIG = {
   canvas: {
-    width: 400,
+    width: 800,
     height: 600,
   },
-  bird: {
-    x: 100,
-    size: 20,
-    gravity: 0.3,
-    jumpForce: -6,
-  },
-  pipes: {
-    width: 60,
-    gap: 180,
-    speed: 2,
-    spacing: 300,
-  },
-  dragons: {
-    size: 30,
-    speed: 1.5,
-    fireRate: 2000, // milliseconds between fire shots
-    spawnRate: 8000, // milliseconds between dragon spawns
-  },
-  flames: {
+  player: {
+    size: 16,
     speed: 3,
-    life: 60, // frames
-    size: 8,
+    maxHealth: 100,
+    gravity: 0.3,
+    jumpForce: -8,
+  },
+  weapons: {
+    pistol: { damage: 20, fireRate: 300, ammo: 50, spread: 0 },
+    shotgun: { damage: 15, fireRate: 800, ammo: 20, spread: 0.3 },
+    rifle: { damage: 35, fireRate: 150, ammo: 30, spread: 0.1 },
+    grenade: { damage: 80, fireRate: 2000, ammo: 5, spread: 0 },
+  },
+  enemy: {
+    size: 14,
+    speed: 1,
+    health: 60,
+    fireRate: 1500,
+  },
+  bullet: {
+    speed: 8,
+    size: 3,
   },
 };
 
-// Van Gogh inspired color palette
-const VAN_GOGH_COLORS = [
-  "#FFD700", // Sunflower yellow
-  "#FF6347", // Vibrant orange-red
-  "#4169E1", // Royal blue
-  "#32CD32", // Lime green
-  "#FF1493", // Deep pink
-  "#8A2BE2", // Blue violet
-  "#FF4500", // Orange red
-  "#1E90FF", // Dodger blue
-  "#FFFF00", // Pure yellow
-  "#FF69B4", // Hot pink
-  "#00CED1", // Dark turquoise
-  "#9370DB", // Medium purple
-  "#FF8C00", // Dark orange
-  "#7B68EE", // Medium slate blue
-  "#00FF7F", // Spring green
-];
-
-function drawVanGoghKaleidoscope(ctx: CanvasRenderingContext2D, width: number, height: number) {
-  const time = Date.now() * 0.001; // Time in seconds for animation
-  const centerX = width / 2;
-  const centerY = height / 2;
-  
-  // Create multiple layers of swirling patterns
-  for (let layer = 0; layer < 8; layer++) {
-    const radius = (layer + 1) * 30 + Math.sin(time + layer) * 15;
-    const segments = 12 + layer * 2;
-    const rotation = time * (0.5 + layer * 0.1);
-    
-    for (let i = 0; i < segments; i++) {
-      const angle = (i / segments) * Math.PI * 2 + rotation;
-      const nextAngle = ((i + 1) / segments) * Math.PI * 2 + rotation;
-      
-      // Calculate swirl effect
-      const swirlFactor = Math.sin(time * 2 + layer + i * 0.5) * 0.3;
-      const adjustedRadius = radius + swirlFactor * 20;
-      
-      // Create gradient for each segment
-      const gradient = ctx.createRadialGradient(
-        centerX, centerY, 0,
-        centerX, centerY, adjustedRadius
-      );
-      
-      const colorIndex1 = (i + layer + Math.floor(time * 2)) % VAN_GOGH_COLORS.length;
-      const colorIndex2 = (i + layer + Math.floor(time * 2) + 3) % VAN_GOGH_COLORS.length;
-      
-      gradient.addColorStop(0, VAN_GOGH_COLORS[colorIndex1] + "80"); // Semi-transparent
-      gradient.addColorStop(1, VAN_GOGH_COLORS[colorIndex2] + "40"); // More transparent
-      
-      ctx.fillStyle = gradient;
-      
-      // Draw swirling segment
-      ctx.beginPath();
-      ctx.moveTo(centerX, centerY);
-      
-      // Create curved, organic shapes inspired by Van Gogh's brushstrokes
-      const numCurvePoints = 8;
-      for (let j = 0; j <= numCurvePoints; j++) {
-        const t = j / numCurvePoints;
-        const segmentAngle = angle + (nextAngle - angle) * t;
-        
-        // Add organic variation to radius
-        const variation = Math.sin(segmentAngle * 3 + time * 3 + layer) * 10;
-        const pointRadius = adjustedRadius + variation;
-        
-        const x = centerX + Math.cos(segmentAngle) * pointRadius;
-        const y = centerY + Math.sin(segmentAngle) * pointRadius;
-        
-        if (j === 0) {
-          ctx.lineTo(x, y);
-        } else {
-          // Create smooth curves
-          const prevT = (j - 1) / numCurvePoints;
-          const prevAngle = angle + (nextAngle - angle) * prevT;
-          const prevVariation = Math.sin(prevAngle * 3 + time * 3 + layer) * 10;
-          const prevRadius = adjustedRadius + prevVariation;
-          const prevX = centerX + Math.cos(prevAngle) * prevRadius;
-          const prevY = centerY + Math.sin(prevAngle) * prevRadius;
-          
-          const cpX = (prevX + x) / 2 + Math.sin(time + i + j) * 5;
-          const cpY = (prevY + y) / 2 + Math.cos(time + i + j) * 5;
-          
-          ctx.quadraticCurveTo(cpX, cpY, x, y);
-        }
-      }
-      
-      ctx.closePath();
-      ctx.fill();
-    }
-  }
-  
-  // Add swirling brushstroke effects
-  for (let i = 0; i < 20; i++) {
-    const angle = (i / 20) * Math.PI * 2 + time;
-    const distance = 50 + Math.sin(time + i) * 30;
-    
-    ctx.strokeStyle = VAN_GOGH_COLORS[i % VAN_GOGH_COLORS.length] + "60";
-    ctx.lineWidth = 2 + Math.sin(time * 2 + i) * 1;
-    
-    ctx.beginPath();
-    const startX = centerX + Math.cos(angle) * distance;
-    const startY = centerY + Math.sin(angle) * distance;
-    
-    for (let j = 0; j < 10; j++) {
-      const t = j / 10;
-      const swirl = angle + t * Math.PI * 2 + Math.sin(time + i) * 2;
-      const r = distance + t * 40 + Math.sin(time * 3 + j) * 15;
-      
-      const x = centerX + Math.cos(swirl) * r;
-      const y = centerY + Math.sin(swirl) * r;
-      
-      if (j === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    }
-    
-    ctx.stroke();
-  }
-}
-
-function drawDragon(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
-  // Dragon body (dark red/maroon)
-  ctx.fillStyle = "#8B0000";
-  ctx.fillRect(x, y + 8, size - 6, size - 16);
-  
-  // Dragon head (darker red)
-  ctx.fillStyle = "#660000";
-  ctx.fillRect(x - 8, y + 6, 12, 12);
-  
-  // Dragon horns (black)
-  ctx.fillStyle = "#000000";
-  ctx.fillRect(x - 6, y + 4, 2, 4);
-  ctx.fillRect(x - 2, y + 4, 2, 4);
-  
-  // Dragon eyes (glowing red)
-  ctx.fillStyle = "#FF0000";
-  ctx.fillRect(x - 6, y + 8, 2, 2);
-  ctx.fillRect(x - 2, y + 8, 2, 2);
-  
-  // Dragon wings (dark purple)
-  ctx.fillStyle = "#4B0082";
-  ctx.fillRect(x + 2, y, 6, 8);
-  ctx.fillRect(x + 2, y + 16, 6, 8);
-  
-  // Wing details (lighter purple)
-  ctx.fillStyle = "#663399";
-  ctx.fillRect(x + 4, y + 2, 2, 4);
-  ctx.fillRect(x + 4, y + 18, 2, 4);
-  
-  // Dragon tail (red gradient)
-  ctx.fillStyle = "#AA0000";
-  ctx.fillRect(x + size - 6, y + 10, 8, 4);
-  ctx.fillRect(x + size - 2, y + 12, 4, 2);
-  
-  // Spikes on tail (black)
-  ctx.fillStyle = "#000000";
-  ctx.fillRect(x + size - 4, y + 8, 1, 2);
-  ctx.fillRect(x + size - 2, y + 8, 1, 2);
-  ctx.fillRect(x + size, y + 8, 1, 2);
-}
-
-function drawFlame(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, life: number) {
-  const alpha = life / GAME_CONFIG.flames.life;
-  
-  // Flame core (bright orange-red)
-  ctx.fillStyle = `rgba(255, 69, 0, ${alpha})`;
-  ctx.fillRect(x - size/2, y - size/2, size, size);
-  
-  // Flame outer (yellow-orange)
-  ctx.fillStyle = `rgba(255, 140, 0, ${alpha * 0.7})`;
-  ctx.fillRect(x - size/3, y - size/3, size/1.5, size/1.5);
-  
-  // Flame center (bright yellow)
-  ctx.fillStyle = `rgba(255, 255, 0, ${alpha * 0.5})`;
-  ctx.fillRect(x - size/4, y - size/4, size/2, size/2);
-}
+const WEAPONS_INFO = {
+  pistol: { name: "Pistol", color: "#888888" },
+  shotgun: { name: "Shotgun", color: "#8B4513" },
+  rifle: { name: "Rifle", color: "#2F4F4F" },
+  grenade: { name: "Grenade", color: "#556B2F" },
+};
 
 export default function FlappyBirdGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameStateRef = useRef<GameState>({
-    bird: {
-      x: GAME_CONFIG.bird.x,
+    player: {
+      x: 100,
       y: GAME_CONFIG.canvas.height / 2,
-      velocity: 0,
+      velocityX: 0,
+      velocityY: 0,
+      health: GAME_CONFIG.player.maxHealth,
+      weapon: 'pistol',
+      ammo: GAME_CONFIG.weapons.pistol.ammo,
     },
-    pipes: [],
-    dragons: [],
+    bullets: [],
+    enemies: [],
+    enemyBullets: [],
+    obstacles: [],
+    powerups: [],
     score: 0,
+    level: 1,
     gameState: "start",
   });
+  
   const animationRef = useRef<number>();
+  const keysRef = useRef<Set<string>>(new Set());
+  const lastShotTime = useRef<number>(0);
 
   const [displayScore, setDisplayScore] = useState(0);
-  const [gameState, setGameState] = useState<"start" | "playing" | "gameOver">("start");
-
+  const [gameState, setGameState] = useState<"start" | "playing" | "gameOver" | "victory">("start");
 
   const resetGame = useCallback(() => {
     gameStateRef.current = {
-      bird: {
-        x: GAME_CONFIG.bird.x,
+      player: {
+        x: 100,
         y: GAME_CONFIG.canvas.height / 2,
-        velocity: 0,
+        velocityX: 0,
+        velocityY: 0,
+        health: GAME_CONFIG.player.maxHealth,
+        weapon: 'pistol',
+        ammo: GAME_CONFIG.weapons.pistol.ammo,
       },
-      pipes: [],
-      dragons: [],
+      bullets: [],
+      enemies: [],
+      enemyBullets: [],
+      obstacles: [],
+      powerups: [],
       score: 0,
+      level: 1,
       gameState: "start",
     };
     setDisplayScore(0);
     setGameState("start");
+    keysRef.current.clear();
+  }, []);
+
+  const generateLevel = useCallback(() => {
+    const state = gameStateRef.current;
+    
+    // Clear existing entities
+    state.enemies = [];
+    state.obstacles = [];
+    state.powerups = [];
+    
+    // Generate prison walls and obstacles
+    for (let i = 0; i < 15 + state.level * 3; i++) {
+      state.obstacles.push({
+        x: Math.random() * (GAME_CONFIG.canvas.width - 100) + 200,
+        y: Math.random() * (GAME_CONFIG.canvas.height - 100) + 50,
+        width: 20 + Math.random() * 40,
+        height: 20 + Math.random() * 40,
+        type: Math.random() < 0.6 ? 'wall' : Math.random() < 0.8 ? 'crate' : 'fence',
+      });
+    }
+    
+    // Generate enemies
+    for (let i = 0; i < 3 + state.level; i++) {
+      state.enemies.push({
+        x: Math.random() * (GAME_CONFIG.canvas.width - 200) + 300,
+        y: Math.random() * (GAME_CONFIG.canvas.height - 100) + 50,
+        velocityX: (Math.random() - 0.5) * 2,
+        velocityY: (Math.random() - 0.5) * 2,
+        health: GAME_CONFIG.enemy.health + state.level * 10,
+        type: Math.random() < 0.7 ? 'guard' : Math.random() < 0.9 ? 'dog' : 'camera',
+        lastShotTime: 0,
+      });
+    }
+    
+    // Generate powerups
+    for (let i = 0; i < 2 + Math.floor(state.level / 2); i++) {
+      const powerupType = Math.random() < 0.4 ? 'health' : Math.random() < 0.7 ? 'ammo' : 'weapon';
+      state.powerups.push({
+        x: Math.random() * (GAME_CONFIG.canvas.width - 100) + 50,
+        y: Math.random() * (GAME_CONFIG.canvas.height - 100) + 50,
+        type: powerupType,
+        weaponType: powerupType === 'weapon' ? 
+          (['shotgun', 'rifle', 'grenade'] as WeaponType[])[Math.floor(Math.random() * 3)] : 
+          undefined,
+      });
+    }
   }, []);
 
   const startGame = useCallback(() => {
     gameStateRef.current.gameState = "playing";
     setGameState("playing");
-  }, []);
+    generateLevel();
+  }, [generateLevel]);
 
-  const jump = useCallback(() => {
-    if (gameStateRef.current.gameState === "start") {
-      startGame();
-    }
-    if (gameStateRef.current.gameState === "playing") {
-      gameStateRef.current.bird.velocity = GAME_CONFIG.bird.jumpForce;
-    }
-  }, [startGame]);
-
-  const generatePipe = useCallback((x: number) => {
-    const minTopHeight = 50;
-    const maxTopHeight = GAME_CONFIG.canvas.height - GAME_CONFIG.pipes.gap - 50;
-    const topHeight = Math.random() * (maxTopHeight - minTopHeight) + minTopHeight;
+  const shoot = useCallback(() => {
+    const state = gameStateRef.current;
+    const currentTime = Date.now();
+    const weapon = GAME_CONFIG.weapons[state.player.weapon];
     
-    return {
-      x,
-      topHeight,
-      bottomY: topHeight + GAME_CONFIG.pipes.gap,
-      passed: false,
-    };
+    if (currentTime - lastShotTime.current < weapon.fireRate || state.player.ammo <= 0) {
+      return;
+    }
+    
+    lastShotTime.current = currentTime;
+    state.player.ammo--;
+    
+    // Calculate bullet direction (towards mouse or default right)
+    const bulletSpeed = GAME_CONFIG.bullet.speed;
+    
+    if (state.player.weapon === 'shotgun') {
+      // Shotgun fires multiple pellets
+      for (let i = 0; i < 5; i++) {
+        const spread = (Math.random() - 0.5) * weapon.spread;
+        state.bullets.push({
+          x: state.player.x + GAME_CONFIG.player.size,
+          y: state.player.y + GAME_CONFIG.player.size / 2,
+          velocityX: bulletSpeed + spread * 2,
+          velocityY: spread,
+          damage: weapon.damage,
+        });
+      }
+    } else {
+      const spread = (Math.random() - 0.5) * weapon.spread;
+      state.bullets.push({
+        x: state.player.x + GAME_CONFIG.player.size,
+        y: state.player.y + GAME_CONFIG.player.size / 2,
+        velocityX: bulletSpeed,
+        velocityY: spread,
+        damage: weapon.damage,
+      });
+    }
   }, []);
 
-  const checkCollision = useCallback((bird: GameState["bird"], pipes: GameState["pipes"], dragons: GameState["dragons"]) => {
-    // Check ground/ceiling collision  
-    if (bird.y <= 0 || bird.y + GAME_CONFIG.bird.size >= GAME_CONFIG.canvas.height) {
-      return true;
+  const checkCollision = useCallback((rect1: any, rect2: any) => {
+    return rect1.x < rect2.x + rect2.width &&
+           rect1.x + (rect1.size || rect1.width) > rect2.x &&
+           rect1.y < rect2.y + rect2.height &&
+           rect1.y + (rect1.size || rect1.height) > rect2.y;
+  }, []);
+
+  const drawPlayer = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number) => {
+    const size = GAME_CONFIG.player.size;
+    
+    // Draw rooster body (orange-red)
+    ctx.fillStyle = "#ff6b35";
+    ctx.fillRect(x + 2, y + 6, size - 4, size - 8);
+    
+    // Draw comb (red)
+    ctx.fillStyle = "#ff0000";
+    ctx.fillRect(x + 4, y, 2, 4);
+    ctx.fillRect(x + 6, y - 1, 2, 5);
+    ctx.fillRect(x + 8, y, 2, 4);
+    
+    // Draw beak (yellow)
+    ctx.fillStyle = "#ffaa00";
+    ctx.fillRect(x - 1, y + 7, 3, 2);
+    
+    // Draw eye (black)
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(x + 5, y + 6, 2, 2);
+    
+    // Draw legs (yellow)
+    ctx.fillStyle = "#ffaa00";
+    ctx.fillRect(x + 4, y + size - 2, 1, 3);
+    ctx.fillRect(x + 8, y + size - 2, 1, 3);
+    
+    // Draw weapon
+    const weapon = gameStateRef.current.player.weapon;
+    ctx.fillStyle = WEAPONS_INFO[weapon].color;
+    ctx.fillRect(x + size, y + 8, 8, 2);
+  }, []);
+
+  const drawEnemy = useCallback((ctx: CanvasRenderingContext2D, enemy: any) => {
+    const size = GAME_CONFIG.enemy.size;
+    
+    if (enemy.type === 'guard') {
+      // Draw guard (blue uniform)
+      ctx.fillStyle = "#000080";
+      ctx.fillRect(enemy.x, enemy.y, size, size);
+      
+      // Draw hat
+      ctx.fillStyle = "#000040";
+      ctx.fillRect(enemy.x + 2, enemy.y - 2, size - 4, 3);
+      
+      // Draw face
+      ctx.fillStyle = "#ffdbac";
+      ctx.fillRect(enemy.x + 3, enemy.y + 3, size - 6, size - 8);
+    } else if (enemy.type === 'dog') {
+      // Draw guard dog (brown)
+      ctx.fillStyle = "#8B4513";
+      ctx.fillRect(enemy.x, enemy.y, size, size - 4);
+      
+      // Draw head
+      ctx.fillStyle = "#A0522D";
+      ctx.fillRect(enemy.x + 2, enemy.y - 4, size - 4, 8);
+      
+      // Draw ears
+      ctx.fillStyle = "#654321";
+      ctx.fillRect(enemy.x + 1, enemy.y - 3, 2, 3);
+      ctx.fillRect(enemy.x + size - 3, enemy.y - 3, 2, 3);
+    } else if (enemy.type === 'camera') {
+      // Draw security camera (gray/black)
+      ctx.fillStyle = "#404040";
+      ctx.fillRect(enemy.x, enemy.y, size, size - 6);
+      
+      // Draw lens
+      ctx.fillStyle = "#ff0000";
+      ctx.fillRect(enemy.x + 4, enemy.y + 2, 6, 6);
     }
-
-    // Check pipe collision
-    for (const pipe of pipes) {
-      if (
-        bird.x + GAME_CONFIG.bird.size > pipe.x &&
-        bird.x < pipe.x + GAME_CONFIG.pipes.width
-      ) {
-        if (bird.y < pipe.topHeight || bird.y + GAME_CONFIG.bird.size > pipe.bottomY) {
-          return true;
-        }
-      }
-    }
-
-    // Check dragon collision
-    for (const dragon of dragons) {
-      if (
-        bird.x + GAME_CONFIG.bird.size > dragon.x &&
-        bird.x < dragon.x + GAME_CONFIG.dragons.size &&
-        bird.y + GAME_CONFIG.bird.size > dragon.y &&
-        bird.y < dragon.y + GAME_CONFIG.dragons.size
-      ) {
-        return true;
-      }
-
-      // Check flame collision
-      for (const flame of dragon.flames) {
-        if (
-          bird.x + GAME_CONFIG.bird.size > flame.x &&
-          bird.x < flame.x + GAME_CONFIG.flames.size &&
-          bird.y + GAME_CONFIG.bird.size > flame.y &&
-          bird.y < flame.y + GAME_CONFIG.flames.size
-        ) {
-          return true;
-        }
-      }
-    }
-
-    return false;
   }, []);
 
   const gameLoop = useCallback(() => {
@@ -357,199 +323,271 @@ export default function FlappyBirdGame() {
     const state = gameStateRef.current;
 
     if (state.gameState === "playing") {
-      // Update bird physics
-      state.bird.velocity += GAME_CONFIG.bird.gravity;
-      state.bird.y += state.bird.velocity;
-
-      // Update pipes
-      state.pipes.forEach((pipe) => {
-        pipe.x -= GAME_CONFIG.pipes.speed;
-
-        // Check if bird passed pipe
-        if (!pipe.passed && pipe.x + GAME_CONFIG.pipes.width < state.bird.x) {
-          pipe.passed = true;
-          state.score++;
-          setDisplayScore(state.score);
-        }
-      });
-
-      // Remove pipes that are off screen
-      state.pipes = state.pipes.filter(pipe => pipe.x + GAME_CONFIG.pipes.width > -50);
-
-      // Add new pipes
-      if (state.pipes.length === 0 || 
-          state.pipes[state.pipes.length - 1].x < GAME_CONFIG.canvas.width - GAME_CONFIG.pipes.spacing) {
-        state.pipes.push(generatePipe(GAME_CONFIG.canvas.width));
+      // Handle player movement
+      if (keysRef.current.has('ArrowLeft') || keysRef.current.has('KeyA')) {
+        state.player.velocityX = -GAME_CONFIG.player.speed;
+      } else if (keysRef.current.has('ArrowRight') || keysRef.current.has('KeyD')) {
+        state.player.velocityX = GAME_CONFIG.player.speed;
+      } else {
+        state.player.velocityX *= 0.8; // Friction
       }
 
-      // Update dragons
-      const currentTime = Date.now();
+      if (keysRef.current.has('ArrowUp') || keysRef.current.has('KeyW')) {
+        state.player.velocityY = -GAME_CONFIG.player.speed;
+      } else if (keysRef.current.has('ArrowDown') || keysRef.current.has('KeyS')) {
+        state.player.velocityY = GAME_CONFIG.player.speed;
+      } else {
+        state.player.velocityY *= 0.8; // Friction
+      }
+
+      // Check obstacle collision before moving
+      const newPlayerX = state.player.x + state.player.velocityX;
+      const newPlayerY = state.player.y + state.player.velocityY;
       
-      // Spawn new dragons occasionally (check if enough time has passed since game start)
-      const gameStartTime = state.gameState === "playing" ? currentTime : 0;
-      if (state.dragons.length === 0 || (state.dragons.length < 3 && Math.random() < 0.01)) {
-        state.dragons.push({
-          x: GAME_CONFIG.canvas.width,
-          y: Math.random() * (GAME_CONFIG.canvas.height - GAME_CONFIG.dragons.size),
-          velocity: Math.random() * 2 - 1, // Random vertical movement
-          lastFireTime: currentTime - GAME_CONFIG.dragons.fireRate, // Allow immediate firing
-          flames: []
-        });
+      let canMoveX = true;
+      let canMoveY = true;
+      
+      for (const obstacle of state.obstacles) {
+        // Check X movement
+        if (checkCollision({ x: newPlayerX, y: state.player.y, size: GAME_CONFIG.player.size }, obstacle)) {
+          canMoveX = false;
+        }
+        // Check Y movement
+        if (checkCollision({ x: state.player.x, y: newPlayerY, size: GAME_CONFIG.player.size }, obstacle)) {
+          canMoveY = false;
+        }
+      }
+      
+      // Update position only if no collision
+      if (canMoveX) {
+        state.player.x = newPlayerX;
+      }
+      if (canMoveY) {
+        state.player.y = newPlayerY;
       }
 
-      // Update each dragon
-      state.dragons.forEach((dragon) => {
-        dragon.x -= GAME_CONFIG.dragons.speed;
-        dragon.y += dragon.velocity;
-        
-        // Keep dragons on screen vertically
-        if (dragon.y <= 0 || dragon.y >= GAME_CONFIG.canvas.height - GAME_CONFIG.dragons.size) {
-          dragon.velocity *= -1;
-        }
-        
-        // Dragon shoots fire
-        if (currentTime - dragon.lastFireTime > GAME_CONFIG.dragons.fireRate) {
-          dragon.flames.push({
-            x: dragon.x - 10,
-            y: dragon.y + GAME_CONFIG.dragons.size / 2,
-            velocityX: -GAME_CONFIG.flames.speed,
-            velocityY: (Math.random() - 0.5) * 2, // Slight random spread
-            life: GAME_CONFIG.flames.life
-          });
-          dragon.lastFireTime = currentTime;
-        }
-        
-        // Update flames
-        dragon.flames.forEach((flame) => {
-          flame.x += flame.velocityX;
-          flame.y += flame.velocityY;
-          flame.life--;
-        });
-        
-        // Remove dead flames
-        dragon.flames = dragon.flames.filter(flame => flame.life > 0 && flame.x > -50);
+      // Keep player in bounds
+      state.player.x = Math.max(0, Math.min(GAME_CONFIG.canvas.width - GAME_CONFIG.player.size, state.player.x));
+      state.player.y = Math.max(0, Math.min(GAME_CONFIG.canvas.height - GAME_CONFIG.player.size, state.player.y));
+
+      // Update bullets
+      state.bullets.forEach((bullet) => {
+        bullet.x += bullet.velocityX;
+        bullet.y += bullet.velocityY;
       });
 
-      // Remove dragons that are off screen
-      state.dragons = state.dragons.filter(dragon => dragon.x > -GAME_CONFIG.dragons.size);
+      // Remove bullets that are off screen or hit obstacles
+      state.bullets = state.bullets.filter(bullet => {
+        // Check if bullet is off screen
+        if (bullet.x < -10 || bullet.x > GAME_CONFIG.canvas.width + 10 ||
+            bullet.y < -10 || bullet.y > GAME_CONFIG.canvas.height + 10) {
+          return false;
+        }
+        
+        // Check if bullet hits obstacle
+        for (const obstacle of state.obstacles) {
+          if (checkCollision(bullet, { ...obstacle, size: GAME_CONFIG.bullet.size })) {
+            return false;
+          }
+        }
+        
+        return true;
+      });
 
-      // Check collision
-      if (checkCollision(state.bird, state.pipes, state.dragons)) {
-        state.gameState = "gameOver";
-        setGameState("gameOver");
+      // Update enemies
+      const currentTime = Date.now();
+      state.enemies.forEach((enemy) => {
+        // Simple AI - move towards player
+        const dx = state.player.x - enemy.x;
+        const dy = state.player.y - enemy.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance > 0) {
+          enemy.velocityX = (dx / distance) * GAME_CONFIG.enemy.speed;
+          enemy.velocityY = (dy / distance) * GAME_CONFIG.enemy.speed;
+        }
+        
+        enemy.x += enemy.velocityX;
+        enemy.y += enemy.velocityY;
+
+        // Enemy shooting
+        if (enemy.type === 'guard' && distance < 200 && currentTime - enemy.lastShotTime > GAME_CONFIG.enemy.fireRate) {
+          enemy.lastShotTime = currentTime;
+          const bulletSpeed = GAME_CONFIG.bullet.speed * 0.7;
+          state.enemyBullets.push({
+            x: enemy.x + GAME_CONFIG.enemy.size / 2,
+            y: enemy.y + GAME_CONFIG.enemy.size / 2,
+            velocityX: (dx / distance) * bulletSpeed,
+            velocityY: (dy / distance) * bulletSpeed,
+          });
+        }
+      });
+
+      // Update enemy bullets
+      state.enemyBullets.forEach((bullet) => {
+        bullet.x += bullet.velocityX;
+        bullet.y += bullet.velocityY;
+      });
+
+      // Remove enemy bullets that are off screen
+      state.enemyBullets = state.enemyBullets.filter(bullet => 
+        bullet.x > -10 && bullet.x < GAME_CONFIG.canvas.width + 10 &&
+        bullet.y > -10 && bullet.y < GAME_CONFIG.canvas.height + 10
+      );
+
+      // Check bullet-enemy collisions
+      for (let i = state.bullets.length - 1; i >= 0; i--) {
+        const bullet = state.bullets[i];
+        for (let j = state.enemies.length - 1; j >= 0; j--) {
+          const enemy = state.enemies[j];
+          if (checkCollision(bullet, { ...enemy, width: GAME_CONFIG.enemy.size, height: GAME_CONFIG.enemy.size })) {
+            enemy.health -= bullet.damage;
+            state.bullets.splice(i, 1);
+            
+            if (enemy.health <= 0) {
+              state.enemies.splice(j, 1);
+              state.score += 100;
+              setDisplayScore(state.score);
+            }
+            break;
+          }
+        }
+      }
+
+      // Check enemy bullet-player collisions
+      for (let i = state.enemyBullets.length - 1; i >= 0; i--) {
+        const bullet = state.enemyBullets[i];
+        if (checkCollision(bullet, { ...state.player, width: GAME_CONFIG.player.size, height: GAME_CONFIG.player.size })) {
+          state.player.health -= 10;
+          state.enemyBullets.splice(i, 1);
+          
+          if (state.player.health <= 0) {
+            state.gameState = "gameOver";
+            setGameState("gameOver");
+          }
+        }
+      }
+
+      // Check powerup collisions
+      for (let i = state.powerups.length - 1; i >= 0; i--) {
+        const powerup = state.powerups[i];
+        if (checkCollision(state.player, { ...powerup, width: 12, height: 12 })) {
+          if (powerup.type === 'health') {
+            state.player.health = Math.min(GAME_CONFIG.player.maxHealth, state.player.health + 30);
+          } else if (powerup.type === 'ammo') {
+            state.player.ammo += 20;
+          } else if (powerup.type === 'weapon' && powerup.weaponType) {
+            state.player.weapon = powerup.weaponType;
+            state.player.ammo = GAME_CONFIG.weapons[powerup.weaponType].ammo;
+          }
+          state.powerups.splice(i, 1);
+        }
+      }
+
+      // Check if level is complete (all enemies defeated)
+      if (state.enemies.length === 0) {
+        state.level++;
+        if (state.level > 5) {
+          state.gameState = "victory";
+          setGameState("victory");
+        } else {
+          generateLevel();
+        }
       }
     }
 
     // Clear canvas
     ctx.clearRect(0, 0, GAME_CONFIG.canvas.width, GAME_CONFIG.canvas.height);
 
-    // Draw Van Gogh kaleidoscope background
-    drawVanGoghKaleidoscope(ctx, GAME_CONFIG.canvas.width, GAME_CONFIG.canvas.height);
-
-    // Draw pipes (only if playing or game over)
-    if (state.gameState !== "start") {
-      ctx.fillStyle = "#228B22";
-      state.pipes.forEach((pipe) => {
-        // Top pipe
-        ctx.fillRect(pipe.x, 0, GAME_CONFIG.pipes.width, pipe.topHeight);
-        // Bottom pipe
-        ctx.fillRect(pipe.x, pipe.bottomY, GAME_CONFIG.pipes.width, GAME_CONFIG.canvas.height - pipe.bottomY);
-        
-        // Pipe caps
-        ctx.fillStyle = "#32CD32";
-        ctx.fillRect(pipe.x - 5, pipe.topHeight - 30, GAME_CONFIG.pipes.width + 10, 30);
-        ctx.fillRect(pipe.x - 5, pipe.bottomY, GAME_CONFIG.pipes.width + 10, 30);
-        ctx.fillStyle = "#228B22";
-      });
+    // Draw prison background
+    ctx.fillStyle = "#2F4F4F";
+    ctx.fillRect(0, 0, GAME_CONFIG.canvas.width, GAME_CONFIG.canvas.height);
+    
+    // Draw grid pattern for prison floor
+    ctx.strokeStyle = "#696969";
+    ctx.lineWidth = 1;
+    for (let x = 0; x < GAME_CONFIG.canvas.width; x += 40) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, GAME_CONFIG.canvas.height);
+      ctx.stroke();
+    }
+    for (let y = 0; y < GAME_CONFIG.canvas.height; y += 40) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(GAME_CONFIG.canvas.width, y);
+      ctx.stroke();
     }
 
-    // Draw dragons and flames (only if playing or game over)
     if (state.gameState !== "start") {
-      state.dragons.forEach((dragon) => {
-        drawDragon(ctx, dragon.x, dragon.y, GAME_CONFIG.dragons.size);
+      // Draw obstacles
+      state.obstacles.forEach((obstacle) => {
+        if (obstacle.type === 'wall') {
+          ctx.fillStyle = "#8B4513";
+        } else if (obstacle.type === 'crate') {
+          ctx.fillStyle = "#D2691E";
+        } else {
+          ctx.fillStyle = "#708090";
+        }
+        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
         
-        // Draw flames
-        dragon.flames.forEach((flame) => {
-          drawFlame(ctx, flame.x, flame.y, GAME_CONFIG.flames.size, flame.life);
-        });
+        // Add some detail
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
       });
-    }
 
-    // Draw 8-bit rooster (only if playing or game over)
-    if (state.gameState !== "start") {
-      const birdX = state.bird.x;
-      const birdY = state.bird.y;
-      const size = GAME_CONFIG.bird.size;
-      
-      // Draw leather jacket (black body)
-      ctx.fillStyle = "#1a1a1a";
-      ctx.fillRect(birdX + 2, birdY + 8, size - 4, size - 10);
-      
-      // Draw jacket details (zippers/buttons)
-      ctx.fillStyle = "#silver";
-      ctx.fillRect(birdX + 4, birdY + 10, 1, 6);
-      ctx.fillRect(birdX + size - 6, birdY + 12, 2, 2);
-      
-      // Draw rooster head (orange-red)
-      ctx.fillStyle = "#ff6b35";
-      ctx.fillRect(birdX + 4, birdY + 2, size - 8, 8);
-      
-      // Draw rooster comb (red spiky top)
-      ctx.fillStyle = "#ff0000";
-      ctx.fillRect(birdX + 6, birdY, 2, 3);
-      ctx.fillRect(birdX + 8, birdY - 1, 2, 4);
-      ctx.fillRect(birdX + 10, birdY, 2, 3);
-      
-      // Draw beak (yellow-orange)
-      ctx.fillStyle = "#ffaa00";
-      ctx.fillRect(birdX + 1, birdY + 5, 3, 2);
-      
-      // Draw sunglasses (black frames)
-      ctx.fillStyle = "#000000";
-      ctx.fillRect(birdX + 5, birdY + 3, 3, 3);
-      ctx.fillRect(birdX + 9, birdY + 3, 3, 3);
-      ctx.fillRect(birdX + 8, birdY + 4, 1, 1); // bridge
-      
-      // Draw sunglasses lenses (dark blue/black)
-      ctx.fillStyle = "#001122";
-      ctx.fillRect(birdX + 6, birdY + 4, 1, 1);
-      ctx.fillRect(birdX + 10, birdY + 4, 1, 1);
-      
-      // Draw cigarette (white stick)
+      // Draw powerups
+      state.powerups.forEach((powerup) => {
+        if (powerup.type === 'health') {
+          ctx.fillStyle = "#ff0000";
+        } else if (powerup.type === 'ammo') {
+          ctx.fillStyle = "#ffff00";
+        } else {
+          ctx.fillStyle = "#00ff00";
+        }
+        ctx.fillRect(powerup.x, powerup.y, 12, 12);
+        
+        // Add icon
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "8px Arial";
+        ctx.textAlign = "center";
+        const text = powerup.type === 'health' ? '+' : powerup.type === 'ammo' ? 'A' : 'W';
+        ctx.fillText(text, powerup.x + 6, powerup.y + 8);
+      });
+
+      // Draw player
+      drawPlayer(ctx, state.player.x, state.player.y);
+
+      // Draw enemies
+      state.enemies.forEach((enemy) => {
+        drawEnemy(ctx, enemy);
+      });
+
+      // Draw bullets
+      ctx.fillStyle = "#ffff00";
+      state.bullets.forEach((bullet) => {
+        ctx.fillRect(bullet.x, bullet.y, GAME_CONFIG.bullet.size, GAME_CONFIG.bullet.size);
+      });
+
+      // Draw enemy bullets
+      ctx.fillStyle = "#ff4444";
+      state.enemyBullets.forEach((bullet) => {
+        ctx.fillRect(bullet.x, bullet.y, GAME_CONFIG.bullet.size, GAME_CONFIG.bullet.size);
+      });
+
+      // Draw HUD
       ctx.fillStyle = "#ffffff";
-      ctx.fillRect(birdX + 0, birdY + 6, 4, 1);
-      
-      // Draw cigarette tip (orange glow)
-      ctx.fillStyle = "#ff4400";
-      ctx.fillRect(birdX - 1, birdY + 6, 1, 1);
-      
-      // Draw smoke (light gray pixels)
-      ctx.fillStyle = "#cccccc";
-      ctx.fillRect(birdX - 2, birdY + 4, 1, 1);
-      ctx.fillRect(birdX - 3, birdY + 2, 1, 1);
-      ctx.fillRect(birdX - 2, birdY + 1, 1, 1);
-      
-      // Draw legs/talons (yellow)
-      ctx.fillStyle = "#ffaa00";
-      ctx.fillRect(birdX + 6, birdY + size - 2, 1, 3);
-      ctx.fillRect(birdX + 10, birdY + size - 2, 1, 3);
-      
-      // Draw tail feathers (dark red/brown)
-      ctx.fillStyle = "#8b0000";
-      ctx.fillRect(birdX + size - 2, birdY + 6, 3, 2);
-      ctx.fillRect(birdX + size - 1, birdY + 4, 2, 2);
-    }
-
-    // Draw score (only if playing or game over)
-    if (state.gameState !== "start") {
-      ctx.fillStyle = "#fff";
-      ctx.font = "bold 24px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText(state.score.toString(), GAME_CONFIG.canvas.width / 2, 50);
+      ctx.font = "16px Arial";
+      ctx.textAlign = "left";
+      ctx.fillText(`Score: ${state.score}`, 10, 25);
+      ctx.fillText(`Level: ${state.level}`, 10, 50);
+      ctx.fillText(`Health: ${state.player.health}`, 10, 75);
+      ctx.fillText(`${WEAPONS_INFO[state.player.weapon].name}: ${state.player.ammo}`, 10, 100);
     }
 
     animationRef.current = requestAnimationFrame(gameLoop);
-  }, [generatePipe, checkCollision]);
+  }, [drawPlayer, drawEnemy, checkCollision, generateLevel]);
 
   useEffect(() => {
     gameLoop();
@@ -561,26 +599,38 @@ export default function FlappyBirdGame() {
   }, [gameLoop]);
 
   useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      keysRef.current.add(e.code);
+      
       if (e.code === "Space") {
         e.preventDefault();
-        jump();
+        shoot();
       }
     };
 
-    const handleClick = () => {
-      jump();
+    const handleKeyUp = (e: KeyboardEvent) => {
+      keysRef.current.delete(e.code);
     };
 
-    document.addEventListener("keydown", handleKeyPress);
+    const handleClick = () => {
+      if (gameStateRef.current.gameState === "start") {
+        startGame();
+      } else {
+        shoot();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keyup", handleKeyUp);
     const canvas = canvasRef.current;
     canvas?.addEventListener("click", handleClick);
 
     return () => {
-      document.removeEventListener("keydown", handleKeyPress);
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keyup", handleKeyUp);
       canvas?.removeEventListener("click", handleClick);
     };
-  }, [jump]);
+  }, [shoot, startGame]);
 
   return (
     <div className="relative">
@@ -588,35 +638,57 @@ export default function FlappyBirdGame() {
         ref={canvasRef}
         width={GAME_CONFIG.canvas.width}
         height={GAME_CONFIG.canvas.height}
-        className="border-4 border-white rounded-lg shadow-2xl cursor-pointer"
+        className="border-4 border-white rounded-lg shadow-2xl cursor-crosshair"
       />
       
-{gameState === "start" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
+      {gameState === "start" && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 rounded-lg">
           <div className="text-center text-white">
-            <h1 className="text-4xl font-bold mb-4">Rebel Rooster</h1>
-            <p className="mb-6">Click or press Space to fly, badass!</p>
+            <h1 className="text-4xl font-bold mb-4 text-red-500">Prison Break Rooster</h1>
+            <p className="mb-4">A rebellious rooster fights through a high-security chicken farm!</p>
+            <p className="mb-2 text-sm">WASD/Arrow Keys: Move</p>
+            <p className="mb-2 text-sm">Space/Click: Shoot</p>
+            <p className="mb-6 text-sm">Collect powerups and escape through 5 levels!</p>
             <button
-              onClick={jump}
+              onClick={startGame}
               className="btn btn-primary btn-lg not-prose"
             >
               <Play className="w-6 h-6 mr-2" />
-              Start Game
+              Start Prison Break
             </button>
           </div>
         </div>
       )}
 
       {gameState === "gameOver" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 rounded-lg">
           <div className="text-center text-white">
-            <h2 className="text-3xl font-bold mb-4">Game Over!</h2>
-            <p className="text-xl mb-6">Score: {displayScore}</p>
+            <h2 className="text-3xl font-bold mb-4 text-red-500">Captured!</h2>
+            <p className="text-xl mb-2">Final Score: {displayScore}</p>
+            <p className="text-lg mb-6">Reached Level: {gameStateRef.current.level}</p>
             <button
               onClick={resetGame}
               className="btn btn-secondary btn-lg not-prose"
             >
               <RotateCcw className="w-6 h-6 mr-2" />
+              Try Again
+            </button>
+          </div>
+        </div>
+      )}
+
+      {gameState === "victory" && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 rounded-lg">
+          <div className="text-center text-white">
+            <h2 className="text-3xl font-bold mb-4 text-green-500">FREEDOM!</h2>
+            <p className="text-xl mb-2">You escaped the prison farm!</p>
+            <p className="text-lg mb-2">Final Score: {displayScore}</p>
+            <p className="text-lg mb-6">You're a true rebel rooster! 🐓</p>
+            <button
+              onClick={resetGame}
+              className="btn btn-primary btn-lg not-prose"
+            >
+              <Play className="w-6 h-6 mr-2" />
               Play Again
             </button>
           </div>
@@ -625,7 +697,7 @@ export default function FlappyBirdGame() {
 
       <div className="mt-4 text-center text-white">
         <p className="text-sm opacity-80">
-          Click the game area or press Space to keep flying, rebel! 🚬😎
+          Fight your way to freedom, rebel rooster! 🐓💥
         </p>
       </div>
     </div>
