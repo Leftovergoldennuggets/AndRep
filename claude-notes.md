@@ -184,6 +184,22 @@ All enemies now appear as dangerous human threats rather than abstract figures!
 
 Game now has the authentic look and feel of a high-security maximum security prison break!
 
+## GAMEPLAY BALANCE FIXES - Player Experience Improvements  
+- **DIRECTIONAL SHOOTING FIX**: Fixed shooting direction to respect player facing direction
+  - Bullets now fire in the direction player is facing (left when facing left, right when facing right)
+  - Muzzle flash position adjusted based on player direction for visual accuracy
+  - Shotgun spread properly applied in the correct direction
+  - Enhanced player agency and tactical positioning in combat
+- **BOSS DIFFICULTY REDUCTION**: Significantly reduced boss difficulty for better balance
+  - Boss health reduced: Warden 300→120, Captain 450→180, Chief 600→240, Helicopter 800→300
+  - Attack rates slowed: Warden 200ms→800ms, Captain 2s→3s, Chief 1.5s→2.5s, Helicopter 800ms→1.8s
+  - Movement speeds reduced: Warden 4→2, Captain 2→1.5, Chief maintains distance behavior
+  - Bullet counts reduced: Captain 5→3 shots, Chief 5→3 shots, Helicopter 3→2 bombs
+  - Bullet speeds slightly reduced for more dodgeable attacks
+  - Bosses now provide challenging but fair encounters instead of overwhelming difficulty
+
+Game now provides balanced, fair combat that rewards skill rather than punishing players!
+
 ## Remaining Enhancement Ideas
 - Sound effects and music for boss encounters
 - Score persistence/high scores across levels

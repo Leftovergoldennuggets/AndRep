@@ -451,7 +451,7 @@ export default function FlappyBirdGame() {
       objectives.push({
         id: 'rescue',
         type: 'rescue' as const,
-        description: 'Rescue 3 prisoners from the compound',
+        description: 'Rescue 3 prisoners - Honor Wilbur\'s memory',
         targetCount: 3,
         currentCount: 0,
         completed: false,
@@ -461,7 +461,7 @@ export default function FlappyBirdGame() {
       objectives.push({
         id: 'destroy',
         type: 'destroy' as const,
-        description: 'Destroy 5 explosive barrels',
+        description: 'Destroy 5 explosive barrels - Sabotage the system',
         targetCount: 5,
         currentCount: 0,
         completed: false,
@@ -471,7 +471,7 @@ export default function FlappyBirdGame() {
       objectives.push({
         id: 'survive',
         type: 'survive' as const,
-        description: 'Survive for 60 seconds',
+        description: 'Survive for 60 seconds - Stay strong like Wilbur',
         timeLimit: 60000,
         timeRemaining: 60000,
         currentCount: 0,
@@ -483,7 +483,7 @@ export default function FlappyBirdGame() {
     objectives.push({
       id: 'escape',
       type: 'escape' as const,
-      description: 'Reach the escape point',
+      description: 'Reach the escape point - Expose the truth!',
       target: { x: 2000, y: GAME_CONFIG.world.groundLevel - 50 },
       currentCount: 0,
       completed: false,
@@ -2426,31 +2426,63 @@ export default function FlappyBirdGame() {
       />
       
       {gameState === "start" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 rounded-lg">
-          <div className="text-center text-white">
-            <h1 className="text-4xl font-bold mb-4 text-red-500">Prison Break Rooster</h1>
-            <p className="mb-4">Endless escape through the prison compound!</p>
-            <p className="mb-2 text-sm">Space/W/↑: Jump</p>
-            <p className="mb-2 text-sm">A/D/←/→: Move Left/Right</p>
-            <p className="mb-2 text-sm">X/Z/Click: Shoot</p>
-            <p className="mb-6 text-sm">How far can you escape?</p>
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-90 rounded-lg">
+          <div className="text-center text-white max-w-2xl mx-4">
+            <h1 className="text-4xl font-bold mb-6 text-red-500">Prison Break Rooster</h1>
+            
+            {/* Epic Backstory */}
+            <div className="bg-gray-900 bg-opacity-80 p-6 rounded-lg mb-6 text-left border border-red-500">
+              <h2 className="text-xl font-bold mb-3 text-yellow-400 text-center">🔥 THE REBELLION BEGINS 🔥</h2>
+              <div className="space-y-3 text-sm leading-relaxed">
+                <p>
+                  <span className="text-red-400 font-bold">Meet "Red"</span> - once the prize rooster of Blackwater Maximum Security Prison's farm program. 
+                  For years, he watched as his fellow animals were exploited, beaten, and worse by the corrupt guards.
+                </p>
+                <p>
+                  <span className="text-yellow-400 font-bold">The breaking point:</span> When Warden Morrison ordered the execution of Red's best friend - 
+                  an old pig named Wilbur who dared to protect the younger animals - something snapped inside the rooster's heart.
+                </p>
+                <p>
+                  <span className="text-orange-400 font-bold">That night</span>, Red broke into the guard's armory, armed himself with weapons, 
+                  and single-handedly took down three guards who were abusing animals in the barn. The leather jacket? 
+                  Taken from a guard who won't be needing it anymore.
+                </p>
+                <p className="text-red-300 font-bold text-center">
+                  Now they've locked him in maximum security. But Red has one goal: 
+                  <span className="text-white"> ESCAPE AND EXPOSE THE TRUTH!</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <p className="mb-2 text-sm text-gray-300">Space/W/↑: Jump</p>
+              <p className="mb-2 text-sm text-gray-300">A/D/←/→: Move Left/Right</p>
+              <p className="mb-2 text-sm text-gray-300">X/Z/Click: Shoot</p>
+              <p className="mb-4 text-sm text-yellow-400">Fight for justice. Fight for freedom. Fight for Wilbur.</p>
+            </div>
+            
             <button
               onClick={startGame}
               className="btn btn-primary btn-lg not-prose"
             >
               <Play className="w-6 h-6 mr-2" />
-              Start Endless Escape
+              BEGIN THE ESCAPE
             </button>
           </div>
         </div>
       )}
 
       {gameState === "gameOver" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 rounded-lg">
-          <div className="text-center text-white">
-            <h2 className="text-3xl font-bold mb-4 text-red-500">Captured!</h2>
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-85 rounded-lg">
+          <div className="text-center text-white max-w-lg mx-4">
+            <h2 className="text-3xl font-bold mb-4 text-red-500">🚨 CAPTURED! 🚨</h2>
+            <div className="bg-gray-900 bg-opacity-80 p-4 rounded-lg mb-4 border border-red-500">
+              <p className="text-yellow-400 mb-2 italic">"They got me this time, but Wilbur's spirit lives on..."</p>
+              <p className="text-gray-300 text-sm">Red's escape attempt has been thwarted, but the rebellion continues.</p>
+            </div>
             <p className="text-xl mb-2">Final Score: {displayScore}</p>
-            <p className="text-lg mb-6">Distance Escaped: {distance}m</p>
+            <p className="text-lg mb-2">Distance Escaped: {distance}m</p>
+            <p className="text-sm text-gray-400 mb-6">Every yard counts in the fight for justice!</p>
             <button
               onClick={resetGame}
               className="btn btn-secondary btn-lg not-prose"
