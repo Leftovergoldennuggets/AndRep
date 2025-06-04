@@ -26,9 +26,14 @@ interface GameState {
     y: number;
     velocityY: number;
     health: number;
-    type: 'guard' | 'dog' | 'camera';
+    maxHealth: number;
+    type: 'guard' | 'dog' | 'camera' | 'boss';
     lastShotTime: number;
     onGround: boolean;
+    aiState: 'patrol' | 'chase' | 'cover' | 'attack' | 'retreat';
+    alertLevel: number;
+    lastPlayerSeen: number;
+    coverPosition?: { x: number; y: number };
   }>;
   enemyBullets: Array<{
     x: number;
@@ -41,7 +46,13 @@ interface GameState {
     y: number;
     width: number;
     height: number;
-    type: 'wall' | 'fence' | 'crate' | 'platform' | 'ground';
+    type: 'wall' | 'fence' | 'crate' | 'platform' | 'ground' | 'barrel' | 'door' | 'switch';
+    health?: number;
+    maxHealth?: number;
+    isDestructible: boolean;
+    isInteractive: boolean;
+    isActivated?: boolean;
+    explosionRadius?: number;
   }>;
   powerups: Array<{
     x: number;
@@ -64,9 +75,26 @@ interface GameState {
     x: number;
     shake: number;
   };
+  objectives: Array<{
+    id: string;
+    type: 'rescue' | 'destroy' | 'survive' | 'escape' | 'stealth';
+    description: string;
+    target?: { x: number; y: number };
+    targetCount?: number;
+    currentCount: number;
+    completed: boolean;
+    timeLimit?: number;
+    timeRemaining?: number;
+  }>;
+  prisoners: Array<{
+    x: number;
+    y: number;
+    isRescued: boolean;
+  }>;
+  alertLevel: number;
   score: number;
   distance: number;
-  gameState: "start" | "playing" | "gameOver";
+  gameState: "start" | "playing" | "gameOver" | "missionComplete";
 }
 
 type WeaponType = 'pistol' | 'shotgun' | 'rifle' | 'grenade';
@@ -136,6 +164,9 @@ export default function FlappyBirdGame() {
       x: 0,
       shake: 0,
     },
+    objectives: [],
+    prisoners: [],
+    alertLevel: 0,
     score: 0,
     distance: 0,
     gameState: "start",
@@ -172,6 +203,9 @@ export default function FlappyBirdGame() {
         x: 0,
         shake: 0,
       },
+      objectives: [],
+      prisoners: [],
+      alertLevel: 0,
       score: 0,
       distance: 0,
       gameState: "start",
@@ -194,6 +228,8 @@ export default function FlappyBirdGame() {
         width: 40,
         height: GAME_CONFIG.canvas.height - GAME_CONFIG.world.groundLevel,
         type: 'ground',
+        isDestructible: false,
+        isInteractive: false,
       });
     }
     
@@ -201,7 +237,7 @@ export default function FlappyBirdGame() {
     for (let x = startX; x < endX; x += 200 + Math.random() * 200) {
       const obstacleType = Math.random();
       
-      if (obstacleType < 0.3) {
+      if (obstacleType < 0.2) {
         // Wall obstacle
         const height = 80 + Math.random() * 120;
         obstacles.push({
@@ -210,8 +246,10 @@ export default function FlappyBirdGame() {
           width: 20 + Math.random() * 40,
           height: height,
           type: 'wall',
+          isDestructible: false,
+          isInteractive: false,
         });
-      } else if (obstacleType < 0.6) {
+      } else if (obstacleType < 0.4) {
         // Platform obstacle
         obstacles.push({
           x: x + Math.random() * 100,
@@ -219,6 +257,36 @@ export default function FlappyBirdGame() {
           width: 60 + Math.random() * 80,
           height: 20,
           type: 'platform',
+          isDestructible: false,
+          isInteractive: false,
+        });
+      } else if (obstacleType < 0.6) {
+        // EXPLOSIVE BARREL - destructible!
+        obstacles.push({
+          x: x + Math.random() * 100,
+          y: GAME_CONFIG.world.groundLevel - 40,
+          width: 40,
+          height: 40,
+          type: 'barrel',
+          health: 50,
+          maxHealth: 50,
+          isDestructible: true,
+          isInteractive: false,
+          explosionRadius: 80,
+        });
+      } else if (obstacleType < 0.8) {
+        // SECURITY DOOR - interactive!
+        obstacles.push({
+          x: x + Math.random() * 100,
+          y: GAME_CONFIG.world.groundLevel - 80,
+          width: 15,
+          height: 80,
+          type: 'door',
+          isDestructible: true,
+          isInteractive: true,
+          health: 100,
+          maxHealth: 100,
+          isActivated: false,
         });
       } else {
         // Fence obstacle
@@ -228,6 +296,8 @@ export default function FlappyBirdGame() {
           width: 10,
           height: 60,
           type: 'fence',
+          isDestructible: false,
+          isInteractive: false,
         });
       }
     }
@@ -249,9 +319,13 @@ export default function FlappyBirdGame() {
         y: enemyY,
         velocityY: 0,
         health: GAME_CONFIG.enemy.health,
+        maxHealth: GAME_CONFIG.enemy.health,
         type: enemyType,
         lastShotTime: 0,
         onGround: enemyType !== 'camera',
+        aiState: 'patrol',
+        alertLevel: 0,
+        lastPlayerSeen: 0,
       });
     }
     
@@ -274,6 +348,72 @@ export default function FlappyBirdGame() {
     }
     
     return powerups;
+  }, []);
+
+  const generateObjectives = useCallback(() => {
+    const objectives = [];
+    
+    // Random mission type
+    const missionType = Math.random();
+    
+    if (missionType < 0.3) {
+      // RESCUE MISSION
+      objectives.push({
+        id: 'rescue',
+        type: 'rescue' as const,
+        description: 'Rescue 3 prisoners from the compound',
+        targetCount: 3,
+        currentCount: 0,
+        completed: false,
+      });
+    } else if (missionType < 0.6) {
+      // DESTRUCTION MISSION
+      objectives.push({
+        id: 'destroy',
+        type: 'destroy' as const,
+        description: 'Destroy 5 explosive barrels',
+        targetCount: 5,
+        currentCount: 0,
+        completed: false,
+      });
+    } else {
+      // SURVIVAL MISSION
+      objectives.push({
+        id: 'survive',
+        type: 'survive' as const,
+        description: 'Survive for 60 seconds',
+        timeLimit: 60000,
+        timeRemaining: 60000,
+        currentCount: 0,
+        completed: false,
+      });
+    }
+    
+    // Always add escape objective
+    objectives.push({
+      id: 'escape',
+      type: 'escape' as const,
+      description: 'Reach the escape point',
+      target: { x: 2000, y: GAME_CONFIG.world.groundLevel - 50 },
+      currentCount: 0,
+      completed: false,
+    });
+    
+    return objectives;
+  }, []);
+
+  const generatePrisoners = useCallback((startX: number, endX: number) => {
+    const prisoners = [];
+    
+    for (let x = startX; x < endX; x += 400 + Math.random() * 600) {
+      prisoners.push({
+        x: x + Math.random() * 200,
+        y: GAME_CONFIG.world.groundLevel - 32,
+        isRescued: false,
+      });
+    }
+    
+    return prisoners;
   }, []);
 
   const createParticles = useCallback((x: number, y: number, type: 'explosion' | 'spark' | 'smoke' | 'blood', count: number = 5) => {
@@ -342,11 +482,16 @@ export default function FlappyBirdGame() {
     const newObstacles = generateObstacles(-worldSize/2, worldSize/2);
     const newEnemies = generateEnemies(-worldSize/2 + 400, worldSize/2 - 400);
     const newPowerups = generatePowerups(-worldSize/2 + 200, worldSize/2 - 200);
+    const newObjectives = generateObjectives();
+    const newPrisoners = generatePrisoners(-worldSize/2 + 300, worldSize/2 - 300);
     
     state.obstacles = newObstacles;
     state.enemies = newEnemies;
     state.powerups = newPowerups;
-  }, [generateObstacles, generateEnemies, generatePowerups]);
+    state.objectives = newObjectives;
+    state.prisoners = newPrisoners;
+    state.alertLevel = 0;
+  }, [generateObstacles, generateEnemies, generatePowerups, generateObjectives, generatePrisoners]);
 
   const jump = useCallback(() => {
     const state = gameStateRef.current;
@@ -407,6 +552,70 @@ export default function FlappyBirdGame() {
       });
     }
   }, [createParticles]);
+
+  const updateEnemyAI = useCallback((enemy: any, playerX: number, playerY: number, currentTime: number) => {
+    const dx = playerX - enemy.x;
+    const dy = playerY - enemy.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // Update alert level based on distance and line of sight
+    if (distance < 200) {
+      enemy.alertLevel = Math.min(100, enemy.alertLevel + 2);
+      enemy.lastPlayerSeen = currentTime;
+    } else if (currentTime - enemy.lastPlayerSeen > 3000) {
+      enemy.alertLevel = Math.max(0, enemy.alertLevel - 1);
+    }
+    
+    // AI State machine
+    switch (enemy.aiState) {
+      case 'patrol':
+        if (enemy.alertLevel > 30) {
+          enemy.aiState = 'chase';
+        }
+        break;
+        
+      case 'chase':
+        if (distance < 100) {
+          enemy.aiState = 'attack';
+        } else if (enemy.alertLevel < 10) {
+          enemy.aiState = 'patrol';
+        }
+        // Move towards player
+        if (enemy.type === 'guard' && enemy.onGround) {
+          const moveSpeed = 1;
+          enemy.x += dx > 0 ? moveSpeed : -moveSpeed;
+        }
+        break;
+        
+      case 'attack':
+        if (distance > 150) {
+          enemy.aiState = 'chase';
+        } else if (enemy.health < enemy.maxHealth * 0.3) {
+          enemy.aiState = 'retreat';
+        }
+        break;
+        
+      case 'retreat':
+        // Move away from player
+        if (enemy.type === 'guard' && enemy.onGround) {
+          const moveSpeed = 1.5;
+          enemy.x += dx > 0 ? -moveSpeed : moveSpeed;
+        }
+        if (distance > 200) {
+          enemy.aiState = 'cover';
+        }
+        break;
+        
+      case 'cover':
+        // Try to find cover (simple implementation)
+        if (enemy.alertLevel < 20) {
+          enemy.aiState = 'patrol';
+        }
+        break;
+    }
+    
+    return distance;
+  }, []);
 
   const checkCollision = useCallback((rect1: any, rect2: any) => {
     return rect1.x < rect2.x + rect2.width &&
@@ -731,11 +940,48 @@ export default function FlappyBirdGame() {
           return false;
         }
         
-        for (const obstacle of state.obstacles) {
+        for (let i = state.obstacles.length - 1; i >= 0; i--) {
+          const obstacle = state.obstacles[i];
           if (checkCollision(
             { x: bullet.x, y: bullet.y, width: GAME_CONFIG.bullet.size, height: GAME_CONFIG.bullet.size },
             { x: obstacle.x, y: obstacle.y, width: obstacle.width, height: obstacle.height }
           )) {
+            // Handle destructible objects
+            if (obstacle.isDestructible && obstacle.health !== undefined) {
+              obstacle.health -= 25;
+              createParticles(obstacle.x + obstacle.width/2, obstacle.y + obstacle.height/2, 'spark', 3);
+              
+              if (obstacle.health <= 0) {
+                // EXPLOSIVE BARREL EXPLOSION!
+                if (obstacle.type === 'barrel') {
+                  createParticles(obstacle.x + obstacle.width/2, obstacle.y + obstacle.height/2, 'explosion', 15);
+                  state.camera.shake = Math.max(state.camera.shake, 8);
+                  
+                  // Damage nearby enemies and player
+                  const explosionRadius = obstacle.explosionRadius || 80;
+                  state.enemies.forEach(enemy => {
+                    const dx = enemy.x - (obstacle.x + obstacle.width/2);
+                    const dy = enemy.y - (obstacle.y + obstacle.height/2);
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < explosionRadius) {
+                      enemy.health -= 80;
+                      createParticles(enemy.x, enemy.y, 'blood', 5);
+                    }
+                  });
+                  
+                  // Check objective progress
+                  const destroyObjective = state.objectives.find(obj => obj.type === 'destroy');
+                  if (destroyObjective && !destroyObjective.completed) {
+                    destroyObjective.currentCount++;
+                    if (destroyObjective.currentCount >= (destroyObjective.targetCount || 0)) {
+                      destroyObjective.completed = true;
+                    }
+                  }
+                }
+                
+                state.obstacles.splice(i, 1);
+              }
+            }
             return false;
           }
         }
@@ -743,7 +989,7 @@ export default function FlappyBirdGame() {
         return true;
       });
 
-      // Update enemies
+      // Update enemies with enhanced AI
       const currentTime = Date.now();
       state.enemies.forEach((enemy) => {
         // Apply gravity to enemies
@@ -752,22 +998,36 @@ export default function FlappyBirdGame() {
         }
         
         const screenX = enemy.x - state.camera.x;
-        const dx = state.player.x - enemy.x;
-        const dy = state.player.y - enemy.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
         
-        // Enemy shooting
-        if (enemy.type === 'guard' && distance < 200 && screenX > -100 && screenX < GAME_CONFIG.canvas.width + 100) {
-          if (currentTime - enemy.lastShotTime > GAME_CONFIG.enemy.fireRate) {
+        // Enhanced AI behavior
+        const distance = updateEnemyAI(enemy, state.player.x, state.player.y, currentTime);
+        
+        // Enhanced enemy shooting based on AI state
+        const canShoot = enemy.aiState === 'attack' || enemy.aiState === 'chase';
+        if (enemy.type === 'guard' && canShoot && distance < 250 && screenX > -100 && screenX < GAME_CONFIG.canvas.width + 100) {
+          const fireRate = enemy.aiState === 'attack' ? GAME_CONFIG.enemy.fireRate * 0.7 : GAME_CONFIG.enemy.fireRate;
+          if (currentTime - enemy.lastShotTime > fireRate) {
             enemy.lastShotTime = currentTime;
             const bulletSpeed = GAME_CONFIG.bullet.speed * 0.7;
+            const dx = state.player.x - enemy.x;
+            const dy = state.player.y - enemy.y;
+            
+            // Add some inaccuracy based on distance and AI state
+            const accuracy = enemy.aiState === 'attack' ? 0.95 : 0.8;
+            const spread = (1 - accuracy) * (Math.random() - 0.5) * 0.5;
+            
             state.enemyBullets.push({
               x: enemy.x,
               y: enemy.y + GAME_CONFIG.enemy.size / 2,
-              velocityX: (dx / distance) * bulletSpeed,
-              velocityY: (dy / distance) * bulletSpeed,
+              velocityX: (dx / distance) * bulletSpeed + spread,
+              velocityY: (dy / distance) * bulletSpeed + spread,
             });
           }
+        }
+        
+        // Increase global alert level when enemies are alert
+        if (enemy.alertLevel > 50) {
+          state.alertLevel = Math.min(100, state.alertLevel + 0.5);
         }
       });
 
@@ -849,6 +1109,54 @@ export default function FlappyBirdGame() {
         }
       }
 
+      // Check prisoner rescue
+      for (let i = state.prisoners.length - 1; i >= 0; i--) {
+        const prisoner = state.prisoners[i];
+        if (!prisoner.isRescued && checkCollision(
+          { x: state.player.x, y: state.player.y, width: GAME_CONFIG.player.size, height: GAME_CONFIG.player.size },
+          { x: prisoner.x, y: prisoner.y, width: 32, height: 32 }
+        )) {
+          prisoner.isRescued = true;
+          createParticles(prisoner.x + 16, prisoner.y + 16, 'spark', 8);
+          state.score += 500;
+          setDisplayScore(state.score);
+          
+          // Check rescue objective
+          const rescueObjective = state.objectives.find(obj => obj.type === 'rescue');
+          if (rescueObjective && !rescueObjective.completed) {
+            rescueObjective.currentCount++;
+            if (rescueObjective.currentCount >= (rescueObjective.targetCount || 0)) {
+              rescueObjective.completed = true;
+            }
+          }
+        }
+      }
+
+      // Update objectives
+      state.objectives.forEach(objective => {
+        if (objective.type === 'survive' && objective.timeRemaining !== undefined) {
+          objective.timeRemaining -= 16; // Assuming 60fps
+          if (objective.timeRemaining <= 0) {
+            objective.completed = true;
+          }
+        }
+        
+        if (objective.type === 'escape' && objective.target) {
+          const dx = state.player.x - objective.target.x;
+          const dy = state.player.y - objective.target.y;
+          if (Math.sqrt(dx * dx + dy * dy) < 50) {
+            objective.completed = true;
+          }
+        }
+      });
+      
+      // Check if mission is complete
+      const allCompleted = state.objectives.every(obj => obj.completed);
+      if (allCompleted && state.gameState === "playing") {
+        state.gameState = "missionComplete";
+        setGameState("missionComplete");
+      }
+
       // No need to generate or remove content - static world
     }
 
@@ -897,23 +1205,65 @@ export default function FlappyBirdGame() {
       state.obstacles.forEach((obstacle) => {
         const screenX = obstacle.x - state.camera.x;
         if (screenX > -obstacle.width && screenX < GAME_CONFIG.canvas.width) {
-          if (obstacle.type === 'ground') {
-            ctx.fillStyle = "#8B4513";
-          } else if (obstacle.type === 'wall') {
-            ctx.fillStyle = "#696969";
-          } else if (obstacle.type === 'platform') {
-            ctx.fillStyle = "#8B8B8B";
-          } else if (obstacle.type === 'crate') {
-            ctx.fillStyle = "#D2691E";
+          if (obstacle.type === 'barrel') {
+            // EXPLOSIVE BARREL - orange with warning stripes
+            const barrelGradient = ctx.createLinearGradient(screenX, obstacle.y, screenX + obstacle.width, obstacle.y + obstacle.height);
+            barrelGradient.addColorStop(0, "#ff8800");
+            barrelGradient.addColorStop(1, "#cc4400");
+            ctx.fillStyle = barrelGradient;
+            ctx.fillRect(screenX, obstacle.y, obstacle.width, obstacle.height);
+            
+            // Warning stripes
+            ctx.fillStyle = "#ffff00";
+            for (let i = 0; i < 3; i++) {
+              ctx.fillRect(screenX + 5, obstacle.y + 5 + i * 12, obstacle.width - 10, 3);
+            }
+            
+            // Hazard symbol
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(screenX + obstacle.width/2 - 4, obstacle.y + obstacle.height/2 - 4, 8, 8);
+          } else if (obstacle.type === 'door') {
+            // SECURITY DOOR - metallic with health bar
+            const doorGradient = ctx.createLinearGradient(screenX, obstacle.y, screenX + obstacle.width, obstacle.y);
+            doorGradient.addColorStop(0, "#555555");
+            doorGradient.addColorStop(0.5, "#333333");
+            doorGradient.addColorStop(1, "#555555");
+            ctx.fillStyle = doorGradient;
+            ctx.fillRect(screenX, obstacle.y, obstacle.width, obstacle.height);
+            
+            // Door details
+            ctx.fillStyle = "#ff0000";
+            ctx.fillRect(screenX + 2, obstacle.y + 10, obstacle.width - 4, 3);
+            ctx.fillRect(screenX + 2, obstacle.y + obstacle.height - 13, obstacle.width - 4, 3);
+            
+            // Health bar
+            if (obstacle.health !== undefined && obstacle.maxHealth !== undefined) {
+              const healthPercent = obstacle.health / obstacle.maxHealth;
+              ctx.fillStyle = "#ff4444";
+              ctx.fillRect(screenX, obstacle.y - 8, obstacle.width, 4);
+              ctx.fillStyle = "#44ff44";
+              ctx.fillRect(screenX, obstacle.y - 8, obstacle.width * healthPercent, 4);
+            }
           } else {
-            ctx.fillStyle = "#708090";
+            // Standard obstacles
+            if (obstacle.type === 'ground') {
+              ctx.fillStyle = "#8B4513";
+            } else if (obstacle.type === 'wall') {
+              ctx.fillStyle = "#696969";
+            } else if (obstacle.type === 'platform') {
+              ctx.fillStyle = "#8B8B8B";
+            } else if (obstacle.type === 'crate') {
+              ctx.fillStyle = "#D2691E";
+            } else {
+              ctx.fillStyle = "#708090";
+            }
+            ctx.fillRect(screenX, obstacle.y, obstacle.width, obstacle.height);
+            
+            // Add border
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(screenX, obstacle.y, obstacle.width, obstacle.height);
           }
-          ctx.fillRect(screenX, obstacle.y, obstacle.width, obstacle.height);
-          
-          // Add border
-          ctx.strokeStyle = "#000000";
-          ctx.lineWidth = 1;
-          ctx.strokeRect(screenX, obstacle.y, obstacle.width, obstacle.height);
         }
       });
 
@@ -936,6 +1286,36 @@ export default function FlappyBirdGame() {
           ctx.textAlign = "center";
           const text = powerup.type === 'health' ? '+' : powerup.type === 'ammo' ? 'A' : 'W';
           ctx.fillText(text, screenX + 12, powerup.y + 16);
+        }
+      });
+
+      // Draw prisoners
+      state.prisoners.forEach((prisoner) => {
+        const screenX = prisoner.x - state.camera.x;
+        if (!prisoner.isRescued && screenX > -32 && screenX < GAME_CONFIG.canvas.width) {
+          // Draw prisoner - orange jumpsuit
+          const prisonerGradient = ctx.createLinearGradient(screenX, prisoner.y, screenX, prisoner.y + 32);
+          prisonerGradient.addColorStop(0, "#ff8800");
+          prisonerGradient.addColorStop(1, "#cc6600");
+          ctx.fillStyle = prisonerGradient;
+          ctx.fillRect(screenX + 4, prisoner.y + 8, 24, 20);
+          
+          // Head
+          ctx.fillStyle = "#ffdbac";
+          ctx.fillRect(screenX + 8, prisoner.y + 2, 16, 12);
+          
+          // Shackles
+          ctx.fillStyle = "#666666";
+          ctx.fillRect(screenX + 6, prisoner.y + 24, 4, 4);
+          ctx.fillRect(screenX + 22, prisoner.y + 24, 4, 4);
+          
+          // Rescue indicator
+          ctx.fillStyle = "rgba(0, 255, 0, 0.7)";
+          ctx.fillRect(screenX, prisoner.y - 8, 32, 4);
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "10px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText("RESCUE", screenX + 16, prisoner.y - 10);
         }
       });
 
@@ -1019,9 +1399,9 @@ export default function FlappyBirdGame() {
       ctx.font = "bold 18px Arial";
       ctx.textAlign = "left";
       
-      // Draw HUD background
+      // Draw HUD background (bigger for objectives)
       ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-      ctx.fillRect(5, 5, 200, 110);
+      ctx.fillRect(5, 5, 300, 160);
       
       // Score with glow effect
       ctx.shadowColor = "#ffff88";
@@ -1053,13 +1433,51 @@ export default function FlappyBirdGame() {
       ctx.shadowBlur = 1;
       ctx.fillText(`${WEAPONS_INFO[state.player.weapon].name}: ${state.player.ammo}`, 15, 105);
       
+      // Alert Level
+      ctx.font = "12px Arial";
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(`Alert Level:`, 15, 125);
+      
+      // Alert level bar
+      ctx.fillStyle = "#333333";
+      ctx.fillRect(100, 115, 100, 8);
+      const alertPercent = state.alertLevel / 100;
+      const alertColor = alertPercent > 0.7 ? "#ff4444" : alertPercent > 0.4 ? "#ffaa44" : "#44ff44";
+      ctx.fillStyle = alertColor;
+      ctx.fillRect(100, 115, 100 * alertPercent, 8);
+      
+      // Objectives
+      ctx.font = "bold 14px Arial";
+      ctx.fillStyle = "#ffff88";
+      ctx.fillText("OBJECTIVES:", 15, 145);
+      
+      ctx.font = "11px Arial";
+      let objY = 155;
+      state.objectives.forEach((objective, index) => {
+        const color = objective.completed ? "#44ff44" : "#ffffff";
+        ctx.fillStyle = color;
+        const status = objective.completed ? "✓" : "○";
+        let text = `${status} ${objective.description}`;
+        
+        if (objective.targetCount) {
+          text += ` (${objective.currentCount}/${objective.targetCount})`;
+        }
+        if (objective.timeRemaining !== undefined) {
+          const seconds = Math.ceil(objective.timeRemaining / 1000);
+          text += ` (${seconds}s)`;
+        }
+        
+        ctx.fillText(text, 25, objY);
+        objY += 12;
+      });
+      
       // Reset shadow
       ctx.shadowColor = "transparent";
       ctx.shadowBlur = 0;
     }
 
     animationRef.current = requestAnimationFrame(gameLoop);
-  }, [drawPlayer, drawEnemy, checkCollision, applyGravity, generateObstacles, generateEnemies, generatePowerups, createParticles, updateParticles]);
+  }, [drawPlayer, drawEnemy, checkCollision, applyGravity, generateObstacles, generateEnemies, generatePowerups, createParticles, updateParticles, updateEnemyAI]);
 
   useEffect(() => {
     gameLoop();
@@ -1149,6 +1567,28 @@ export default function FlappyBirdGame() {
             >
               <RotateCcw className="w-6 h-6 mr-2" />
               Try Escape Again
+            </button>
+          </div>
+        </div>
+      )}
+
+      {gameState === "missionComplete" && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 rounded-lg">
+          <div className="text-center text-white">
+            <h2 className="text-3xl font-bold mb-4 text-green-500">MISSION COMPLETE!</h2>
+            <p className="text-xl mb-2">🎖️ ALL OBJECTIVES COMPLETED! 🎖️</p>
+            <p className="text-lg mb-2">Final Score: {displayScore}</p>
+            <p className="text-lg mb-6">Distance Escaped: {distance}m</p>
+            <div className="mb-6">
+              <p className="text-green-400 mb-2">✓ Escape successful!</p>
+              <p className="text-sm opacity-80">The badass rooster lives to fight another day!</p>
+            </div>
+            <button
+              onClick={resetGame}
+              className="btn btn-primary btn-lg not-prose"
+            >
+              <Play className="w-6 h-6 mr-2" />
+              New Mission
             </button>
           </div>
         </div>
