@@ -13,6 +13,19 @@ interface GameState {
     bottomY: number;
     passed: boolean;
   }>;
+  dragons: Array<{
+    x: number;
+    y: number;
+    velocity: number;
+    lastFireTime: number;
+    flames: Array<{
+      x: number;
+      y: number;
+      velocityX: number;
+      velocityY: number;
+      life: number;
+    }>;
+  }>;
   score: number;
   gameState: "start" | "playing" | "gameOver";
 }
@@ -33,6 +46,17 @@ const GAME_CONFIG = {
     gap: 180,
     speed: 2,
     spacing: 300,
+  },
+  dragons: {
+    size: 30,
+    speed: 1.5,
+    fireRate: 2000, // milliseconds between fire shots
+    spawnRate: 8000, // milliseconds between dragon spawns
+  },
+  flames: {
+    speed: 3,
+    life: 60, // frames
+    size: 8,
   },
 };
 
@@ -159,6 +183,63 @@ function drawVanGoghKaleidoscope(ctx: CanvasRenderingContext2D, width: number, h
   }
 }
 
+function drawDragon(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
+  // Dragon body (dark red/maroon)
+  ctx.fillStyle = "#8B0000";
+  ctx.fillRect(x, y + 8, size - 6, size - 16);
+  
+  // Dragon head (darker red)
+  ctx.fillStyle = "#660000";
+  ctx.fillRect(x - 8, y + 6, 12, 12);
+  
+  // Dragon horns (black)
+  ctx.fillStyle = "#000000";
+  ctx.fillRect(x - 6, y + 4, 2, 4);
+  ctx.fillRect(x - 2, y + 4, 2, 4);
+  
+  // Dragon eyes (glowing red)
+  ctx.fillStyle = "#FF0000";
+  ctx.fillRect(x - 6, y + 8, 2, 2);
+  ctx.fillRect(x - 2, y + 8, 2, 2);
+  
+  // Dragon wings (dark purple)
+  ctx.fillStyle = "#4B0082";
+  ctx.fillRect(x + 2, y, 6, 8);
+  ctx.fillRect(x + 2, y + 16, 6, 8);
+  
+  // Wing details (lighter purple)
+  ctx.fillStyle = "#663399";
+  ctx.fillRect(x + 4, y + 2, 2, 4);
+  ctx.fillRect(x + 4, y + 18, 2, 4);
+  
+  // Dragon tail (red gradient)
+  ctx.fillStyle = "#AA0000";
+  ctx.fillRect(x + size - 6, y + 10, 8, 4);
+  ctx.fillRect(x + size - 2, y + 12, 4, 2);
+  
+  // Spikes on tail (black)
+  ctx.fillStyle = "#000000";
+  ctx.fillRect(x + size - 4, y + 8, 1, 2);
+  ctx.fillRect(x + size - 2, y + 8, 1, 2);
+  ctx.fillRect(x + size, y + 8, 1, 2);
+}
+
+function drawFlame(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, life: number) {
+  const alpha = life / GAME_CONFIG.flames.life;
+  
+  // Flame core (bright orange-red)
+  ctx.fillStyle = `rgba(255, 69, 0, ${alpha})`;
+  ctx.fillRect(x - size/2, y - size/2, size, size);
+  
+  // Flame outer (yellow-orange)
+  ctx.fillStyle = `rgba(255, 140, 0, ${alpha * 0.7})`;
+  ctx.fillRect(x - size/3, y - size/3, size/1.5, size/1.5);
+  
+  // Flame center (bright yellow)
+  ctx.fillStyle = `rgba(255, 255, 0, ${alpha * 0.5})`;
+  ctx.fillRect(x - size/4, y - size/4, size/2, size/2);
+}
+
 export default function FlappyBirdGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameStateRef = useRef<GameState>({
@@ -168,6 +249,7 @@ export default function FlappyBirdGame() {
       velocity: 0,
     },
     pipes: [],
+    dragons: [],
     score: 0,
     gameState: "start",
   });
@@ -185,6 +267,7 @@ export default function FlappyBirdGame() {
         velocity: 0,
       },
       pipes: [],
+      dragons: [],
       score: 0,
       gameState: "start",
     };
@@ -219,7 +302,7 @@ export default function FlappyBirdGame() {
     };
   }, []);
 
-  const checkCollision = useCallback((bird: GameState["bird"], pipes: GameState["pipes"]) => {
+  const checkCollision = useCallback((bird: GameState["bird"], pipes: GameState["pipes"], dragons: GameState["dragons"]) => {
     // Check ground/ceiling collision  
     if (bird.y <= 0 || bird.y + GAME_CONFIG.bird.size >= GAME_CONFIG.canvas.height) {
       return true;
@@ -232,6 +315,30 @@ export default function FlappyBirdGame() {
         bird.x < pipe.x + GAME_CONFIG.pipes.width
       ) {
         if (bird.y < pipe.topHeight || bird.y + GAME_CONFIG.bird.size > pipe.bottomY) {
+          return true;
+        }
+      }
+    }
+
+    // Check dragon collision
+    for (const dragon of dragons) {
+      if (
+        bird.x + GAME_CONFIG.bird.size > dragon.x &&
+        bird.x < dragon.x + GAME_CONFIG.dragons.size &&
+        bird.y + GAME_CONFIG.bird.size > dragon.y &&
+        bird.y < dragon.y + GAME_CONFIG.dragons.size
+      ) {
+        return true;
+      }
+
+      // Check flame collision
+      for (const flame of dragon.flames) {
+        if (
+          bird.x + GAME_CONFIG.bird.size > flame.x &&
+          bird.x < flame.x + GAME_CONFIG.flames.size &&
+          bird.y + GAME_CONFIG.bird.size > flame.y &&
+          bird.y < flame.y + GAME_CONFIG.flames.size
+        ) {
           return true;
         }
       }
@@ -275,8 +382,59 @@ export default function FlappyBirdGame() {
         state.pipes.push(generatePipe(GAME_CONFIG.canvas.width));
       }
 
+      // Update dragons
+      const currentTime = Date.now();
+      
+      // Spawn new dragons occasionally (check if enough time has passed since game start)
+      const gameStartTime = state.gameState === "playing" ? currentTime : 0;
+      if (state.dragons.length === 0 || (state.dragons.length < 3 && Math.random() < 0.01)) {
+        state.dragons.push({
+          x: GAME_CONFIG.canvas.width,
+          y: Math.random() * (GAME_CONFIG.canvas.height - GAME_CONFIG.dragons.size),
+          velocity: Math.random() * 2 - 1, // Random vertical movement
+          lastFireTime: currentTime - GAME_CONFIG.dragons.fireRate, // Allow immediate firing
+          flames: []
+        });
+      }
+
+      // Update each dragon
+      state.dragons.forEach((dragon) => {
+        dragon.x -= GAME_CONFIG.dragons.speed;
+        dragon.y += dragon.velocity;
+        
+        // Keep dragons on screen vertically
+        if (dragon.y <= 0 || dragon.y >= GAME_CONFIG.canvas.height - GAME_CONFIG.dragons.size) {
+          dragon.velocity *= -1;
+        }
+        
+        // Dragon shoots fire
+        if (currentTime - dragon.lastFireTime > GAME_CONFIG.dragons.fireRate) {
+          dragon.flames.push({
+            x: dragon.x - 10,
+            y: dragon.y + GAME_CONFIG.dragons.size / 2,
+            velocityX: -GAME_CONFIG.flames.speed,
+            velocityY: (Math.random() - 0.5) * 2, // Slight random spread
+            life: GAME_CONFIG.flames.life
+          });
+          dragon.lastFireTime = currentTime;
+        }
+        
+        // Update flames
+        dragon.flames.forEach((flame) => {
+          flame.x += flame.velocityX;
+          flame.y += flame.velocityY;
+          flame.life--;
+        });
+        
+        // Remove dead flames
+        dragon.flames = dragon.flames.filter(flame => flame.life > 0 && flame.x > -50);
+      });
+
+      // Remove dragons that are off screen
+      state.dragons = state.dragons.filter(dragon => dragon.x > -GAME_CONFIG.dragons.size);
+
       // Check collision
-      if (checkCollision(state.bird, state.pipes)) {
+      if (checkCollision(state.bird, state.pipes, state.dragons)) {
         state.gameState = "gameOver";
         setGameState("gameOver");
       }
@@ -302,6 +460,18 @@ export default function FlappyBirdGame() {
         ctx.fillRect(pipe.x - 5, pipe.topHeight - 30, GAME_CONFIG.pipes.width + 10, 30);
         ctx.fillRect(pipe.x - 5, pipe.bottomY, GAME_CONFIG.pipes.width + 10, 30);
         ctx.fillStyle = "#228B22";
+      });
+    }
+
+    // Draw dragons and flames (only if playing or game over)
+    if (state.gameState !== "start") {
+      state.dragons.forEach((dragon) => {
+        drawDragon(ctx, dragon.x, dragon.y, GAME_CONFIG.dragons.size);
+        
+        // Draw flames
+        dragon.flames.forEach((flame) => {
+          drawFlame(ctx, flame.x, flame.y, GAME_CONFIG.flames.size, flame.life);
+        });
       });
     }
 

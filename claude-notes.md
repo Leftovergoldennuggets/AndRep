@@ -1,9 +1,9 @@
 # Claude Code Session Notes
 
 ## Current Session
-- **Step**: 7 - Added Van Gogh kaleidoscope background
+- **Step**: 8 - Added fire dragon enemies with flame attacks
 - **Start Commit**: 9e9ee70 Initial commit  
-- **Session Commits**: fe0dc04 (requirements doc), e635fe0 (game implementation), dee0004 (physics tuning), 005b69c (rooster character)
+- **Session Commits**: fe0dc04 (requirements doc), e635fe0 (game implementation), dee0004 (physics tuning), 005b69c (rooster character), f180796 (kaleidoscope background)
 
 ## Project Initialization Progress
 - ✅ Gathered requirements: Building Flappy Bird game
@@ -14,13 +14,15 @@
 - ✅ Completed MVP - Game is fully functional!
 - ✅ Enhanced with 8-bit rooster character (sunglasses, smoking, leather jacket)
 - ✅ Added Van Gogh inspired dynamic kaleidoscope background
+- ✅ Added fire dragon enemies with flame shooting mechanics
 
 ## App Details
 - **Type**: "Rebel Rooster" - Flappy Bird-style game
 - **Character**: 8-bit pixel art rooster wearing sunglasses, smoking, and black leather jacket
 - **Background**: Dynamic Van Gogh kaleidoscope with swirling colors and organic brushstrokes
-- **Core Mechanics**: Tap/click to flap, gravity, pipe obstacles, scoring
-- **Features**: Endless runner, score tracking, game over/restart, responsive design, badass attitude, psychedelic visuals
+- **Enemies**: Fire dragons with red/purple pixel art, shoot flame projectiles
+- **Core Mechanics**: Tap/click to flap, gravity, pipe obstacles, dragon enemies, flame attacks, scoring
+- **Features**: Endless runner, score tracking, game over/restart, responsive design, badass attitude, psychedelic visuals, epic dragon battles
 
 ## MVP Implementation Plan
 - **Frontend**: Canvas-based game with HTML5 Canvas and requestAnimationFrame
