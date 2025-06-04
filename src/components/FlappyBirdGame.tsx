@@ -316,7 +316,7 @@ export default function FlappyBirdGame() {
     storySlide: 0,
   });
   
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number>(0);
   const keysRef = useRef<Set<string>>(new Set());
   const lastShotTime = useRef<number>(0);
 
@@ -675,7 +675,7 @@ export default function FlappyBirdGame() {
     }, 3000);
   }, []);
 
-  const updateBoss = useCallback((boss: typeof gameStateRef.current.enemies[0], deltaTime: number) => {
+  const updateBoss = useCallback((boss: typeof gameStateRef.current.enemies[0], _deltaTime: number) => {
     const state = gameStateRef.current;
     const player = state.player;
     const levelConfig = LEVELS[state.level.current as keyof typeof LEVELS];
@@ -2437,7 +2437,7 @@ export default function FlappyBirdGame() {
       
       ctx.font = "11px Arial";
       let objY = 180;
-      state.objectives.forEach((objective, index) => {
+      state.objectives.forEach((objective, _index) => {
         const color = objective.completed ? "#44ff44" : "#ffffff";
         ctx.fillStyle = color;
         const status = objective.completed ? "✓" : "○";
