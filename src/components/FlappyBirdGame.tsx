@@ -445,58 +445,96 @@ export default function FlappyBirdGame() {
     }
     
     // Draw shadow
-    ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-    ctx.fillRect(x, y + size + 2, size, 4);
+    ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+    ctx.fillRect(x, y + size + 2, size + 4, 6);
     
-    // Draw rooster body with gradient
-    const bodyGradient = ctx.createLinearGradient(x, y, x, y + size);
-    bodyGradient.addColorStop(0, "#ff8c42");
-    bodyGradient.addColorStop(1, "#ff6b35");
-    ctx.fillStyle = bodyGradient;
-    ctx.fillRect(x + 4, y + 8 + bobOffset, size - 8, size - 12);
+    // Draw BLACK LEATHER JACKET - main body
+    const jacketGradient = ctx.createLinearGradient(x, y, x, y + size);
+    jacketGradient.addColorStop(0, "#1a1a1a");
+    jacketGradient.addColorStop(0.3, "#000000");
+    jacketGradient.addColorStop(1, "#333333");
+    ctx.fillStyle = jacketGradient;
+    ctx.fillRect(x + 2, y + 8 + bobOffset, size - 4, size - 10);
     
-    // Draw wing with animation
-    ctx.fillStyle = "#ff5722";
-    const wingOffset = isMoving ? Math.sin(state.player.animationFrame * 0.8) * 3 : 0;
-    ctx.fillRect(x + 6, y + 10 + bobOffset + wingOffset, size - 12, 8);
+    // Jacket details - zipper and seams
+    ctx.fillStyle = "#555555";
+    ctx.fillRect(x + size/2, y + 10 + bobOffset, 2, size - 12);
+    ctx.fillStyle = "#666666";
+    ctx.fillRect(x + 4, y + 12 + bobOffset, size - 8, 1);
+    ctx.fillRect(x + 4, y + 20 + bobOffset, size - 8, 1);
     
-    // Draw comb with more detail
-    ctx.fillStyle = "#d32f2f";
-    ctx.fillRect(x + 8, y + 2, 4, 6);
-    ctx.fillRect(x + 10, y, 4, 8);
-    ctx.fillRect(x + 14, y + 2, 4, 6);
-    
-    // Draw beak with depth
-    ctx.fillStyle = "#ff9800";
-    ctx.fillRect(x + size - 2, y + 12, 6, 4);
-    ctx.fillStyle = "#ff8f00";
-    ctx.fillRect(x + size - 2, y + 13, 4, 2);
-    
-    // Draw eye with pupil
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(x + 10, y + 10, 6, 6);
+    // Jacket collar
     ctx.fillStyle = "#000000";
-    ctx.fillRect(x + 12, y + 12, 2, 2);
+    ctx.fillRect(x + 6, y + 6 + bobOffset, size - 12, 4);
     
-    // Draw legs with animation
+    // Draw rooster head/neck above jacket
+    const headGradient = ctx.createLinearGradient(x, y, x, y + 12);
+    headGradient.addColorStop(0, "#ff8c42");
+    headGradient.addColorStop(1, "#ff6b35");
+    ctx.fillStyle = headGradient;
+    ctx.fillRect(x + 6, y + 2, size - 12, 8);
+    
+    // Draw comb (rebel rooster style)
+    ctx.fillStyle = "#d32f2f";
+    ctx.fillRect(x + 8, y - 2, 3, 6);
+    ctx.fillRect(x + 11, y - 4, 3, 8);
+    ctx.fillRect(x + 14, y - 2, 3, 6);
+    
+    // Draw beak
     ctx.fillStyle = "#ff9800";
-    const legOffset = isMoving ? Math.sin(state.player.animationFrame * 0.6) * 1 : 0;
-    ctx.fillRect(x + 8, y + size - 4, 2, 6 + legOffset);
-    ctx.fillRect(x + 16, y + size - 4, 2, 6 - legOffset);
-    
-    // Draw feet
+    ctx.fillRect(x + size - 2, y + 6, 6, 3);
     ctx.fillStyle = "#ff8f00";
-    ctx.fillRect(x + 6, y + size + 2, 6, 2);
-    ctx.fillRect(x + 14, y + size + 2, 6, 2);
+    ctx.fillRect(x + size - 2, y + 7, 4, 1);
     
-    // Draw weapon with muzzle flash
-    const weapon = gameStateRef.current.player.weapon;
-    ctx.fillStyle = WEAPONS_INFO[weapon].color;
-    ctx.fillRect(x + size - 2, y + 16, 20, 6);
-    
-    // Add weapon details
+    // Draw SUNGLASSES - total badass
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(x + 8, y + 4, 12, 6);
+    // Lens reflections
     ctx.fillStyle = "#333333";
-    ctx.fillRect(x + size + 12, y + 18, 4, 2);
+    ctx.fillRect(x + 9, y + 5, 4, 2);
+    ctx.fillRect(x + 15, y + 5, 4, 2);
+    // Bridge
+    ctx.fillRect(x + 13, y + 6, 2, 1);
+    
+    // Draw CIGARETTE - smoking badass
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(x + size + 2, y + 8, 8, 2);
+    ctx.fillStyle = "#ff6b35";
+    ctx.fillRect(x + size + 8, y + 8, 2, 2);
+    // Smoke particles
+    ctx.fillStyle = "rgba(200, 200, 200, 0.7)";
+    for (let i = 0; i < 3; i++) {
+      const smokeX = x + size + 10 + i * 3 + Math.sin((state.player.animationFrame + i) * 0.3) * 2;
+      const smokeY = y + 6 - i * 2;
+      ctx.fillRect(smokeX, smokeY, 1, 1);
+    }
+    
+    // Draw legs in LEATHER BOOTS
+    ctx.fillStyle = "#1a1a1a";
+    const legOffset = isMoving ? Math.sin(state.player.animationFrame * 0.6) * 1 : 0;
+    ctx.fillRect(x + 8, y + size - 4, 3, 8 + legOffset);
+    ctx.fillRect(x + 16, y + size - 4, 3, 8 - legOffset);
+    
+    // Boot details
+    ctx.fillStyle = "#333333";
+    ctx.fillRect(x + 6, y + size + 2, 8, 3);
+    ctx.fillRect(x + 14, y + size + 2, 8, 3);
+    
+    // Draw BADASS WEAPON
+    const weapon = gameStateRef.current.player.weapon;
+    const weaponGradient = ctx.createLinearGradient(x + size, y + 14, x + size + 20, y + 20);
+    weaponGradient.addColorStop(0, WEAPONS_INFO[weapon].color);
+    weaponGradient.addColorStop(1, "#000000");
+    ctx.fillStyle = weaponGradient;
+    ctx.fillRect(x + size - 2, y + 14, 22, 8);
+    
+    // Weapon details - scope, barrel, etc.
+    ctx.fillStyle = "#666666";
+    ctx.fillRect(x + size + 2, y + 16, 2, 2);
+    ctx.fillRect(x + size + 8, y + 15, 8, 1);
+    ctx.fillRect(x + size + 8, y + 21, 8, 1);
+    ctx.fillStyle = "#ff8800";
+    ctx.fillRect(x + size + 16, y + 17, 2, 2);
     
     ctx.restore();
   }, []);
@@ -505,38 +543,115 @@ export default function FlappyBirdGame() {
     const size = GAME_CONFIG.enemy.size;
     
     if (enemy.type === 'guard') {
-      // Draw guard (blue uniform)
-      ctx.fillStyle = "#000080";
-      ctx.fillRect(screenX, enemy.y, size, size);
+      // BADASS GUARD - Military tactical style
       
-      // Draw hat
-      ctx.fillStyle = "#000040";
-      ctx.fillRect(screenX + 2, enemy.y - 2, size - 4, 3);
+      // Draw shadow
+      ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+      ctx.fillRect(screenX, enemy.y + size + 2, size, 4);
       
-      // Draw face
-      ctx.fillStyle = "#ffdbac";
-      ctx.fillRect(screenX + 3, enemy.y + 3, size - 6, size - 8);
+      // Draw TACTICAL ARMOR body
+      const armorGradient = ctx.createLinearGradient(screenX, enemy.y, screenX, enemy.y + size);
+      armorGradient.addColorStop(0, "#2d4a2d");
+      armorGradient.addColorStop(0.5, "#1a2e1a");
+      armorGradient.addColorStop(1, "#0f1f0f");
+      ctx.fillStyle = armorGradient;
+      ctx.fillRect(screenX + 2, enemy.y + 6, size - 4, size - 8);
+      
+      // Armor plates and details
+      ctx.fillStyle = "#4a4a4a";
+      ctx.fillRect(screenX + 4, enemy.y + 8, size - 8, 2);
+      ctx.fillRect(screenX + 4, enemy.y + 12, size - 8, 2);
+      ctx.fillRect(screenX + 4, enemy.y + 16, size - 8, 2);
+      
+      // Draw TACTICAL HELMET
+      ctx.fillStyle = "#1a1a1a";
+      ctx.fillRect(screenX + 3, enemy.y + 2, size - 6, 8);
+      
+      // Helmet visor/goggles - BADASS
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(screenX + 4, enemy.y + 4, size - 8, 4);
+      // Visor reflection
+      ctx.fillStyle = "#333333";
+      ctx.fillRect(screenX + 5, enemy.y + 5, 2, 1);
+      ctx.fillRect(screenX + size - 7, enemy.y + 5, 2, 1);
+      
+      // Draw TACTICAL WEAPON
+      ctx.fillStyle = "#2a2a2a";
+      ctx.fillRect(screenX - 8, enemy.y + 10, 12, 4);
+      ctx.fillStyle = "#666666";
+      ctx.fillRect(screenX - 6, enemy.y + 11, 2, 2);
+      
+      // Combat boots
+      ctx.fillStyle = "#1a1a1a";
+      ctx.fillRect(screenX + 4, enemy.y + size - 2, 4, 6);
+      ctx.fillRect(screenX + size - 8, enemy.y + size - 2, 4, 6);
+      
     } else if (enemy.type === 'dog') {
-      // Draw guard dog (brown)
-      ctx.fillStyle = "#8B4513";
+      // BADASS GUARD DOG - Cybernetic style
+      
+      // Draw shadow
+      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+      ctx.fillRect(screenX, enemy.y + size, size, 3);
+      
+      // Draw cybernetic dog body
+      const dogGradient = ctx.createLinearGradient(screenX, enemy.y, screenX, enemy.y + size);
+      dogGradient.addColorStop(0, "#4a4a4a");
+      dogGradient.addColorStop(0.5, "#2a2a2a");
+      dogGradient.addColorStop(1, "#1a1a1a");
+      ctx.fillStyle = dogGradient;
       ctx.fillRect(screenX, enemy.y, size, size - 4);
       
-      // Draw head
-      ctx.fillStyle = "#A0522D";
+      // Cybernetic implants
+      ctx.fillStyle = "#ff4444";
+      ctx.fillRect(screenX + 2, enemy.y + 2, 2, 2);
+      ctx.fillRect(screenX + size - 4, enemy.y + 2, 2, 2);
+      
+      // Draw robotic head
+      ctx.fillStyle = "#333333";
       ctx.fillRect(screenX + 2, enemy.y - 4, size - 4, 8);
       
-      // Draw ears
-      ctx.fillStyle = "#654321";
-      ctx.fillRect(screenX + 1, enemy.y - 3, 2, 3);
-      ctx.fillRect(screenX + size - 3, enemy.y - 3, 2, 3);
+      // Glowing red eyes
+      ctx.fillStyle = "#ff0000";
+      ctx.fillRect(screenX + 4, enemy.y - 2, 3, 3);
+      ctx.fillRect(screenX + size - 7, enemy.y - 2, 3, 3);
+      
+      // Mechanical ears
+      ctx.fillStyle = "#666666";
+      ctx.fillRect(screenX + 1, enemy.y - 3, 3, 2);
+      ctx.fillRect(screenX + size - 4, enemy.y - 3, 3, 2);
+      
     } else if (enemy.type === 'camera') {
-      // Draw security camera (gray/black)
-      ctx.fillStyle = "#404040";
+      // BADASS SECURITY CAMERA - High-tech surveillance
+      
+      // Draw mounting bracket
+      ctx.fillStyle = "#2a2a2a";
+      ctx.fillRect(screenX + size/2 - 2, enemy.y - 4, 4, 8);
+      
+      // Draw main camera body - sleek design
+      const cameraGradient = ctx.createLinearGradient(screenX, enemy.y, screenX + size, enemy.y);
+      cameraGradient.addColorStop(0, "#1a1a1a");
+      cameraGradient.addColorStop(0.5, "#000000");
+      cameraGradient.addColorStop(1, "#333333");
+      ctx.fillStyle = cameraGradient;
       ctx.fillRect(screenX, enemy.y, size, size - 6);
       
-      // Draw lens
+      // Draw large surveillance lens
       ctx.fillStyle = "#ff0000";
-      ctx.fillRect(screenX + 4, enemy.y + 2, 6, 6);
+      ctx.fillRect(screenX + 3, enemy.y + 2, size - 6, size - 10);
+      
+      // Lens reflection/glare
+      ctx.fillStyle = "#ff6666";
+      ctx.fillRect(screenX + 4, enemy.y + 3, 3, 2);
+      
+      // Additional sensors
+      ctx.fillStyle = "#00ff00";
+      ctx.fillRect(screenX + 1, enemy.y + 1, 2, 2);
+      ctx.fillRect(screenX + size - 3, enemy.y + 1, 2, 2);
+      
+      // Warning lights
+      ctx.fillStyle = "#ffaa00";
+      ctx.fillRect(screenX + 2, enemy.y + size - 4, 2, 1);
+      ctx.fillRect(screenX + size - 4, enemy.y + size - 4, 2, 1);
     }
   }, []);
 
