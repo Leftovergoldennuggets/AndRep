@@ -5,11 +5,11 @@ interface GameState {
   player: {
     x: number;
     y: number;
-    velocityX: number;
     velocityY: number;
     health: number;
     weapon: WeaponType;
     ammo: number;
+    onGround: boolean;
   };
   bullets: Array<{
     x: number;
@@ -21,11 +21,11 @@ interface GameState {
   enemies: Array<{
     x: number;
     y: number;
-    velocityX: number;
     velocityY: number;
     health: number;
     type: 'guard' | 'dog' | 'camera';
     lastShotTime: number;
+    onGround: boolean;
   }>;
   enemyBullets: Array<{
     x: number;
@@ -38,7 +38,7 @@ interface GameState {
     y: number;
     width: number;
     height: number;
-    type: 'wall' | 'fence' | 'crate';
+    type: 'wall' | 'fence' | 'crate' | 'platform' | 'ground';
   }>;
   powerups: Array<{
     x: number;
@@ -46,9 +46,12 @@ interface GameState {
     type: 'health' | 'ammo' | 'weapon';
     weaponType?: WeaponType;
   }>;
+  camera: {
+    x: number;
+  };
   score: number;
-  level: number;
-  gameState: "start" | "playing" | "gameOver" | "victory";
+  distance: number;
+  gameState: "start" | "playing" | "gameOver";
 }
 
 type WeaponType = 'pistol' | 'shotgun' | 'rifle' | 'grenade';
@@ -60,10 +63,11 @@ const GAME_CONFIG = {
   },
   player: {
     size: 16,
-    speed: 3,
     maxHealth: 100,
-    gravity: 0.3,
-    jumpForce: -8,
+    gravity: 0.4,
+    jumpForce: -12,
+    moveSpeed: 2,
+    scrollSpeed: 3, // How fast the world moves left
   },
   weapons: {
     pistol: { damage: 20, fireRate: 300, ammo: 50, spread: 0 },
@@ -73,13 +77,16 @@ const GAME_CONFIG = {
   },
   enemy: {
     size: 14,
-    speed: 1,
     health: 60,
     fireRate: 1500,
+    gravity: 0.4,
   },
   bullet: {
     speed: 8,
     size: 3,
+  },
+  world: {
+    groundLevel: 550, // Y position of the ground
   },
 };
 
@@ -94,21 +101,24 @@ export default function FlappyBirdGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameStateRef = useRef<GameState>({
     player: {
-      x: 100,
-      y: GAME_CONFIG.canvas.height / 2,
-      velocityX: 0,
+      x: 150, // Fixed horizontal position (relative to camera)
+      y: GAME_CONFIG.world.groundLevel - GAME_CONFIG.player.size,
       velocityY: 0,
       health: GAME_CONFIG.player.maxHealth,
       weapon: 'pistol',
       ammo: GAME_CONFIG.weapons.pistol.ammo,
+      onGround: true,
     },
     bullets: [],
     enemies: [],
     enemyBullets: [],
     obstacles: [],
     powerups: [],
+    camera: {
+      x: 0,
+    },
     score: 0,
-    level: 1,
+    distance: 0,
     gameState: "start",
   });
   
@@ -117,84 +127,158 @@ export default function FlappyBirdGame() {
   const lastShotTime = useRef<number>(0);
 
   const [displayScore, setDisplayScore] = useState(0);
-  const [gameState, setGameState] = useState<"start" | "playing" | "gameOver" | "victory">("start");
+  const [gameState, setGameState] = useState<"start" | "playing" | "gameOver">("start");
+  const [distance, setDistance] = useState(0);
 
   const resetGame = useCallback(() => {
     gameStateRef.current = {
       player: {
-        x: 100,
-        y: GAME_CONFIG.canvas.height / 2,
-        velocityX: 0,
+        x: 150,
+        y: GAME_CONFIG.world.groundLevel - GAME_CONFIG.player.size,
         velocityY: 0,
         health: GAME_CONFIG.player.maxHealth,
         weapon: 'pistol',
         ammo: GAME_CONFIG.weapons.pistol.ammo,
+        onGround: true,
       },
       bullets: [],
       enemies: [],
       enemyBullets: [],
       obstacles: [],
       powerups: [],
+      camera: {
+        x: 0,
+      },
       score: 0,
-      level: 1,
+      distance: 0,
       gameState: "start",
     };
     setDisplayScore(0);
     setGameState("start");
+    setDistance(0);
     keysRef.current.clear();
   }, []);
 
-  const generateLevel = useCallback(() => {
+  const generateObstacles = useCallback((startX: number, endX: number) => {
     const state = gameStateRef.current;
+    const obstacles: typeof state.obstacles = [];
     
-    // Clear existing entities
-    state.enemies = [];
-    state.obstacles = [];
-    state.powerups = [];
+    // Generate ground segments
+    for (let x = startX; x < endX; x += 40) {
+      obstacles.push({
+        x,
+        y: GAME_CONFIG.world.groundLevel,
+        width: 40,
+        height: GAME_CONFIG.canvas.height - GAME_CONFIG.world.groundLevel,
+        type: 'ground',
+      });
+    }
     
     // Generate prison walls and obstacles
-    for (let i = 0; i < 15 + state.level * 3; i++) {
-      state.obstacles.push({
-        x: Math.random() * (GAME_CONFIG.canvas.width - 100) + 200,
-        y: Math.random() * (GAME_CONFIG.canvas.height - 100) + 50,
-        width: 20 + Math.random() * 40,
-        height: 20 + Math.random() * 40,
-        type: Math.random() < 0.6 ? 'wall' : Math.random() < 0.8 ? 'crate' : 'fence',
-      });
+    for (let x = startX; x < endX; x += 200 + Math.random() * 200) {
+      const obstacleType = Math.random();
+      
+      if (obstacleType < 0.3) {
+        // Wall obstacle
+        const height = 80 + Math.random() * 120;
+        obstacles.push({
+          x: x + Math.random() * 100,
+          y: GAME_CONFIG.world.groundLevel - height,
+          width: 20 + Math.random() * 40,
+          height: height,
+          type: 'wall',
+        });
+      } else if (obstacleType < 0.6) {
+        // Platform obstacle
+        obstacles.push({
+          x: x + Math.random() * 100,
+          y: GAME_CONFIG.world.groundLevel - 120 - Math.random() * 100,
+          width: 60 + Math.random() * 80,
+          height: 20,
+          type: 'platform',
+        });
+      } else {
+        // Fence obstacle
+        obstacles.push({
+          x: x + Math.random() * 100,
+          y: GAME_CONFIG.world.groundLevel - 60,
+          width: 10,
+          height: 60,
+          type: 'fence',
+        });
+      }
     }
     
-    // Generate enemies
-    for (let i = 0; i < 3 + state.level; i++) {
-      state.enemies.push({
-        x: Math.random() * (GAME_CONFIG.canvas.width - 200) + 300,
-        y: Math.random() * (GAME_CONFIG.canvas.height - 100) + 50,
-        velocityX: (Math.random() - 0.5) * 2,
-        velocityY: (Math.random() - 0.5) * 2,
-        health: GAME_CONFIG.enemy.health + state.level * 10,
-        type: Math.random() < 0.7 ? 'guard' : Math.random() < 0.9 ? 'dog' : 'camera',
+    return obstacles;
+  }, []);
+
+  const generateEnemies = useCallback((startX: number, endX: number) => {
+    const enemies: GameState['enemies'] = [];
+    
+    for (let x = startX; x < endX; x += 300 + Math.random() * 400) {
+      const enemyType = Math.random() < 0.7 ? 'guard' : Math.random() < 0.9 ? 'dog' : 'camera';
+      const enemyY = enemyType === 'camera' ? 
+        GAME_CONFIG.world.groundLevel - 100 - Math.random() * 200 : 
+        GAME_CONFIG.world.groundLevel - GAME_CONFIG.enemy.size;
+      
+      enemies.push({
+        x: x + Math.random() * 200,
+        y: enemyY,
+        velocityY: 0,
+        health: GAME_CONFIG.enemy.health,
+        type: enemyType,
         lastShotTime: 0,
+        onGround: enemyType !== 'camera',
       });
     }
     
-    // Generate powerups
-    for (let i = 0; i < 2 + Math.floor(state.level / 2); i++) {
+    return enemies;
+  }, []);
+
+  const generatePowerups = useCallback((startX: number, endX: number) => {
+    const powerups: GameState['powerups'] = [];
+    
+    for (let x = startX; x < endX; x += 400 + Math.random() * 600) {
       const powerupType = Math.random() < 0.4 ? 'health' : Math.random() < 0.7 ? 'ammo' : 'weapon';
-      state.powerups.push({
-        x: Math.random() * (GAME_CONFIG.canvas.width - 100) + 50,
-        y: Math.random() * (GAME_CONFIG.canvas.height - 100) + 50,
+      powerups.push({
+        x: x + Math.random() * 200,
+        y: GAME_CONFIG.world.groundLevel - 40 - Math.random() * 200,
         type: powerupType,
         weaponType: powerupType === 'weapon' ? 
           (['shotgun', 'rifle', 'grenade'] as WeaponType[])[Math.floor(Math.random() * 3)] : 
           undefined,
       });
     }
+    
+    return powerups;
   }, []);
 
   const startGame = useCallback(() => {
-    gameStateRef.current.gameState = "playing";
+    const state = gameStateRef.current;
+    state.gameState = "playing";
     setGameState("playing");
-    generateLevel();
-  }, [generateLevel]);
+    
+    // Generate initial world content
+    const newObstacles = generateObstacles(0, 2000);
+    const newEnemies = generateEnemies(400, 2000);
+    const newPowerups = generatePowerups(200, 2000);
+    
+    state.obstacles = newObstacles;
+    state.enemies = newEnemies;
+    state.powerups = newPowerups;
+  }, [generateObstacles, generateEnemies, generatePowerups]);
+
+  const jump = useCallback(() => {
+    const state = gameStateRef.current;
+    if (state.gameState === "start") {
+      startGame();
+      return;
+    }
+    if (state.gameState === "playing" && state.player.onGround) {
+      state.player.velocityY = GAME_CONFIG.player.jumpForce;
+      state.player.onGround = false;
+    }
+  }, [startGame]);
 
   const shoot = useCallback(() => {
     const state = gameStateRef.current;
@@ -208,7 +292,6 @@ export default function FlappyBirdGame() {
     lastShotTime.current = currentTime;
     state.player.ammo--;
     
-    // Calculate bullet direction (towards mouse or default right)
     const bulletSpeed = GAME_CONFIG.bullet.speed;
     
     if (state.player.weapon === 'shotgun') {
@@ -216,7 +299,7 @@ export default function FlappyBirdGame() {
       for (let i = 0; i < 5; i++) {
         const spread = (Math.random() - 0.5) * weapon.spread;
         state.bullets.push({
-          x: state.player.x + GAME_CONFIG.player.size,
+          x: state.player.x + state.camera.x + GAME_CONFIG.player.size,
           y: state.player.y + GAME_CONFIG.player.size / 2,
           velocityX: bulletSpeed + spread * 2,
           velocityY: spread,
@@ -226,7 +309,7 @@ export default function FlappyBirdGame() {
     } else {
       const spread = (Math.random() - 0.5) * weapon.spread;
       state.bullets.push({
-        x: state.player.x + GAME_CONFIG.player.size,
+        x: state.player.x + state.camera.x + GAME_CONFIG.player.size,
         y: state.player.y + GAME_CONFIG.player.size / 2,
         velocityX: bulletSpeed,
         velocityY: spread,
@@ -240,6 +323,20 @@ export default function FlappyBirdGame() {
            rect1.x + (rect1.size || rect1.width) > rect2.x &&
            rect1.y < rect2.y + rect2.height &&
            rect1.y + (rect1.size || rect1.height) > rect2.y;
+  }, []);
+
+  const applyGravity = useCallback((entity: any) => {
+    entity.velocityY += GAME_CONFIG.player.gravity;
+    entity.y += entity.velocityY;
+    
+    // Ground collision
+    if (entity.y + (entity.size || GAME_CONFIG.player.size) >= GAME_CONFIG.world.groundLevel) {
+      entity.y = GAME_CONFIG.world.groundLevel - (entity.size || GAME_CONFIG.player.size);
+      entity.velocityY = 0;
+      entity.onGround = true;
+    } else {
+      entity.onGround = false;
+    }
   }, []);
 
   const drawPlayer = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number) => {
@@ -274,42 +371,42 @@ export default function FlappyBirdGame() {
     ctx.fillRect(x + size, y + 8, 8, 2);
   }, []);
 
-  const drawEnemy = useCallback((ctx: CanvasRenderingContext2D, enemy: any) => {
+  const drawEnemy = useCallback((ctx: CanvasRenderingContext2D, enemy: any, screenX: number) => {
     const size = GAME_CONFIG.enemy.size;
     
     if (enemy.type === 'guard') {
       // Draw guard (blue uniform)
       ctx.fillStyle = "#000080";
-      ctx.fillRect(enemy.x, enemy.y, size, size);
+      ctx.fillRect(screenX, enemy.y, size, size);
       
       // Draw hat
       ctx.fillStyle = "#000040";
-      ctx.fillRect(enemy.x + 2, enemy.y - 2, size - 4, 3);
+      ctx.fillRect(screenX + 2, enemy.y - 2, size - 4, 3);
       
       // Draw face
       ctx.fillStyle = "#ffdbac";
-      ctx.fillRect(enemy.x + 3, enemy.y + 3, size - 6, size - 8);
+      ctx.fillRect(screenX + 3, enemy.y + 3, size - 6, size - 8);
     } else if (enemy.type === 'dog') {
       // Draw guard dog (brown)
       ctx.fillStyle = "#8B4513";
-      ctx.fillRect(enemy.x, enemy.y, size, size - 4);
+      ctx.fillRect(screenX, enemy.y, size, size - 4);
       
       // Draw head
       ctx.fillStyle = "#A0522D";
-      ctx.fillRect(enemy.x + 2, enemy.y - 4, size - 4, 8);
+      ctx.fillRect(screenX + 2, enemy.y - 4, size - 4, 8);
       
       // Draw ears
       ctx.fillStyle = "#654321";
-      ctx.fillRect(enemy.x + 1, enemy.y - 3, 2, 3);
-      ctx.fillRect(enemy.x + size - 3, enemy.y - 3, 2, 3);
+      ctx.fillRect(screenX + 1, enemy.y - 3, 2, 3);
+      ctx.fillRect(screenX + size - 3, enemy.y - 3, 2, 3);
     } else if (enemy.type === 'camera') {
       // Draw security camera (gray/black)
       ctx.fillStyle = "#404040";
-      ctx.fillRect(enemy.x, enemy.y, size, size - 6);
+      ctx.fillRect(screenX, enemy.y, size, size - 6);
       
       // Draw lens
       ctx.fillStyle = "#ff0000";
-      ctx.fillRect(enemy.x + 4, enemy.y + 2, 6, 6);
+      ctx.fillRect(screenX + 4, enemy.y + 2, 6, 6);
     }
   }, []);
 
@@ -323,52 +420,40 @@ export default function FlappyBirdGame() {
     const state = gameStateRef.current;
 
     if (state.gameState === "playing") {
-      // Handle player movement
+      // Move camera forward (endless scrolling)
+      state.camera.x += GAME_CONFIG.player.scrollSpeed;
+      state.distance = Math.floor(state.camera.x / 10);
+      setDistance(state.distance);
+
+      // Handle player horizontal movement (limited)
       if (keysRef.current.has('ArrowLeft') || keysRef.current.has('KeyA')) {
-        state.player.velocityX = -GAME_CONFIG.player.speed;
-      } else if (keysRef.current.has('ArrowRight') || keysRef.current.has('KeyD')) {
-        state.player.velocityX = GAME_CONFIG.player.speed;
-      } else {
-        state.player.velocityX *= 0.8; // Friction
+        state.player.x = Math.max(50, state.player.x - GAME_CONFIG.player.moveSpeed);
+      }
+      if (keysRef.current.has('ArrowRight') || keysRef.current.has('KeyD')) {
+        state.player.x = Math.min(300, state.player.x + GAME_CONFIG.player.moveSpeed);
       }
 
-      if (keysRef.current.has('ArrowUp') || keysRef.current.has('KeyW')) {
-        state.player.velocityY = -GAME_CONFIG.player.speed;
-      } else if (keysRef.current.has('ArrowDown') || keysRef.current.has('KeyS')) {
-        state.player.velocityY = GAME_CONFIG.player.speed;
-      } else {
-        state.player.velocityY *= 0.8; // Friction
-      }
+      // Apply gravity to player
+      applyGravity(state.player);
 
-      // Check obstacle collision before moving
-      const newPlayerX = state.player.x + state.player.velocityX;
-      const newPlayerY = state.player.y + state.player.velocityY;
-      
-      let canMoveX = true;
-      let canMoveY = true;
-      
+      // Platform collision for player
       for (const obstacle of state.obstacles) {
-        // Check X movement
-        if (checkCollision({ x: newPlayerX, y: state.player.y, size: GAME_CONFIG.player.size }, obstacle)) {
-          canMoveX = false;
+        if (obstacle.type === 'platform') {
+          const screenX = obstacle.x - state.camera.x;
+          if (screenX > -obstacle.width && screenX < GAME_CONFIG.canvas.width) {
+            if (checkCollision(
+              { x: state.player.x, y: state.player.y, size: GAME_CONFIG.player.size },
+              { x: screenX, y: obstacle.y, width: obstacle.width, height: obstacle.height }
+            )) {
+              if (state.player.velocityY > 0) { // Falling down
+                state.player.y = obstacle.y - GAME_CONFIG.player.size;
+                state.player.velocityY = 0;
+                state.player.onGround = true;
+              }
+            }
+          }
         }
-        // Check Y movement
-        if (checkCollision({ x: state.player.x, y: newPlayerY, size: GAME_CONFIG.player.size }, obstacle)) {
-          canMoveY = false;
-        }
       }
-      
-      // Update position only if no collision
-      if (canMoveX) {
-        state.player.x = newPlayerX;
-      }
-      if (canMoveY) {
-        state.player.y = newPlayerY;
-      }
-
-      // Keep player in bounds
-      state.player.x = Math.max(0, Math.min(GAME_CONFIG.canvas.width - GAME_CONFIG.player.size, state.player.x));
-      state.player.y = Math.max(0, Math.min(GAME_CONFIG.canvas.height - GAME_CONFIG.player.size, state.player.y));
 
       // Update bullets
       state.bullets.forEach((bullet) => {
@@ -378,15 +463,15 @@ export default function FlappyBirdGame() {
 
       // Remove bullets that are off screen or hit obstacles
       state.bullets = state.bullets.filter(bullet => {
-        // Check if bullet is off screen
-        if (bullet.x < -10 || bullet.x > GAME_CONFIG.canvas.width + 10 ||
+        const screenX = bullet.x - state.camera.x;
+        if (screenX < -50 || screenX > GAME_CONFIG.canvas.width + 50 ||
             bullet.y < -10 || bullet.y > GAME_CONFIG.canvas.height + 10) {
           return false;
         }
         
-        // Check if bullet hits obstacle
         for (const obstacle of state.obstacles) {
-          if (checkCollision(bullet, { ...obstacle, size: GAME_CONFIG.bullet.size })) {
+          const obstacleScreenX = obstacle.x - state.camera.x;
+          if (checkCollision(bullet, { x: obstacleScreenX, y: obstacle.y, width: obstacle.width, height: obstacle.height })) {
             return false;
           }
         }
@@ -397,31 +482,33 @@ export default function FlappyBirdGame() {
       // Update enemies
       const currentTime = Date.now();
       state.enemies.forEach((enemy) => {
-        // Simple AI - move towards player
-        const dx = state.player.x - enemy.x;
+        // Apply gravity to enemies
+        if (enemy.type !== 'camera') {
+          applyGravity(enemy);
+        }
+        
+        const screenX = enemy.x - state.camera.x;
+        const dx = (state.player.x + state.camera.x) - enemy.x;
         const dy = state.player.y - enemy.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        if (distance > 0) {
-          enemy.velocityX = (dx / distance) * GAME_CONFIG.enemy.speed;
-          enemy.velocityY = (dy / distance) * GAME_CONFIG.enemy.speed;
-        }
-        
-        enemy.x += enemy.velocityX;
-        enemy.y += enemy.velocityY;
-
         // Enemy shooting
-        if (enemy.type === 'guard' && distance < 200 && currentTime - enemy.lastShotTime > GAME_CONFIG.enemy.fireRate) {
-          enemy.lastShotTime = currentTime;
-          const bulletSpeed = GAME_CONFIG.bullet.speed * 0.7;
-          state.enemyBullets.push({
-            x: enemy.x + GAME_CONFIG.enemy.size / 2,
-            y: enemy.y + GAME_CONFIG.enemy.size / 2,
-            velocityX: (dx / distance) * bulletSpeed,
-            velocityY: (dy / distance) * bulletSpeed,
-          });
+        if (enemy.type === 'guard' && distance < 200 && screenX > -100 && screenX < GAME_CONFIG.canvas.width + 100) {
+          if (currentTime - enemy.lastShotTime > GAME_CONFIG.enemy.fireRate) {
+            enemy.lastShotTime = currentTime;
+            const bulletSpeed = GAME_CONFIG.bullet.speed * 0.7;
+            state.enemyBullets.push({
+              x: enemy.x,
+              y: enemy.y + GAME_CONFIG.enemy.size / 2,
+              velocityX: (dx / distance) * bulletSpeed,
+              velocityY: (dy / distance) * bulletSpeed,
+            });
+          }
         }
       });
+
+      // Remove enemies that are far behind camera
+      state.enemies = state.enemies.filter(enemy => enemy.x > state.camera.x - 200);
 
       // Update enemy bullets
       state.enemyBullets.forEach((bullet) => {
@@ -430,10 +517,11 @@ export default function FlappyBirdGame() {
       });
 
       // Remove enemy bullets that are off screen
-      state.enemyBullets = state.enemyBullets.filter(bullet => 
-        bullet.x > -10 && bullet.x < GAME_CONFIG.canvas.width + 10 &&
-        bullet.y > -10 && bullet.y < GAME_CONFIG.canvas.height + 10
-      );
+      state.enemyBullets = state.enemyBullets.filter(bullet => {
+        const screenX = bullet.x - state.camera.x;
+        return screenX > -50 && screenX < GAME_CONFIG.canvas.width + 50 &&
+               bullet.y > -10 && bullet.y < GAME_CONFIG.canvas.height + 10;
+      });
 
       // Check bullet-enemy collisions
       for (let i = state.bullets.length - 1; i >= 0; i--) {
@@ -457,7 +545,11 @@ export default function FlappyBirdGame() {
       // Check enemy bullet-player collisions
       for (let i = state.enemyBullets.length - 1; i >= 0; i--) {
         const bullet = state.enemyBullets[i];
-        if (checkCollision(bullet, { ...state.player, width: GAME_CONFIG.player.size, height: GAME_CONFIG.player.size })) {
+        const playerWorldX = state.player.x + state.camera.x;
+        if (checkCollision(
+          { x: playerWorldX, y: state.player.y, size: GAME_CONFIG.player.size },
+          { x: bullet.x, y: bullet.y, size: GAME_CONFIG.bullet.size }
+        )) {
           state.player.health -= 10;
           state.enemyBullets.splice(i, 1);
           
@@ -471,7 +563,11 @@ export default function FlappyBirdGame() {
       // Check powerup collisions
       for (let i = state.powerups.length - 1; i >= 0; i--) {
         const powerup = state.powerups[i];
-        if (checkCollision(state.player, { ...powerup, width: 12, height: 12 })) {
+        const playerWorldX = state.player.x + state.camera.x;
+        if (checkCollision(
+          { x: playerWorldX, y: state.player.y, size: GAME_CONFIG.player.size },
+          { x: powerup.x, y: powerup.y, width: 12, height: 12 }
+        )) {
           if (powerup.type === 'health') {
             state.player.health = Math.min(GAME_CONFIG.player.maxHealth, state.player.health + 30);
           } else if (powerup.type === 'ammo') {
@@ -484,76 +580,87 @@ export default function FlappyBirdGame() {
         }
       }
 
-      // Check if level is complete (all enemies defeated)
-      if (state.enemies.length === 0) {
-        state.level++;
-        if (state.level > 5) {
-          state.gameState = "victory";
-          setGameState("victory");
-        } else {
-          generateLevel();
-        }
+      // Remove powerups that are far behind camera
+      state.powerups = state.powerups.filter(powerup => powerup.x > state.camera.x - 100);
+
+      // Generate new world content ahead of camera
+      const worldEnd = state.obstacles.length > 0 ? Math.max(...state.obstacles.map(o => o.x)) + 100 : 0;
+      if (worldEnd < state.camera.x + GAME_CONFIG.canvas.width + 1000) {
+        const newObstacles = generateObstacles(worldEnd, worldEnd + 1000);
+        const newEnemies = generateEnemies(worldEnd, worldEnd + 1000);
+        const newPowerups = generatePowerups(worldEnd, worldEnd + 1000);
+        
+        state.obstacles.push(...newObstacles);
+        state.enemies.push(...newEnemies);
+        state.powerups.push(...newPowerups);
       }
+
+      // Remove old obstacles behind camera
+      state.obstacles = state.obstacles.filter(obstacle => obstacle.x > state.camera.x - 200);
     }
 
     // Clear canvas
     ctx.clearRect(0, 0, GAME_CONFIG.canvas.width, GAME_CONFIG.canvas.height);
 
-    // Draw prison background
-    ctx.fillStyle = "#2F4F4F";
-    ctx.fillRect(0, 0, GAME_CONFIG.canvas.width, GAME_CONFIG.canvas.height);
-    
-    // Draw grid pattern for prison floor
+    // Draw sky background
+    ctx.fillStyle = "#87CEEB";
+    ctx.fillRect(0, 0, GAME_CONFIG.canvas.width, GAME_CONFIG.world.groundLevel);
+
+    // Draw prison background elements (moving with camera)
     ctx.strokeStyle = "#696969";
     ctx.lineWidth = 1;
-    for (let x = 0; x < GAME_CONFIG.canvas.width; x += 40) {
+    for (let x = -(state.camera.x % 40); x < GAME_CONFIG.canvas.width; x += 40) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, GAME_CONFIG.canvas.height);
-      ctx.stroke();
-    }
-    for (let y = 0; y < GAME_CONFIG.canvas.height; y += 40) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(GAME_CONFIG.canvas.width, y);
       ctx.stroke();
     }
 
     if (state.gameState !== "start") {
       // Draw obstacles
       state.obstacles.forEach((obstacle) => {
-        if (obstacle.type === 'wall') {
-          ctx.fillStyle = "#8B4513";
-        } else if (obstacle.type === 'crate') {
-          ctx.fillStyle = "#D2691E";
-        } else {
-          ctx.fillStyle = "#708090";
+        const screenX = obstacle.x - state.camera.x;
+        if (screenX > -obstacle.width && screenX < GAME_CONFIG.canvas.width) {
+          if (obstacle.type === 'ground') {
+            ctx.fillStyle = "#8B4513";
+          } else if (obstacle.type === 'wall') {
+            ctx.fillStyle = "#696969";
+          } else if (obstacle.type === 'platform') {
+            ctx.fillStyle = "#8B8B8B";
+          } else if (obstacle.type === 'crate') {
+            ctx.fillStyle = "#D2691E";
+          } else {
+            ctx.fillStyle = "#708090";
+          }
+          ctx.fillRect(screenX, obstacle.y, obstacle.width, obstacle.height);
+          
+          // Add border
+          ctx.strokeStyle = "#000000";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(screenX, obstacle.y, obstacle.width, obstacle.height);
         }
-        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-        
-        // Add some detail
-        ctx.strokeStyle = "#000000";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
       });
 
       // Draw powerups
       state.powerups.forEach((powerup) => {
-        if (powerup.type === 'health') {
-          ctx.fillStyle = "#ff0000";
-        } else if (powerup.type === 'ammo') {
-          ctx.fillStyle = "#ffff00";
-        } else {
-          ctx.fillStyle = "#00ff00";
+        const screenX = powerup.x - state.camera.x;
+        if (screenX > -12 && screenX < GAME_CONFIG.canvas.width) {
+          if (powerup.type === 'health') {
+            ctx.fillStyle = "#ff0000";
+          } else if (powerup.type === 'ammo') {
+            ctx.fillStyle = "#ffff00";
+          } else {
+            ctx.fillStyle = "#00ff00";
+          }
+          ctx.fillRect(screenX, powerup.y, 12, 12);
+          
+          // Add icon
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "8px Arial";
+          ctx.textAlign = "center";
+          const text = powerup.type === 'health' ? '+' : powerup.type === 'ammo' ? 'A' : 'W';
+          ctx.fillText(text, screenX + 6, powerup.y + 8);
         }
-        ctx.fillRect(powerup.x, powerup.y, 12, 12);
-        
-        // Add icon
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "8px Arial";
-        ctx.textAlign = "center";
-        const text = powerup.type === 'health' ? '+' : powerup.type === 'ammo' ? 'A' : 'W';
-        ctx.fillText(text, powerup.x + 6, powerup.y + 8);
       });
 
       // Draw player
@@ -561,19 +668,28 @@ export default function FlappyBirdGame() {
 
       // Draw enemies
       state.enemies.forEach((enemy) => {
-        drawEnemy(ctx, enemy);
+        const screenX = enemy.x - state.camera.x;
+        if (screenX > -GAME_CONFIG.enemy.size && screenX < GAME_CONFIG.canvas.width) {
+          drawEnemy(ctx, enemy, screenX);
+        }
       });
 
       // Draw bullets
       ctx.fillStyle = "#ffff00";
       state.bullets.forEach((bullet) => {
-        ctx.fillRect(bullet.x, bullet.y, GAME_CONFIG.bullet.size, GAME_CONFIG.bullet.size);
+        const screenX = bullet.x - state.camera.x;
+        if (screenX > -GAME_CONFIG.bullet.size && screenX < GAME_CONFIG.canvas.width) {
+          ctx.fillRect(screenX, bullet.y, GAME_CONFIG.bullet.size, GAME_CONFIG.bullet.size);
+        }
       });
 
       // Draw enemy bullets
       ctx.fillStyle = "#ff4444";
       state.enemyBullets.forEach((bullet) => {
-        ctx.fillRect(bullet.x, bullet.y, GAME_CONFIG.bullet.size, GAME_CONFIG.bullet.size);
+        const screenX = bullet.x - state.camera.x;
+        if (screenX > -GAME_CONFIG.bullet.size && screenX < GAME_CONFIG.canvas.width) {
+          ctx.fillRect(screenX, bullet.y, GAME_CONFIG.bullet.size, GAME_CONFIG.bullet.size);
+        }
       });
 
       // Draw HUD
@@ -581,13 +697,13 @@ export default function FlappyBirdGame() {
       ctx.font = "16px Arial";
       ctx.textAlign = "left";
       ctx.fillText(`Score: ${state.score}`, 10, 25);
-      ctx.fillText(`Level: ${state.level}`, 10, 50);
+      ctx.fillText(`Distance: ${state.distance}m`, 10, 50);
       ctx.fillText(`Health: ${state.player.health}`, 10, 75);
       ctx.fillText(`${WEAPONS_INFO[state.player.weapon].name}: ${state.player.ammo}`, 10, 100);
     }
 
     animationRef.current = requestAnimationFrame(gameLoop);
-  }, [drawPlayer, drawEnemy, checkCollision, generateLevel]);
+  }, [drawPlayer, drawEnemy, checkCollision, applyGravity, generateObstacles, generateEnemies, generatePowerups]);
 
   useEffect(() => {
     gameLoop();
@@ -602,7 +718,11 @@ export default function FlappyBirdGame() {
     const handleKeyDown = (e: KeyboardEvent) => {
       keysRef.current.add(e.code);
       
-      if (e.code === "Space") {
+      if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW") {
+        e.preventDefault();
+        jump();
+      }
+      if (e.code === "KeyX" || e.code === "KeyZ") {
         e.preventDefault();
         shoot();
       }
@@ -630,7 +750,7 @@ export default function FlappyBirdGame() {
       document.removeEventListener("keyup", handleKeyUp);
       canvas?.removeEventListener("click", handleClick);
     };
-  }, [shoot, startGame]);
+  }, [jump, shoot, startGame]);
 
   return (
     <div className="relative">
@@ -645,16 +765,17 @@ export default function FlappyBirdGame() {
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 rounded-lg">
           <div className="text-center text-white">
             <h1 className="text-4xl font-bold mb-4 text-red-500">Prison Break Rooster</h1>
-            <p className="mb-4">A rebellious rooster fights through a high-security chicken farm!</p>
-            <p className="mb-2 text-sm">WASD/Arrow Keys: Move</p>
-            <p className="mb-2 text-sm">Space/Click: Shoot</p>
-            <p className="mb-6 text-sm">Collect powerups and escape through 5 levels!</p>
+            <p className="mb-4">Endless escape through the prison compound!</p>
+            <p className="mb-2 text-sm">Space/W/↑: Jump</p>
+            <p className="mb-2 text-sm">A/D/←/→: Move Left/Right</p>
+            <p className="mb-2 text-sm">X/Z/Click: Shoot</p>
+            <p className="mb-6 text-sm">How far can you escape?</p>
             <button
               onClick={startGame}
               className="btn btn-primary btn-lg not-prose"
             >
               <Play className="w-6 h-6 mr-2" />
-              Start Prison Break
+              Start Endless Escape
             </button>
           </div>
         </div>
@@ -665,31 +786,13 @@ export default function FlappyBirdGame() {
           <div className="text-center text-white">
             <h2 className="text-3xl font-bold mb-4 text-red-500">Captured!</h2>
             <p className="text-xl mb-2">Final Score: {displayScore}</p>
-            <p className="text-lg mb-6">Reached Level: {gameStateRef.current.level}</p>
+            <p className="text-lg mb-6">Distance Escaped: {distance}m</p>
             <button
               onClick={resetGame}
               className="btn btn-secondary btn-lg not-prose"
             >
               <RotateCcw className="w-6 h-6 mr-2" />
-              Try Again
-            </button>
-          </div>
-        </div>
-      )}
-
-      {gameState === "victory" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 rounded-lg">
-          <div className="text-center text-white">
-            <h2 className="text-3xl font-bold mb-4 text-green-500">FREEDOM!</h2>
-            <p className="text-xl mb-2">You escaped the prison farm!</p>
-            <p className="text-lg mb-2">Final Score: {displayScore}</p>
-            <p className="text-lg mb-6">You're a true rebel rooster! 🐓</p>
-            <button
-              onClick={resetGame}
-              className="btn btn-primary btn-lg not-prose"
-            >
-              <Play className="w-6 h-6 mr-2" />
-              Play Again
+              Try Escape Again
             </button>
           </div>
         </div>
@@ -697,7 +800,7 @@ export default function FlappyBirdGame() {
 
       <div className="mt-4 text-center text-white">
         <p className="text-sm opacity-80">
-          Fight your way to freedom, rebel rooster! 🐓💥
+          Keep running, rebel rooster! The prison never ends! 🐓🏃‍♂️
         </p>
       </div>
     </div>

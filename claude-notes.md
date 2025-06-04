@@ -1,29 +1,30 @@
 # Claude Code Session Notes
 
 ## Current Session
-- **Step**: 9 - Completely reimplemented as prison escape game
+- **Step**: 10 - Transformed into endless side-scrolling prison escape with gravity
 - **Start Commit**: d149214 feat: add epic fire dragons with flame shooting attacks and collision detection
-- **Session Commits**: d149214 (previous version completed)
+- **Session Commits**: d149214 (previous version), 31696c5 (2D prison escape)
 
-## Project Transformation Progress
-- ✅ Previous: Completed enhanced Flappy Bird with rebel rooster, dragons, Van Gogh backgrounds
-- ✅ NEW: Completely replaced with 2D prison escape game
-- ✅ Implemented rooster player character with WASD/arrow key movement
-- ✅ Added weapon system: pistol, shotgun, rifle, grenade with different stats
-- ✅ Created enemy AI: guards, dogs, cameras with shooting behavior
-- ✅ Built level generation: obstacles (walls, crates, fences), powerups, scaling difficulty
-- ✅ Added collision detection: player vs obstacles, bullets vs enemies/obstacles
-- ✅ Implemented game progression: 5 levels, victory condition, score system
-- ✅ Added visual feedback: prison grid background, different enemy types, HUD display
+## Project Evolution Progress
+- ✅ Step 1-8: Enhanced Flappy Bird with rebel rooster, dragons, Van Gogh backgrounds  
+- ✅ Step 9: Reimplemented as 2D top-down prison escape game
+- ✅ Step 10: NEW: Transformed into side-scrolling endless runner with gravity physics
+- ✅ Added gravity system: rooster falls and jumps with physics
+- ✅ Converted to side-scrolling: camera moves forward automatically, world scrolls left
+- ✅ Endless generation: infinite prison compound with procedural obstacles, enemies, powerups
+- ✅ Platform mechanics: rooster can jump on platforms and obstacles
+- ✅ Limited horizontal movement: player can move left/right within screen boundaries
+- ✅ Distance tracking: escape progress measured in meters
+- ✅ Redesigned controls: Space/W/↑ to jump, A/D/arrows for horizontal movement, X/Z/click to shoot
 
 ## App Details
-- **Type**: "Prison Break Rooster" - 2D top-down action game
-- **Character**: Pixel art rooster with weapon system
-- **Gameplay**: Fight through high-security chicken farm using various weapons
-- **Enemies**: Guards (blue uniforms, shoot bullets), Guard Dogs (brown, chase player), Security Cameras (red lens)
-- **Weapons**: Pistol (fast, accurate), Shotgun (spread damage), Rifle (high damage), Grenade (explosive damage)
-- **Core Mechanics**: WASD movement, space/click to shoot, collect powerups, avoid enemy bullets
-- **Features**: 5 levels of increasing difficulty, health/ammo/weapon powerups, victory escape condition
+- **Type**: "Prison Break Rooster" - Side-scrolling endless runner with gravity
+- **Character**: Pixel art rooster with gravity physics and weapons
+- **Gameplay**: Jump and shoot through endless prison compound while automatically moving forward
+- **Enemies**: Guards (shoot at player), Guard Dogs (ground-based), Security Cameras (wall-mounted)
+- **Weapons**: Pistol, Shotgun, Rifle, Grenade - same weapon system but with side-scrolling bullets
+- **Core Mechanics**: Gravity + jumping, limited horizontal movement, endless auto-scrolling, shooting enemies
+- **Features**: Infinite procedural generation, platform collision, distance scoring, powerup collection
 
 ## MVP Implementation Plan
 - **Frontend**: Canvas-based game with HTML5 Canvas and requestAnimationFrame
