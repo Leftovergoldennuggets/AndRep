@@ -106,7 +106,8 @@ interface GameState {
   alertLevel: number;
   score: number;
   distance: number;
-  gameState: "start" | "playing" | "gameOver" | "missionComplete" | "bossIntro" | "levelComplete";
+  gameState: "start" | "story" | "playing" | "gameOver" | "missionComplete" | "bossIntro" | "levelComplete";
+  storySlide: number;
 }
 
 type WeaponType = 'pistol' | 'shotgun' | 'rifle' | 'grenade';
@@ -151,6 +152,72 @@ const WEAPONS_INFO = {
   rifle: { name: "Rifle", color: "#2F4F4F" },
   grenade: { name: "Grenade", color: "#556B2F" },
 };
+
+const STORY_SLIDES = [
+  {
+    title: "Meet Red",
+    subtitle: "The Prize Rooster",
+    text: "Once the star of Blackwater Prison's farm program...",
+    ascii: `
+      🏆
+     🐓
+    ╭───╮
+    │🌽🥕│  Prize Rooster
+    ╰───╯   of the Year
+    `,
+    color: "text-yellow-400"
+  },
+  {
+    title: "Years of Suffering", 
+    subtitle: "Witnessing Injustice",
+    text: "Red watched helplessly as guards abused innocent animals.",
+    ascii: `
+    ⚡💥  😡👮‍♂️
+      🐷   ←─── Guards
+      🐮        hurting
+      🐰        animals
+    `,
+    color: "text-red-400"
+  },
+  {
+    title: "The Breaking Point",
+    subtitle: "Wilbur's Sacrifice", 
+    text: "When they executed his best friend Wilbur for protecting others...",
+    ascii: `
+       💔
+      🐷💫  "Wilbur..."
+     ╱   ╲
+    🐓     ⚰️
+   Red    Goodbye
+    `,
+    color: "text-purple-400"
+  },
+  {
+    title: "The Rebellion",
+    subtitle: "Red Fights Back",
+    text: "That night, Red armed himself and took down three corrupt guards!",
+    ascii: `
+    💥🔫 🐓🥾  ⚡
+       ╲  |  ╱
+        ╲ | ╱    Red's
+    😵👮‍♂️  ⚔️  👮‍♂️😵  Revenge!
+    `,
+    color: "text-orange-400"
+  },
+  {
+    title: "Maximum Security",
+    subtitle: "The Escape Begins",
+    text: "Now imprisoned, Red has one goal: ESCAPE AND EXPOSE THE TRUTH!",
+    ascii: `
+    🔒🏢🔒
+      ╭───╮
+      │🐓⚡│  "For Wilbur!"
+      ╰───╯
+     💪🔓💪
+    `,
+    color: "text-green-400"
+  }
+];
 
 const LEVELS = {
   1: {
@@ -246,6 +313,7 @@ export default function FlappyBirdGame() {
     score: 0,
     distance: 0,
     gameState: "start",
+    storySlide: 0,
   });
   
   const animationRef = useRef<number>();
@@ -253,8 +321,9 @@ export default function FlappyBirdGame() {
   const lastShotTime = useRef<number>(0);
 
   const [displayScore, setDisplayScore] = useState(0);
-  const [gameState, setGameState] = useState<"start" | "playing" | "gameOver" | "missionComplete" | "bossIntro" | "levelComplete">("start");
+  const [gameState, setGameState] = useState<"start" | "story" | "playing" | "gameOver" | "missionComplete" | "bossIntro" | "levelComplete">("start");
   const [distance, setDistance] = useState(0);
+  const [storySlide, setStorySlide] = useState(0);
 
   const resetGame = useCallback(() => {
     gameStateRef.current = {
@@ -294,10 +363,12 @@ export default function FlappyBirdGame() {
       score: 0,
       distance: 0,
       gameState: "start",
+      storySlide: 0,
     };
     setDisplayScore(0);
     setGameState("start");
     setDistance(0);
+    setStorySlide(0);
     keysRef.current.clear();
   }, []);
 
@@ -813,6 +884,29 @@ export default function FlappyBirdGame() {
     state.level.bossSpawned = false;
     state.level.bossDefeated = false;
   }, [generateObstacles, generateEnemies, generatePowerups, generateObjectives, generatePrisoners]);
+
+  const startStory = useCallback(() => {
+    const state = gameStateRef.current;
+    state.gameState = "story";
+    state.storySlide = 0;
+    setGameState("story");
+    setStorySlide(0);
+  }, []);
+
+  const nextStorySlide = useCallback(() => {
+    const state = gameStateRef.current;
+    if (state.storySlide < STORY_SLIDES.length - 1) {
+      state.storySlide++;
+      setStorySlide(state.storySlide);
+    } else {
+      // Story finished, start game
+      startGame();
+    }
+  }, [startGame]);
+
+  const skipStory = useCallback(() => {
+    startGame();
+  }, [startGame]);
 
   const jump = useCallback(() => {
     const state = gameStateRef.current;
@@ -2427,47 +2521,89 @@ export default function FlappyBirdGame() {
       
       {gameState === "start" && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-90 rounded-lg">
-          <div className="text-center text-white max-w-2xl mx-4">
+          <div className="text-center text-white max-w-lg mx-4">
             <h1 className="text-4xl font-bold mb-6 text-red-500">Prison Break Rooster</h1>
             
-            {/* Epic Backstory */}
-            <div className="bg-gray-900 bg-opacity-80 p-6 rounded-lg mb-6 text-left border border-red-500">
-              <h2 className="text-xl font-bold mb-3 text-yellow-400 text-center">🔥 THE REBELLION BEGINS 🔥</h2>
-              <div className="space-y-3 text-sm leading-relaxed">
-                <p>
-                  <span className="text-red-400 font-bold">Meet "Red"</span> - once the prize rooster of Blackwater Maximum Security Prison's farm program. 
-                  For years, he watched as his fellow animals were exploited, beaten, and worse by the corrupt guards.
-                </p>
-                <p>
-                  <span className="text-yellow-400 font-bold">The breaking point:</span> When Warden Morrison ordered the execution of Red's best friend - 
-                  an old pig named Wilbur who dared to protect the younger animals - something snapped inside the rooster's heart.
-                </p>
-                <p>
-                  <span className="text-orange-400 font-bold">That night</span>, Red broke into the guard's armory, armed himself with weapons, 
-                  and single-handedly took down three guards who were abusing animals in the barn. The leather jacket? 
-                  Taken from a guard who won't be needing it anymore.
-                </p>
-                <p className="text-red-300 font-bold text-center">
-                  Now they've locked him in maximum security. But Red has one goal: 
-                  <span className="text-white"> ESCAPE AND EXPOSE THE TRUTH!</span>
-                </p>
+            <div className="bg-gray-900 bg-opacity-80 p-6 rounded-lg mb-6 border border-red-500">
+              <h2 className="text-xl font-bold mb-3 text-yellow-400">🐓 The Rebel's Tale 🐓</h2>
+              <p className="text-gray-300 mb-4">
+                Experience the epic story of Red, a rooster who dared to fight back against corruption.
+              </p>
+              <div className="space-y-2 text-sm text-gray-400">
+                <p>Space/W/↑: Jump</p>
+                <p>A/D/←/→: Move Left/Right</p>
+                <p>X/Z/Click: Shoot</p>
               </div>
             </div>
-
-            <div className="mb-4">
-              <p className="mb-2 text-sm text-gray-300">Space/W/↑: Jump</p>
-              <p className="mb-2 text-sm text-gray-300">A/D/←/→: Move Left/Right</p>
-              <p className="mb-2 text-sm text-gray-300">X/Z/Click: Shoot</p>
-              <p className="mb-4 text-sm text-yellow-400">Fight for justice. Fight for freedom. Fight for Wilbur.</p>
-            </div>
             
-            <button
-              onClick={startGame}
-              className="btn btn-primary btn-lg not-prose"
-            >
-              <Play className="w-6 h-6 mr-2" />
-              BEGIN THE ESCAPE
-            </button>
+            <div className="space-y-3">
+              <button
+                onClick={startStory}
+                className="btn btn-primary btn-lg not-prose w-full"
+              >
+                <Play className="w-6 h-6 mr-2" />
+                WATCH THE STORY
+              </button>
+              <button
+                onClick={startGame}
+                className="btn btn-secondary btn-md not-prose w-full"
+              >
+                SKIP TO GAME
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {gameState === "story" && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-95 rounded-lg">
+          <div className="text-center text-white max-w-2xl mx-4">
+            {(() => {
+              const slide = STORY_SLIDES[storySlide];
+              return (
+                <div className="space-y-6">
+                  {/* Chapter indicator */}
+                  <div className="text-sm text-gray-400">
+                    Chapter {storySlide + 1} of {STORY_SLIDES.length}
+                  </div>
+                  
+                  {/* Title */}
+                  <div>
+                    <h2 className={`text-3xl font-bold mb-2 ${slide.color}`}>{slide.title}</h2>
+                    <h3 className="text-xl text-gray-300 mb-4">{slide.subtitle}</h3>
+                  </div>
+                  
+                  {/* ASCII Art */}
+                  <div className="bg-gray-900 bg-opacity-80 p-6 rounded-lg border border-gray-600">
+                    <pre className="text-2xl leading-relaxed font-mono whitespace-pre">
+                      {slide.ascii}
+                    </pre>
+                  </div>
+                  
+                  {/* Story text */}
+                  <p className="text-lg text-gray-200 leading-relaxed">
+                    {slide.text}
+                  </p>
+                  
+                  {/* Navigation buttons */}
+                  <div className="flex justify-center space-x-4 pt-4">
+                    <button
+                      onClick={skipStory}
+                      className="btn btn-ghost btn-sm not-prose"
+                    >
+                      Skip Story
+                    </button>
+                    <button
+                      onClick={nextStorySlide}
+                      className="btn btn-primary btn-lg not-prose"
+                    >
+                      {storySlide < STORY_SLIDES.length - 1 ? 
+                        "Continue" : "BEGIN THE ESCAPE"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
