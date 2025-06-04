@@ -13,6 +13,15 @@ interface GameState {
     animationFrame: number;
     direction: 'left' | 'right';
   };
+  level: {
+    current: number;
+    name: string;
+    theme: 'yard' | 'cellblock' | 'security' | 'escape';
+    startX: number;
+    endX: number;
+    bossSpawned: boolean;
+    bossDefeated: boolean;
+  };
   bullets: Array<{
     x: number;
     y: number;
@@ -28,6 +37,9 @@ interface GameState {
     health: number;
     maxHealth: number;
     type: 'guard' | 'dog' | 'camera' | 'boss';
+    bossType?: 'warden' | 'captain' | 'chief' | 'helicopter';
+    attackPattern?: string;
+    phase?: number;
     lastShotTime: number;
     onGround: boolean;
     aiState: 'patrol' | 'chase' | 'cover' | 'attack' | 'retreat';
@@ -94,7 +106,7 @@ interface GameState {
   alertLevel: number;
   score: number;
   distance: number;
-  gameState: "start" | "playing" | "gameOver" | "missionComplete";
+  gameState: "start" | "playing" | "gameOver" | "missionComplete" | "bossIntro" | "levelComplete";
 }
 
 type WeaponType = 'pistol' | 'shotgun' | 'rifle' | 'grenade';
@@ -140,6 +152,61 @@ const WEAPONS_INFO = {
   grenade: { name: "Grenade", color: "#556B2F" },
 };
 
+const LEVELS = {
+  1: {
+    name: "Prison Yard",
+    theme: 'yard' as const,
+    width: 2000,
+    boss: {
+      type: 'warden' as const,
+      name: "Prison Warden",
+      health: 300,
+      size: 60,
+      attackPattern: "charge_and_shoot",
+      description: "The corrupt warden blocks your escape!",
+    },
+  },
+  2: {
+    name: "Cell Block Alpha",
+    theme: 'cellblock' as const,
+    width: 2500,
+    boss: {
+      type: 'captain' as const,
+      name: "Riot Captain",
+      health: 450,
+      size: 55,
+      attackPattern: "shield_slam",
+      description: "The riot captain won't let you pass!",
+    },
+  },
+  3: {
+    name: "Security Center",
+    theme: 'security' as const,
+    width: 3000,
+    boss: {
+      type: 'chief' as const,
+      name: "Security Chief",
+      health: 600,
+      size: 50,
+      attackPattern: "tech_assault",
+      description: "The security chief activates all defenses!",
+    },
+  },
+  4: {
+    name: "Escape Route",
+    theme: 'escape' as const,
+    width: 3500,
+    boss: {
+      type: 'helicopter' as const,
+      name: "Pursuit Helicopter",
+      health: 800,
+      size: 80,
+      attackPattern: "aerial_barrage",
+      description: "A helicopter blocks your final escape!",
+    },
+  },
+};
+
 export default function FlappyBirdGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameStateRef = useRef<GameState>({
@@ -153,6 +220,15 @@ export default function FlappyBirdGame() {
       onGround: true,
       animationFrame: 0,
       direction: 'right',
+    },
+    level: {
+      current: 1,
+      name: LEVELS[1].name,
+      theme: LEVELS[1].theme,
+      startX: 0,
+      endX: LEVELS[1].width,
+      bossSpawned: false,
+      bossDefeated: false,
     },
     bullets: [],
     enemies: [],
@@ -177,7 +253,7 @@ export default function FlappyBirdGame() {
   const lastShotTime = useRef<number>(0);
 
   const [displayScore, setDisplayScore] = useState(0);
-  const [gameState, setGameState] = useState<"start" | "playing" | "gameOver">("start");
+  const [gameState, setGameState] = useState<"start" | "playing" | "gameOver" | "missionComplete" | "bossIntro" | "levelComplete">("start");
   const [distance, setDistance] = useState(0);
 
   const resetGame = useCallback(() => {
@@ -192,6 +268,15 @@ export default function FlappyBirdGame() {
         onGround: true,
         animationFrame: 0,
         direction: 'right',
+      },
+      level: {
+        current: 1,
+        name: LEVELS[1].name,
+        theme: LEVELS[1].theme,
+        startX: 0,
+        endX: LEVELS[1].width,
+        bossSpawned: false,
+        bossDefeated: false,
       },
       bullets: [],
       enemies: [],
@@ -472,18 +557,245 @@ export default function FlappyBirdGame() {
     }
   }, []);
 
+  const spawnBoss = useCallback(() => {
+    const state = gameStateRef.current;
+    const currentLevel = state.level.current;
+    const levelConfig = LEVELS[currentLevel as keyof typeof LEVELS];
+    
+    if (!levelConfig || state.level.bossSpawned) return;
+    
+    // Spawn boss at the end of the level
+    const boss = {
+      x: state.level.endX - 200,
+      y: GAME_CONFIG.world.groundLevel - levelConfig.boss.size,
+      velocityY: 0,
+      health: levelConfig.boss.health,
+      maxHealth: levelConfig.boss.health,
+      type: 'boss' as const,
+      bossType: levelConfig.boss.type,
+      attackPattern: levelConfig.boss.attackPattern,
+      phase: 1,
+      lastShotTime: 0,
+      onGround: true,
+      aiState: 'patrol' as const,
+      alertLevel: 100, // Bosses are always fully alert
+      lastPlayerSeen: Date.now(),
+      coverPosition: undefined,
+    };
+    
+    state.enemies.push(boss);
+    state.level.bossSpawned = true;
+    
+    // Trigger boss intro
+    state.gameState = "bossIntro";
+    setGameState("bossIntro");
+    
+    // Show boss intro for 3 seconds, then return to playing
+    setTimeout(() => {
+      if (gameStateRef.current.gameState === "bossIntro") {
+        gameStateRef.current.gameState = "playing";
+        setGameState("playing");
+      }
+    }, 3000);
+  }, []);
+
+  const updateBoss = useCallback((boss: typeof gameStateRef.current.enemies[0], deltaTime: number) => {
+    const state = gameStateRef.current;
+    const player = state.player;
+    const levelConfig = LEVELS[state.level.current as keyof typeof LEVELS];
+    
+    if (!levelConfig || boss.type !== 'boss') return;
+    
+    const distanceToPlayer = Math.abs(boss.x - player.x);
+    const playerInRange = distanceToPlayer < 400;
+    
+    // Boss movement and attack patterns
+    switch (boss.bossType) {
+      case 'warden': // Charge and shoot
+        if (playerInRange) {
+          // Charge towards player
+          const direction = player.x > boss.x ? 1 : -1;
+          boss.x += direction * 4;
+          
+          // Rapid fire when close
+          if (Date.now() - boss.lastShotTime > 200) {
+            state.enemyBullets.push({
+              x: boss.x,
+              y: boss.y + 20,
+              velocityX: direction * 10,
+              velocityY: -2 + Math.random() * 4,
+            });
+            boss.lastShotTime = Date.now();
+          }
+        }
+        break;
+        
+      case 'captain': // Shield slam with periodic vulnerability
+        if (playerInRange) {
+          // Move towards player but slower
+          const direction = player.x > boss.x ? 1 : -1;
+          boss.x += direction * 2;
+          
+          // Slam attack every 2 seconds
+          if (Date.now() - boss.lastShotTime > 2000) {
+            // Multi-shot slam
+            for (let i = -2; i <= 2; i++) {
+              state.enemyBullets.push({
+                x: boss.x,
+                y: boss.y + 20,
+                velocityX: direction * 8 + i * 2,
+                velocityY: -3 + Math.random() * 6,
+              });
+            }
+            boss.lastShotTime = Date.now();
+          }
+        }
+        break;
+        
+      case 'chief': // Tech assault with drones
+        if (playerInRange) {
+          // Stay at distance and coordinate attacks
+          const direction = player.x > boss.x ? 1 : -1;
+          if (distanceToPlayer < 250) {
+            boss.x -= direction * 2; // Back away
+          }
+          
+          // Tech barrage every 1.5 seconds
+          if (Date.now() - boss.lastShotTime > 1500) {
+            // Homing-style bullets
+            for (let i = 0; i < 5; i++) {
+              const angle = (Math.PI / 4) * (i - 2) / 2;
+              state.enemyBullets.push({
+                x: boss.x,
+                y: boss.y + 20,
+                velocityX: Math.cos(angle) * 8 * direction,
+                velocityY: Math.sin(angle) * 8,
+              });
+            }
+            boss.lastShotTime = Date.now();
+          }
+        }
+        break;
+        
+      case 'helicopter': // Aerial barrage from above
+        // Float above ground
+        boss.y = GAME_CONFIG.world.groundLevel - 150;
+        
+        if (playerInRange) {
+          // Follow player horizontally
+          const direction = player.x > boss.x ? 1 : -1;
+          boss.x += direction * 3;
+          
+          // Carpet bomb every 800ms
+          if (Date.now() - boss.lastShotTime > 800) {
+            // Drop bombs
+            for (let i = 0; i < 3; i++) {
+              state.enemyBullets.push({
+                x: boss.x + (i - 1) * 30,
+                y: boss.y + 30,
+                velocityX: (i - 1) * 2,
+                velocityY: 6, // Fall down
+              });
+            }
+            boss.lastShotTime = Date.now();
+          }
+        }
+        break;
+    }
+    
+    // Check if boss is defeated
+    if (boss.health <= 0 && !state.level.bossDefeated) {
+      state.level.bossDefeated = true;
+      
+      // Remove boss from enemies
+      const bossIndex = state.enemies.indexOf(boss);
+      if (bossIndex !== -1) {
+        state.enemies.splice(bossIndex, 1);
+      }
+      
+      // Create epic death explosion
+      createParticles(boss.x, boss.y, 'explosion', 20);
+      
+      // Award points for boss kill
+      state.score += 1000;
+      
+      // Trigger level completion
+      state.gameState = "levelComplete";
+      setGameState("levelComplete");
+      
+      // Auto-advance to next level after 3 seconds
+      setTimeout(() => {
+        if (gameStateRef.current.gameState === "levelComplete") {
+          advanceToNextLevel();
+        }
+      }, 3000);
+    }
+  }, [createParticles]);
+
+  const advanceToNextLevel = useCallback(() => {
+    const state = gameStateRef.current;
+    const nextLevel = state.level.current + 1;
+    
+    if (nextLevel > 4) {
+      // Game completed!
+      state.gameState = "missionComplete";
+      setGameState("missionComplete");
+      return;
+    }
+    
+    // Set up next level
+    const levelConfig = LEVELS[nextLevel as keyof typeof LEVELS];
+    state.level = {
+      current: nextLevel,
+      name: levelConfig.name,
+      theme: levelConfig.theme,
+      startX: 0,
+      endX: levelConfig.width,
+      bossSpawned: false,
+      bossDefeated: false,
+    };
+    
+    // Reset player position
+    state.player.x = 400;
+    state.player.y = GAME_CONFIG.world.groundLevel - GAME_CONFIG.player.size;
+    state.player.health = GAME_CONFIG.player.maxHealth; // Full health for new level
+    
+    // Clear existing entities
+    state.enemies = [];
+    state.bullets = [];
+    state.enemyBullets = [];
+    state.particles = [];
+    
+    // Generate new level content
+    const newObstacles = generateObstacles(state.level.startX, state.level.endX);
+    const newEnemies = generateEnemies(state.level.startX + 400, state.level.endX - 400);
+    const newPowerups = generatePowerups(state.level.startX + 200, state.level.endX - 200);
+    const newObjectives = generateObjectives();
+    const newPrisoners = generatePrisoners(state.level.startX + 300, state.level.endX - 300);
+    
+    state.obstacles = newObstacles;
+    state.enemies = newEnemies;
+    state.powerups = newPowerups;
+    state.objectives = newObjectives;
+    state.prisoners = newPrisoners;
+    
+    // Start playing the new level
+    state.gameState = "playing";
+    setGameState("playing");
+  }, [generateObstacles, generateEnemies, generatePowerups, generateObjectives, generatePrisoners]);
+
   const startGame = useCallback(() => {
     const state = gameStateRef.current;
     state.gameState = "playing";
     setGameState("playing");
     
-    // Generate large static world content (much bigger area)
-    const worldSize = 5000; // 5000 units wide world
-    const newObstacles = generateObstacles(-worldSize/2, worldSize/2);
-    const newEnemies = generateEnemies(-worldSize/2 + 400, worldSize/2 - 400);
-    const newPowerups = generatePowerups(-worldSize/2 + 200, worldSize/2 - 200);
+    // Generate level content based on current level
+    const level = state.level;
+    const newObstacles = generateObstacles(level.startX, level.endX);
+    const newEnemies = generateEnemies(level.startX + 400, level.endX - 400);
+    const newPowerups = generatePowerups(level.startX + 200, level.endX - 200);
     const newObjectives = generateObjectives();
-    const newPrisoners = generatePrisoners(-worldSize/2 + 300, worldSize/2 - 300);
+    const newPrisoners = generatePrisoners(level.startX + 300, level.endX - 300);
     
     state.obstacles = newObstacles;
     state.enemies = newEnemies;
@@ -491,6 +803,10 @@ export default function FlappyBirdGame() {
     state.objectives = newObjectives;
     state.prisoners = newPrisoners;
     state.alertLevel = 0;
+    
+    // Reset level-specific flags
+    state.level.bossSpawned = false;
+    state.level.bossDefeated = false;
   }, [generateObstacles, generateEnemies, generatePowerups, generateObjectives, generatePrisoners]);
 
   const jump = useCallback(() => {
@@ -861,6 +1177,148 @@ export default function FlappyBirdGame() {
       ctx.fillStyle = "#ffaa00";
       ctx.fillRect(screenX + 2, enemy.y + size - 4, 2, 1);
       ctx.fillRect(screenX + size - 4, enemy.y + size - 4, 2, 1);
+      
+    } else if (enemy.type === 'boss') {
+      // EPIC BOSS RENDERING - Different for each boss type
+      const currentLevel = gameStateRef.current.level.current;
+      const levelConfig = LEVELS[currentLevel as keyof typeof LEVELS];
+      const bossSize = levelConfig?.boss.size || 60;
+      
+      // Draw boss shadow
+      ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+      ctx.fillRect(screenX - 5, enemy.y + bossSize + 2, bossSize + 10, 8);
+      
+      // Boss health bar above boss
+      const healthBarWidth = bossSize + 20;
+      const healthPercent = enemy.health / enemy.maxHealth;
+      
+      // Health bar background
+      ctx.fillStyle = "#333333";
+      ctx.fillRect(screenX - 10, enemy.y - 20, healthBarWidth, 6);
+      
+      // Health bar fill
+      const healthColor = healthPercent > 0.6 ? "#00ff00" : healthPercent > 0.3 ? "#ffff00" : "#ff0000";
+      ctx.fillStyle = healthColor;
+      ctx.fillRect(screenX - 10, enemy.y - 20, healthBarWidth * healthPercent, 6);
+      
+      // Boss name
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 12px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText(levelConfig?.boss.name || "BOSS", screenX + bossSize / 2, enemy.y - 25);
+      
+      switch (enemy.bossType) {
+        case 'warden':
+          // PRISON WARDEN - Large, imposing authority figure
+          // Body - dark uniform
+          const wardenGradient = ctx.createLinearGradient(screenX, enemy.y, screenX, enemy.y + bossSize);
+          wardenGradient.addColorStop(0, "#1a1a1a");
+          wardenGradient.addColorStop(0.5, "#333333");
+          wardenGradient.addColorStop(1, "#1a1a1a");
+          ctx.fillStyle = wardenGradient;
+          ctx.fillRect(screenX + 5, enemy.y + 10, bossSize - 10, bossSize - 15);
+          
+          // Authority badges and buttons
+          ctx.fillStyle = "#ffd700";
+          ctx.fillRect(screenX + 8, enemy.y + 15, 4, 4);
+          ctx.fillRect(screenX + 8, enemy.y + 22, 4, 4);
+          ctx.fillRect(screenX + bossSize - 12, enemy.y + 15, 4, 4);
+          
+          // Intimidating head
+          ctx.fillStyle = "#2a2a2a";
+          ctx.fillRect(screenX + 10, enemy.y + 2, bossSize - 20, 12);
+          
+          // Evil eyes
+          ctx.fillStyle = "#ff0000";
+          ctx.fillRect(screenX + 15, enemy.y + 5, 3, 2);
+          ctx.fillRect(screenX + bossSize - 18, enemy.y + 5, 3, 2);
+          
+          // Large weapon
+          ctx.fillStyle = "#444444";
+          ctx.fillRect(screenX + bossSize - 8, enemy.y + 20, 6, 20);
+          break;
+          
+        case 'captain':
+          // RIOT CAPTAIN - Armored with shield
+          // Heavy armor body
+          const captainGradient = ctx.createLinearGradient(screenX, enemy.y, screenX, enemy.y + bossSize);
+          captainGradient.addColorStop(0, "#4a4a4a");
+          captainGradient.addColorStop(0.5, "#666666");
+          captainGradient.addColorStop(1, "#4a4a4a");
+          ctx.fillStyle = captainGradient;
+          ctx.fillRect(screenX + 3, enemy.y + 8, bossSize - 6, bossSize - 12);
+          
+          // Shield
+          ctx.fillStyle = "#888888";
+          ctx.fillRect(screenX - 5, enemy.y + 10, 8, bossSize - 20);
+          
+          // Shield emblem
+          ctx.fillStyle = "#ff0000";
+          ctx.fillRect(screenX - 3, enemy.y + 20, 4, 8);
+          
+          // Riot helmet
+          ctx.fillStyle = "#222222";
+          ctx.fillRect(screenX + 5, enemy.y + 2, bossSize - 10, 10);
+          
+          // Visor
+          ctx.fillStyle = "#000000";
+          ctx.fillRect(screenX + 7, enemy.y + 4, bossSize - 14, 4);
+          break;
+          
+        case 'chief':
+          // SECURITY CHIEF - High-tech cyber appearance
+          // Tech suit body
+          const chiefGradient = ctx.createLinearGradient(screenX, enemy.y, screenX, enemy.y + bossSize);
+          chiefGradient.addColorStop(0, "#003366");
+          chiefGradient.addColorStop(0.5, "#006699");
+          chiefGradient.addColorStop(1, "#003366");
+          ctx.fillStyle = chiefGradient;
+          ctx.fillRect(screenX + 4, enemy.y + 6, bossSize - 8, bossSize - 10);
+          
+          // Tech details and circuitry
+          ctx.fillStyle = "#00ffff";
+          ctx.fillRect(screenX + 6, enemy.y + 10, 2, 2);
+          ctx.fillRect(screenX + 10, enemy.y + 15, 2, 2);
+          ctx.fillRect(screenX + 14, enemy.y + 12, 2, 2);
+          ctx.fillRect(screenX + bossSize - 8, enemy.y + 18, 2, 2);
+          
+          // High-tech helmet
+          ctx.fillStyle = "#001122";
+          ctx.fillRect(screenX + 6, enemy.y + 1, bossSize - 12, 8);
+          
+          // Glowing visor
+          ctx.fillStyle = "#00ff00";
+          ctx.fillRect(screenX + 8, enemy.y + 3, bossSize - 16, 3);
+          break;
+          
+        case 'helicopter':
+          // PURSUIT HELICOPTER - Flying menace
+          // Main body
+          const heliGradient = ctx.createLinearGradient(screenX, enemy.y, screenX, enemy.y + bossSize);
+          heliGradient.addColorStop(0, "#333333");
+          heliGradient.addColorStop(0.5, "#555555");
+          heliGradient.addColorStop(1, "#333333");
+          ctx.fillStyle = heliGradient;
+          ctx.fillRect(screenX + 5, enemy.y + 15, bossSize - 10, bossSize - 25);
+          
+          // Cockpit
+          ctx.fillStyle = "#111111";
+          ctx.fillRect(screenX + 8, enemy.y + 18, bossSize - 16, 15);
+          
+          // Rotor blur effect (spinning)
+          ctx.fillStyle = "rgba(200, 200, 200, 0.3)";
+          ctx.fillRect(screenX - 10, enemy.y + 5, bossSize + 20, 4);
+          
+          // Landing skids
+          ctx.fillStyle = "#666666";
+          ctx.fillRect(screenX + 2, enemy.y + bossSize - 8, bossSize - 4, 3);
+          
+          // Warning lights
+          ctx.fillStyle = "#ff0000";
+          ctx.fillRect(screenX + 10, enemy.y + 10, 3, 3);
+          ctx.fillRect(screenX + bossSize - 13, enemy.y + 10, 3, 3);
+          break;
+      }
     }
   }, []);
 
@@ -989,6 +1447,11 @@ export default function FlappyBirdGame() {
         return true;
       });
 
+      // Check for boss spawning when player reaches near end of level
+      if (!state.level.bossSpawned && state.player.x > state.level.endX - 500) {
+        spawnBoss();
+      }
+
       // Update enemies with enhanced AI
       const currentTime = Date.now();
       state.enemies.forEach((enemy) => {
@@ -997,10 +1460,20 @@ export default function FlappyBirdGame() {
           applyGravity(enemy);
         }
         
+        // Handle boss-specific updates
+        if (enemy.type === 'boss') {
+          updateBoss(enemy, 1/60); // Assume 60fps
+        }
+        
         const screenX = enemy.x - state.camera.x;
         
-        // Enhanced AI behavior
-        const distance = updateEnemyAI(enemy, state.player.x, state.player.y, currentTime);
+        // Enhanced AI behavior (skip for bosses as they have their own logic)
+        let distance = 0;
+        if (enemy.type !== 'boss') {
+          distance = updateEnemyAI(enemy, state.player.x, state.player.y, currentTime);
+        } else {
+          distance = Math.sqrt((enemy.x - state.player.x) ** 2 + (enemy.y - state.player.y) ** 2);
+        }
         
         // Enhanced enemy shooting based on AI state
         const canShoot = enemy.aiState === 'attack' || enemy.aiState === 'chase';
@@ -1399,60 +1872,66 @@ export default function FlappyBirdGame() {
       ctx.font = "bold 18px Arial";
       ctx.textAlign = "left";
       
-      // Draw HUD background (bigger for objectives)
+      // Draw HUD background (bigger for objectives and level info)
       ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-      ctx.fillRect(5, 5, 300, 160);
+      ctx.fillRect(5, 5, 350, 180);
+      
+      // Level Information with glow effect
+      ctx.shadowColor = "#00ffff";
+      ctx.shadowBlur = 2;
+      ctx.fillStyle = "#00ffff";
+      ctx.fillText(`Level ${state.level.current}: ${state.level.name}`, 15, 30);
       
       // Score with glow effect
       ctx.shadowColor = "#ffff88";
       ctx.shadowBlur = 2;
       ctx.fillStyle = "#ffff88";
-      ctx.fillText(`Score: ${state.score}`, 15, 30);
+      ctx.fillText(`Score: ${state.score}`, 15, 55);
       
       // Distance
       ctx.shadowColor = "#88ff88";
       ctx.fillStyle = "#88ff88";
-      ctx.fillText(`Distance: ${state.distance}m`, 15, 55);
+      ctx.fillText(`Distance: ${state.distance}m`, 15, 80);
       
       // Health bar
       ctx.shadowColor = "none";
       ctx.shadowBlur = 0;
       ctx.fillStyle = "#ff4444";
-      ctx.fillRect(15, 65, 100, 10);
+      ctx.fillRect(15, 90, 100, 10);
       ctx.fillStyle = "#44ff44";
       const healthPercent = state.player.health / GAME_CONFIG.player.maxHealth;
-      ctx.fillRect(15, 65, 100 * healthPercent, 10);
+      ctx.fillRect(15, 90, 100 * healthPercent, 10);
       ctx.fillStyle = "#ffffff";
       ctx.font = "12px Arial";
-      ctx.fillText(`Health: ${state.player.health}`, 15, 85);
+      ctx.fillText(`Health: ${state.player.health}`, 15, 110);
       
       // Weapon info with color coding
       ctx.font = "bold 16px Arial";
       ctx.fillStyle = WEAPONS_INFO[state.player.weapon].color;
       ctx.shadowColor = WEAPONS_INFO[state.player.weapon].color;
       ctx.shadowBlur = 1;
-      ctx.fillText(`${WEAPONS_INFO[state.player.weapon].name}: ${state.player.ammo}`, 15, 105);
+      ctx.fillText(`${WEAPONS_INFO[state.player.weapon].name}: ${state.player.ammo}`, 15, 130);
       
       // Alert Level
       ctx.font = "12px Arial";
       ctx.fillStyle = "#ffffff";
-      ctx.fillText(`Alert Level:`, 15, 125);
+      ctx.fillText(`Alert Level:`, 15, 150);
       
       // Alert level bar
       ctx.fillStyle = "#333333";
-      ctx.fillRect(100, 115, 100, 8);
+      ctx.fillRect(100, 140, 100, 8);
       const alertPercent = state.alertLevel / 100;
       const alertColor = alertPercent > 0.7 ? "#ff4444" : alertPercent > 0.4 ? "#ffaa44" : "#44ff44";
       ctx.fillStyle = alertColor;
-      ctx.fillRect(100, 115, 100 * alertPercent, 8);
+      ctx.fillRect(100, 140, 100 * alertPercent, 8);
       
       // Objectives
       ctx.font = "bold 14px Arial";
       ctx.fillStyle = "#ffff88";
-      ctx.fillText("OBJECTIVES:", 15, 145);
+      ctx.fillText("OBJECTIVES:", 15, 170);
       
       ctx.font = "11px Arial";
-      let objY = 155;
+      let objY = 180;
       state.objectives.forEach((objective, index) => {
         const color = objective.completed ? "#44ff44" : "#ffffff";
         ctx.fillStyle = color;
@@ -1477,7 +1956,7 @@ export default function FlappyBirdGame() {
     }
 
     animationRef.current = requestAnimationFrame(gameLoop);
-  }, [drawPlayer, drawEnemy, checkCollision, applyGravity, generateObstacles, generateEnemies, generatePowerups, createParticles, updateParticles, updateEnemyAI]);
+  }, [drawPlayer, drawEnemy, checkCollision, applyGravity, generateObstacles, generateEnemies, generatePowerups, createParticles, updateParticles, updateEnemyAI, spawnBoss, updateBoss]);
 
   useEffect(() => {
     gameLoop();
@@ -1572,23 +2051,58 @@ export default function FlappyBirdGame() {
         </div>
       )}
 
+      {gameState === "bossIntro" && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-85 rounded-lg">
+          <div className="text-center text-white">
+            <h2 className="text-4xl font-bold mb-4 text-red-500 animate-pulse">⚠️ BOSS ENCOUNTER ⚠️</h2>
+            <h3 className="text-2xl font-bold mb-2 text-yellow-400">
+              {gameStateRef.current.level && LEVELS[gameStateRef.current.level.current as keyof typeof LEVELS]?.boss.name}
+            </h3>
+            <p className="text-lg mb-6 text-gray-300">
+              {gameStateRef.current.level && LEVELS[gameStateRef.current.level.current as keyof typeof LEVELS]?.boss.description}
+            </p>
+            <div className="text-6xl mb-4">💀</div>
+            <p className="text-sm opacity-75">Prepare for battle...</p>
+          </div>
+        </div>
+      )}
+
+      {gameState === "levelComplete" && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 rounded-lg">
+          <div className="text-center text-white">
+            <h2 className="text-3xl font-bold mb-4 text-green-500">LEVEL COMPLETE!</h2>
+            <h3 className="text-xl mb-2 text-yellow-400">
+              {gameStateRef.current.level?.name} - Cleared!
+            </h3>
+            <p className="text-lg mb-2">Boss Defeated! +1000 Points</p>
+            <p className="text-lg mb-6">Advancing to next level...</p>
+            <div className="text-4xl mb-4">🎯</div>
+            <p className="text-sm opacity-75">Get ready for the next challenge!</p>
+          </div>
+        </div>
+      )}
+
       {gameState === "missionComplete" && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 rounded-lg">
           <div className="text-center text-white">
-            <h2 className="text-3xl font-bold mb-4 text-green-500">MISSION COMPLETE!</h2>
-            <p className="text-xl mb-2">🎖️ ALL OBJECTIVES COMPLETED! 🎖️</p>
+            <h2 className="text-4xl font-bold mb-4 text-green-500">🎉 PRISON BREAK COMPLETE! 🎉</h2>
+            <p className="text-2xl mb-4 text-yellow-400">⭐ ALL 4 LEVELS CLEARED ⭐</p>
             <p className="text-lg mb-2">Final Score: {displayScore}</p>
-            <p className="text-lg mb-6">Distance Escaped: {distance}m</p>
+            <p className="text-lg mb-4">Distance Escaped: {distance}m</p>
             <div className="mb-6">
-              <p className="text-green-400 mb-2">✓ Escape successful!</p>
-              <p className="text-sm opacity-80">The badass rooster lives to fight another day!</p>
+              <p className="text-green-400 mb-2">✓ Prison Yard - Warden Defeated</p>
+              <p className="text-green-400 mb-2">✓ Cell Block Alpha - Riot Captain Defeated</p>
+              <p className="text-green-400 mb-2">✓ Security Center - Security Chief Defeated</p>
+              <p className="text-green-400 mb-2">✓ Escape Route - Helicopter Destroyed</p>
+              <p className="text-xl text-yellow-400 mt-4">🐓 ULTIMATE FREEDOM ACHIEVED! 🐓</p>
+              <p className="text-sm opacity-80 mt-2">The legendary badass rooster has escaped the maximum security prison!</p>
             </div>
             <button
               onClick={resetGame}
               className="btn btn-primary btn-lg not-prose"
             >
               <Play className="w-6 h-6 mr-2" />
-              New Mission
+              New Prison Break
             </button>
           </div>
         </div>
