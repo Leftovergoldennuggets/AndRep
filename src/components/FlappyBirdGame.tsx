@@ -186,30 +186,69 @@ export default function FlappyBirdGame() {
       });
     }
 
-    // Draw bird (only if playing or game over)
+    // Draw 8-bit rooster (only if playing or game over)
     if (state.gameState !== "start") {
-      ctx.fillStyle = "#FFD700";
-      ctx.beginPath();
-      ctx.arc(
-        state.bird.x + GAME_CONFIG.bird.size / 2,
-        state.bird.y + GAME_CONFIG.bird.size / 2,
-        GAME_CONFIG.bird.size / 2,
-        0,
-        Math.PI * 2
-      );
-      ctx.fill();
-
-      // Draw eye
-      ctx.fillStyle = "#000";
-      ctx.beginPath();
-      ctx.arc(
-        state.bird.x + GAME_CONFIG.bird.size / 2 + 5,
-        state.bird.y + GAME_CONFIG.bird.size / 2 - 3,
-        3,
-        0,
-        Math.PI * 2
-      );
-      ctx.fill();
+      const birdX = state.bird.x;
+      const birdY = state.bird.y;
+      const size = GAME_CONFIG.bird.size;
+      
+      // Draw leather jacket (black body)
+      ctx.fillStyle = "#1a1a1a";
+      ctx.fillRect(birdX + 2, birdY + 8, size - 4, size - 10);
+      
+      // Draw jacket details (zippers/buttons)
+      ctx.fillStyle = "#silver";
+      ctx.fillRect(birdX + 4, birdY + 10, 1, 6);
+      ctx.fillRect(birdX + size - 6, birdY + 12, 2, 2);
+      
+      // Draw rooster head (orange-red)
+      ctx.fillStyle = "#ff6b35";
+      ctx.fillRect(birdX + 4, birdY + 2, size - 8, 8);
+      
+      // Draw rooster comb (red spiky top)
+      ctx.fillStyle = "#ff0000";
+      ctx.fillRect(birdX + 6, birdY, 2, 3);
+      ctx.fillRect(birdX + 8, birdY - 1, 2, 4);
+      ctx.fillRect(birdX + 10, birdY, 2, 3);
+      
+      // Draw beak (yellow-orange)
+      ctx.fillStyle = "#ffaa00";
+      ctx.fillRect(birdX + 1, birdY + 5, 3, 2);
+      
+      // Draw sunglasses (black frames)
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(birdX + 5, birdY + 3, 3, 3);
+      ctx.fillRect(birdX + 9, birdY + 3, 3, 3);
+      ctx.fillRect(birdX + 8, birdY + 4, 1, 1); // bridge
+      
+      // Draw sunglasses lenses (dark blue/black)
+      ctx.fillStyle = "#001122";
+      ctx.fillRect(birdX + 6, birdY + 4, 1, 1);
+      ctx.fillRect(birdX + 10, birdY + 4, 1, 1);
+      
+      // Draw cigarette (white stick)
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(birdX + 0, birdY + 6, 4, 1);
+      
+      // Draw cigarette tip (orange glow)
+      ctx.fillStyle = "#ff4400";
+      ctx.fillRect(birdX - 1, birdY + 6, 1, 1);
+      
+      // Draw smoke (light gray pixels)
+      ctx.fillStyle = "#cccccc";
+      ctx.fillRect(birdX - 2, birdY + 4, 1, 1);
+      ctx.fillRect(birdX - 3, birdY + 2, 1, 1);
+      ctx.fillRect(birdX - 2, birdY + 1, 1, 1);
+      
+      // Draw legs/talons (yellow)
+      ctx.fillStyle = "#ffaa00";
+      ctx.fillRect(birdX + 6, birdY + size - 2, 1, 3);
+      ctx.fillRect(birdX + 10, birdY + size - 2, 1, 3);
+      
+      // Draw tail feathers (dark red/brown)
+      ctx.fillStyle = "#8b0000";
+      ctx.fillRect(birdX + size - 2, birdY + 6, 3, 2);
+      ctx.fillRect(birdX + size - 1, birdY + 4, 2, 2);
     }
 
     // Draw score (only if playing or game over)
@@ -266,8 +305,8 @@ export default function FlappyBirdGame() {
 {gameState === "start" && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
           <div className="text-center text-white">
-            <h1 className="text-4xl font-bold mb-4">Flappy Bird</h1>
-            <p className="mb-6">Click or press Space to flap</p>
+            <h1 className="text-4xl font-bold mb-4">Rebel Rooster</h1>
+            <p className="mb-6">Click or press Space to fly, badass!</p>
             <button
               onClick={jump}
               className="btn btn-primary btn-lg not-prose"
@@ -297,7 +336,7 @@ export default function FlappyBirdGame() {
 
       <div className="mt-4 text-center text-white">
         <p className="text-sm opacity-80">
-          Click the game area or press Space to flap
+          Click the game area or press Space to keep flying, rebel! 🚬😎
         </p>
       </div>
     </div>
