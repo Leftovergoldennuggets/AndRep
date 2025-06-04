@@ -319,10 +319,10 @@ export default function FlappyBirdGame() {
     }
     
     // Generate prison walls and obstacles
-    for (let x = startX; x < endX; x += 200 + Math.random() * 200) {
+    for (let x = startX; x < endX; x += 150 + Math.random() * 150) {
       const obstacleType = Math.random();
       
-      if (obstacleType < 0.2) {
+      if (obstacleType < 0.15) {
         // Wall obstacle
         const height = 80 + Math.random() * 120;
         obstacles.push({
@@ -334,18 +334,23 @@ export default function FlappyBirdGame() {
           isDestructible: false,
           isInteractive: false,
         });
-      } else if (obstacleType < 0.4) {
-        // Platform obstacle
-        obstacles.push({
-          x: x + Math.random() * 100,
-          y: GAME_CONFIG.world.groundLevel - 120 - Math.random() * 100,
-          width: 60 + Math.random() * 80,
-          height: 20,
-          type: 'platform',
-          isDestructible: false,
-          isInteractive: false,
-        });
-      } else if (obstacleType < 0.6) {
+      } else if (obstacleType < 0.55) {
+        // Multiple platform levels for complex jumping
+        const platformCount = 1 + Math.floor(Math.random() * 3);
+        for (let level = 0; level < platformCount; level++) {
+          const height = 80 + level * 60 + Math.random() * 40;
+          const width = 60 + Math.random() * 60;
+          obstacles.push({
+            x: x + Math.random() * 50 + level * 20,
+            y: GAME_CONFIG.world.groundLevel - height,
+            width: width,
+            height: 15 + Math.random() * 10,
+            type: 'platform',
+            isDestructible: false,
+            isInteractive: false,
+          });
+        }
+      } else if (obstacleType < 0.7) {
         // EXPLOSIVE BARREL - destructible!
         obstacles.push({
           x: x + Math.random() * 100,
@@ -1887,40 +1892,115 @@ export default function FlappyBirdGame() {
     // Clear canvas
     ctx.clearRect(0, 0, GAME_CONFIG.canvas.width, GAME_CONFIG.canvas.height);
 
-    // Draw gradient sky background
+    // Draw dark, gritty prison sky background
     const gradient = ctx.createLinearGradient(0, 0, 0, GAME_CONFIG.world.groundLevel);
-    gradient.addColorStop(0, "#ff6b6b");
-    gradient.addColorStop(0.4, "#ffa726");
-    gradient.addColorStop(1, "#ffcc80");
+    gradient.addColorStop(0, "#2C1810"); // Dark brown-red
+    gradient.addColorStop(0.3, "#1A1A1A"); // Very dark gray
+    gradient.addColorStop(0.7, "#333333"); // Dark gray
+    gradient.addColorStop(1, "#4A4A4A"); // Medium gray
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, GAME_CONFIG.canvas.width, GAME_CONFIG.world.groundLevel);
 
-    // Draw prison background elements with depth
-    const parallaxOffset = state.camera.x * 0.3;
+    // Draw high-security prison background elements with depth
+    const parallaxOffset = state.camera.x * 0.2;
+    const slowParallax = state.camera.x * 0.1;
     
-    // Background prison walls
-    ctx.fillStyle = "rgba(100, 100, 100, 0.3)";
-    for (let x = -(parallaxOffset % 120); x < GAME_CONFIG.canvas.width; x += 120) {
-      ctx.fillRect(x, 0, 8, GAME_CONFIG.world.groundLevel);
+    // Far background - concrete prison walls with watchtowers
+    ctx.fillStyle = "rgba(60, 60, 60, 0.4)";
+    for (let x = -(slowParallax % 200); x < GAME_CONFIG.canvas.width; x += 200) {
+      // Main wall
+      ctx.fillRect(x, 60, 15, GAME_CONFIG.world.groundLevel - 60);
+      
+      // Watchtower every few walls
+      if ((x + slowParallax) % 600 < 200) {
+        ctx.fillStyle = "rgba(40, 40, 40, 0.6)";
+        ctx.fillRect(x + 5, 20, 25, 80);
+        ctx.fillRect(x + 10, 10, 15, 20);
+        ctx.fillStyle = "rgba(60, 60, 60, 0.4)";
+      }
     }
     
-    // Foreground fence pattern
-    ctx.strokeStyle = "#556b2f";
-    ctx.lineWidth = 2;
-    for (let x = -(state.camera.x % 20); x < GAME_CONFIG.canvas.width; x += 20) {
+    // Mid background - concrete wall panels with industrial details
+    ctx.fillStyle = "rgba(80, 80, 80, 0.5)";
+    for (let x = -(parallaxOffset % 150); x < GAME_CONFIG.canvas.width; x += 150) {
+      ctx.fillRect(x, 0, 12, GAME_CONFIG.world.groundLevel);
+      
+      // Add concrete panel lines
+      ctx.fillStyle = "rgba(100, 100, 100, 0.3)";
+      ctx.fillRect(x + 2, 40, 8, 2);
+      ctx.fillRect(x + 2, 120, 8, 2);
+      ctx.fillRect(x + 2, 200, 8, 2);
+      ctx.fillStyle = "rgba(80, 80, 80, 0.5)";
+    }
+    
+    // Foreground - razor wire fence and security elements
+    ctx.strokeStyle = "#666666";
+    ctx.lineWidth = 3;
+    for (let x = -(state.camera.x % 25); x < GAME_CONFIG.canvas.width; x += 25) {
+      // Main fence posts
       ctx.beginPath();
-      ctx.moveTo(x, GAME_CONFIG.world.groundLevel - 60);
+      ctx.moveTo(x, GAME_CONFIG.world.groundLevel - 80);
       ctx.lineTo(x, GAME_CONFIG.world.groundLevel);
       ctx.stroke();
       
-      // Barbed wire effect
-      if (x % 40 === 0) {
-        ctx.strokeStyle = "#8b4513";
-        ctx.beginPath();
-        ctx.moveTo(x - 10, GAME_CONFIG.world.groundLevel - 80);
-        ctx.lineTo(x + 10, GAME_CONFIG.world.groundLevel - 80);
-        ctx.stroke();
-        ctx.strokeStyle = "#556b2f";
+      // Razor wire coils
+      if (x % 50 === 0) {
+        ctx.strokeStyle = "#C0C0C0";
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 4; i++) {
+          ctx.beginPath();
+          ctx.arc(x, GAME_CONFIG.world.groundLevel - 90 + i * 5, 8, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.strokeStyle = "#666666";
+        ctx.lineWidth = 3;
+      }
+      
+      // Security cameras on poles
+      if (x % 100 === 50) {
+        ctx.fillStyle = "#333333";
+        ctx.fillRect(x - 3, GAME_CONFIG.world.groundLevel - 100, 6, 15);
+        ctx.fillStyle = "#FF0000";
+        ctx.fillRect(x - 1, GAME_CONFIG.world.groundLevel - 98, 2, 2);
+      }
+    }
+
+    // Add dramatic lighting effects for badass atmosphere
+    if (state.gameState !== "start") {
+      // Searchlight sweeps across the prison yard
+      const searchlightTime = Date.now() * 0.001;
+      const searchlightX = Math.sin(searchlightTime * 0.3) * 300 + 400;
+      const searchlightScreenX = searchlightX - state.camera.x;
+      
+      if (searchlightScreenX > -200 && searchlightScreenX < GAME_CONFIG.canvas.width + 200) {
+        // Create spotlight effect
+        const spotlightGradient = ctx.createRadialGradient(
+          searchlightScreenX, 50, 0,
+          searchlightScreenX, 50, 150
+        );
+        spotlightGradient.addColorStop(0, "rgba(255, 255, 200, 0.3)");
+        spotlightGradient.addColorStop(0.5, "rgba(255, 255, 200, 0.1)");
+        spotlightGradient.addColorStop(1, "rgba(255, 255, 200, 0)");
+        
+        ctx.fillStyle = spotlightGradient;
+        ctx.fillRect(searchlightScreenX - 150, 50, 300, GAME_CONFIG.world.groundLevel - 50);
+      }
+      
+      // Emergency strobe lights from alarms
+      if (state.alertLevel > 50) {
+        const strobeTime = Math.floor(Date.now() / 200) % 2;
+        if (strobeTime === 0) {
+          ctx.fillStyle = "rgba(255, 0, 0, 0.15)";
+          ctx.fillRect(0, 0, GAME_CONFIG.canvas.width, GAME_CONFIG.canvas.height);
+        }
+      }
+      
+      // Atmospheric dust particles in the air
+      ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
+      for (let i = 0; i < 30; i++) {
+        const dustX = ((Date.now() * 0.02 + i * 50) % (GAME_CONFIG.canvas.width + 100)) - 50;
+        const dustY = ((Date.now() * 0.015 + i * 30) % GAME_CONFIG.world.groundLevel);
+        ctx.fillRect(dustX, dustY, 1, 1);
       }
     }
 
@@ -1971,17 +2051,72 @@ export default function FlappyBirdGame() {
           } else {
             // Standard obstacles
             if (obstacle.type === 'ground') {
-              ctx.fillStyle = "#8B4513";
+              // Industrial concrete ground with grime
+              const groundGradient = ctx.createLinearGradient(screenX, obstacle.y, screenX, obstacle.y + obstacle.height);
+              groundGradient.addColorStop(0, "#4A4A4A");
+              groundGradient.addColorStop(0.2, "#666666");
+              groundGradient.addColorStop(1, "#2A2A2A");
+              ctx.fillStyle = groundGradient;
             } else if (obstacle.type === 'wall') {
-              ctx.fillStyle = "#696969";
+              // Prison concrete walls with weathering
+              const wallGradient = ctx.createLinearGradient(screenX, obstacle.y, screenX + obstacle.width, obstacle.y);
+              wallGradient.addColorStop(0, "#555555");
+              wallGradient.addColorStop(0.5, "#404040");
+              wallGradient.addColorStop(1, "#505050");
+              ctx.fillStyle = wallGradient;
             } else if (obstacle.type === 'platform') {
-              ctx.fillStyle = "#8B8B8B";
+              // Industrial metal grating platforms
+              const platformGradient = ctx.createLinearGradient(screenX, obstacle.y, screenX, obstacle.y + obstacle.height);
+              platformGradient.addColorStop(0, "#888888");
+              platformGradient.addColorStop(0.3, "#666666");
+              platformGradient.addColorStop(1, "#555555");
+              ctx.fillStyle = platformGradient;
             } else if (obstacle.type === 'crate') {
               ctx.fillStyle = "#D2691E";
             } else {
               ctx.fillStyle = "#708090";
             }
             ctx.fillRect(screenX, obstacle.y, obstacle.width, obstacle.height);
+            
+            // Add enhanced details based on obstacle type
+            if (obstacle.type === 'platform') {
+              // Metal grating lines for industrial look
+              ctx.strokeStyle = "#999999";
+              ctx.lineWidth = 1;
+              for (let i = 1; i < obstacle.width / 8; i++) {
+                ctx.beginPath();
+                ctx.moveTo(screenX + i * 8, obstacle.y);
+                ctx.lineTo(screenX + i * 8, obstacle.y + obstacle.height);
+                ctx.stroke();
+              }
+              // Support rivets
+              ctx.fillStyle = "#AAAAAA";
+              for (let i = 0; i < obstacle.width / 20; i++) {
+                ctx.fillRect(screenX + 5 + i * 20, obstacle.y + 2, 3, 3);
+                ctx.fillRect(screenX + 5 + i * 20, obstacle.y + obstacle.height - 5, 3, 3);
+              }
+            } else if (obstacle.type === 'wall') {
+              // Concrete panel lines
+              ctx.strokeStyle = "#333333";
+              ctx.lineWidth = 2;
+              for (let i = 1; i < obstacle.height / 30; i++) {
+                ctx.beginPath();
+                ctx.moveTo(screenX, obstacle.y + i * 30);
+                ctx.lineTo(screenX + obstacle.width, obstacle.y + i * 30);
+                ctx.stroke();
+              }
+            } else if (obstacle.type === 'ground') {
+              // Concrete texture with cracks
+              ctx.strokeStyle = "#333333";
+              ctx.lineWidth = 1;
+              for (let i = 0; i < obstacle.width / 25; i++) {
+                const crackX = screenX + i * 25 + Math.random() * 10;
+                ctx.beginPath();
+                ctx.moveTo(crackX, obstacle.y);
+                ctx.lineTo(crackX + Math.random() * 8 - 4, obstacle.y + 8);
+                ctx.stroke();
+              }
+            }
             
             // Add border
             ctx.strokeStyle = "#000000";
@@ -2055,41 +2190,63 @@ export default function FlappyBirdGame() {
         }
       });
 
-      // Draw bullets with trails
+      // Draw bullets with dramatic trails and effects
       state.bullets.forEach((bullet) => {
         const screenX = bullet.x - state.camera.x;
         if (screenX > -GAME_CONFIG.bullet.size && screenX < GAME_CONFIG.canvas.width) {
-          // Draw trail
-          ctx.strokeStyle = "rgba(255, 255, 136, 0.6)";
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          for (let i = 0; i < bullet.trail.length; i++) {
-            const trailScreenX = bullet.trail[i].x - state.camera.x;
-            if (i === 0) {
-              ctx.moveTo(trailScreenX, bullet.trail[i].y);
-            } else {
-              ctx.lineTo(trailScreenX, bullet.trail[i].y);
+          // Draw enhanced trail with gradient
+          if (bullet.trail.length > 0) {
+            for (let i = 0; i < bullet.trail.length - 1; i++) {
+              const alpha = (i / bullet.trail.length) * 0.8;
+              const trailScreenX1 = bullet.trail[i].x - state.camera.x;
+              const trailScreenX2 = bullet.trail[i + 1].x - state.camera.x;
+              
+              ctx.strokeStyle = `rgba(255, 255, 200, ${alpha})`;
+              ctx.lineWidth = 3 - (i / bullet.trail.length) * 2;
+              ctx.beginPath();
+              ctx.moveTo(trailScreenX1, bullet.trail[i].y);
+              ctx.lineTo(trailScreenX2, bullet.trail[i + 1].y);
+              ctx.stroke();
             }
           }
-          ctx.stroke();
           
-          // Draw bullet with glow
+          // Draw bullet with intense glow and spark effect
           const bulletGradient = ctx.createRadialGradient(
             screenX + GAME_CONFIG.bullet.size/2, bullet.y + GAME_CONFIG.bullet.size/2, 0,
-            screenX + GAME_CONFIG.bullet.size/2, bullet.y + GAME_CONFIG.bullet.size/2, GAME_CONFIG.bullet.size
+            screenX + GAME_CONFIG.bullet.size/2, bullet.y + GAME_CONFIG.bullet.size/2, GAME_CONFIG.bullet.size * 2
           );
-          bulletGradient.addColorStop(0, "#ffff88");
-          bulletGradient.addColorStop(1, "#ff8800");
+          bulletGradient.addColorStop(0, "#FFFFFF");
+          bulletGradient.addColorStop(0.3, "#FFFF88");
+          bulletGradient.addColorStop(0.7, "#FF8800");
+          bulletGradient.addColorStop(1, "rgba(255, 136, 0, 0)");
           ctx.fillStyle = bulletGradient;
+          ctx.fillRect(screenX - GAME_CONFIG.bullet.size, bullet.y - GAME_CONFIG.bullet.size, 
+                      GAME_CONFIG.bullet.size * 3, GAME_CONFIG.bullet.size * 3);
+          
+          // Bright bullet core
+          ctx.fillStyle = "#FFFFFF";
           ctx.fillRect(screenX, bullet.y, GAME_CONFIG.bullet.size, GAME_CONFIG.bullet.size);
         }
       });
 
-      // Draw enemy bullets
-      ctx.fillStyle = "#ff4444";
+      // Draw enemy bullets with menacing red glow
       state.enemyBullets.forEach((bullet) => {
         const screenX = bullet.x - state.camera.x;
         if (screenX > -GAME_CONFIG.bullet.size && screenX < GAME_CONFIG.canvas.width) {
+          // Enemy bullet glow
+          const enemyBulletGradient = ctx.createRadialGradient(
+            screenX + GAME_CONFIG.bullet.size/2, bullet.y + GAME_CONFIG.bullet.size/2, 0,
+            screenX + GAME_CONFIG.bullet.size/2, bullet.y + GAME_CONFIG.bullet.size/2, GAME_CONFIG.bullet.size * 1.5
+          );
+          enemyBulletGradient.addColorStop(0, "#FF0000");
+          enemyBulletGradient.addColorStop(0.5, "#FF4444");
+          enemyBulletGradient.addColorStop(1, "rgba(255, 68, 68, 0)");
+          ctx.fillStyle = enemyBulletGradient;
+          ctx.fillRect(screenX - GAME_CONFIG.bullet.size/2, bullet.y - GAME_CONFIG.bullet.size/2, 
+                      GAME_CONFIG.bullet.size * 2, GAME_CONFIG.bullet.size * 2);
+          
+          // Bright enemy bullet core
+          ctx.fillStyle = "#FF6666";
           ctx.fillRect(screenX, bullet.y, GAME_CONFIG.bullet.size, GAME_CONFIG.bullet.size);
         }
       });
