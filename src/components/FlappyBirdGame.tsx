@@ -10,6 +10,8 @@ interface GameState {
     weapon: WeaponType;
     ammo: number;
     onGround: boolean;
+    animationFrame: number;
+    direction: 'left' | 'right';
   };
   bullets: Array<{
     x: number;
@@ -17,6 +19,7 @@ interface GameState {
     velocityX: number;
     velocityY: number;
     damage: number;
+    trail: Array<{x: number, y: number}>;
   }>;
   enemies: Array<{
     x: number;
@@ -46,8 +49,20 @@ interface GameState {
     type: 'health' | 'ammo' | 'weapon';
     weaponType?: WeaponType;
   }>;
+  particles: Array<{
+    x: number;
+    y: number;
+    velocityX: number;
+    velocityY: number;
+    life: number;
+    maxLife: number;
+    color: string;
+    size: number;
+    type: 'explosion' | 'spark' | 'smoke' | 'blood';
+  }>;
   camera: {
     x: number;
+    shake: number;
   };
   score: number;
   distance: number;
@@ -108,14 +123,18 @@ export default function FlappyBirdGame() {
       weapon: 'pistol',
       ammo: GAME_CONFIG.weapons.pistol.ammo,
       onGround: true,
+      animationFrame: 0,
+      direction: 'right',
     },
     bullets: [],
     enemies: [],
     enemyBullets: [],
     obstacles: [],
     powerups: [],
+    particles: [],
     camera: {
       x: 0,
+      shake: 0,
     },
     score: 0,
     distance: 0,
@@ -140,14 +159,18 @@ export default function FlappyBirdGame() {
         weapon: 'pistol',
         ammo: GAME_CONFIG.weapons.pistol.ammo,
         onGround: true,
+        animationFrame: 0,
+        direction: 'right',
       },
       bullets: [],
       enemies: [],
       enemyBullets: [],
       obstacles: [],
       powerups: [],
+      particles: [],
       camera: {
         x: 0,
+        shake: 0,
       },
       score: 0,
       distance: 0,
@@ -253,6 +276,62 @@ export default function FlappyBirdGame() {
     return powerups;
   }, []);
 
+  const createParticles = useCallback((x: number, y: number, type: 'explosion' | 'spark' | 'smoke' | 'blood', count: number = 5) => {
+    const state = gameStateRef.current;
+    for (let i = 0; i < count; i++) {
+      let color, life, size;
+      switch (type) {
+        case 'explosion':
+          color = `hsl(${Math.random() * 60 + 15}, 100%, ${50 + Math.random() * 30}%)`;
+          life = 20 + Math.random() * 20;
+          size = 3 + Math.random() * 4;
+          break;
+        case 'spark':
+          color = '#ffff88';
+          life = 10 + Math.random() * 10;
+          size = 1 + Math.random() * 2;
+          break;
+        case 'smoke':
+          color = `hsl(0, 0%, ${20 + Math.random() * 40}%)`;
+          life = 30 + Math.random() * 30;
+          size = 4 + Math.random() * 6;
+          break;
+        case 'blood':
+          color = `hsl(0, 80%, ${30 + Math.random() * 20}%)`;
+          life = 15 + Math.random() * 15;
+          size = 2 + Math.random() * 3;
+          break;
+      }
+      
+      state.particles.push({
+        x: x + (Math.random() - 0.5) * 10,
+        y: y + (Math.random() - 0.5) * 10,
+        velocityX: (Math.random() - 0.5) * 8,
+        velocityY: (Math.random() - 0.5) * 8 - 2,
+        life,
+        maxLife: life,
+        color,
+        size,
+        type,
+      });
+    }
+  }, []);
+
+  const updateParticles = useCallback(() => {
+    const state = gameStateRef.current;
+    for (let i = state.particles.length - 1; i >= 0; i--) {
+      const particle = state.particles[i];
+      particle.x += particle.velocityX;
+      particle.y += particle.velocityY;
+      particle.velocityY += 0.2; // gravity
+      particle.life--;
+      
+      if (particle.life <= 0) {
+        state.particles.splice(i, 1);
+      }
+    }
+  }, []);
+
   const startGame = useCallback(() => {
     const state = gameStateRef.current;
     state.gameState = "playing";
@@ -293,6 +372,14 @@ export default function FlappyBirdGame() {
     lastShotTime.current = currentTime;
     state.player.ammo--;
     
+    // Add camera shake
+    state.camera.shake = 3;
+    
+    // Create muzzle flash particles
+    const muzzleX = state.player.x + GAME_CONFIG.player.size;
+    const muzzleY = state.player.y + GAME_CONFIG.player.size / 2;
+    createParticles(muzzleX, muzzleY, 'spark', 3);
+    
     const bulletSpeed = GAME_CONFIG.bullet.speed;
     
     if (state.player.weapon === 'shotgun') {
@@ -300,24 +387,26 @@ export default function FlappyBirdGame() {
       for (let i = 0; i < 5; i++) {
         const spread = (Math.random() - 0.5) * weapon.spread;
         state.bullets.push({
-          x: state.player.x + GAME_CONFIG.player.size,
-          y: state.player.y + GAME_CONFIG.player.size / 2,
+          x: muzzleX,
+          y: muzzleY,
           velocityX: bulletSpeed + spread * 2,
           velocityY: spread,
           damage: weapon.damage,
+          trail: [],
         });
       }
     } else {
       const spread = (Math.random() - 0.5) * weapon.spread;
       state.bullets.push({
-        x: state.player.x + GAME_CONFIG.player.size,
-        y: state.player.y + GAME_CONFIG.player.size / 2,
+        x: muzzleX,
+        y: muzzleY,
         velocityX: bulletSpeed,
         velocityY: spread,
         damage: weapon.damage,
+        trail: [],
       });
     }
-  }, []);
+  }, [createParticles]);
 
   const checkCollision = useCallback((rect1: any, rect2: any) => {
     return rect1.x < rect2.x + rect2.width &&
@@ -342,34 +431,74 @@ export default function FlappyBirdGame() {
 
   const drawPlayer = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number) => {
     const size = GAME_CONFIG.player.size;
+    const state = gameStateRef.current;
+    const isMoving = state.player.animationFrame > 0;
+    const bobOffset = isMoving ? Math.sin(state.player.animationFrame * 0.5) * 2 : 0;
+    const direction = state.player.direction;
     
-    // Draw rooster body (orange-red)
-    ctx.fillStyle = "#ff6b35";
-    ctx.fillRect(x + 2, y + 6, size - 4, size - 8);
+    ctx.save();
     
-    // Draw comb (red)
-    ctx.fillStyle = "#ff0000";
-    ctx.fillRect(x + 4, y, 2, 4);
-    ctx.fillRect(x + 6, y - 1, 2, 5);
-    ctx.fillRect(x + 8, y, 2, 4);
+    // Flip horizontally if moving left
+    if (direction === 'left') {
+      ctx.scale(-1, 1);
+      x = -x - size;
+    }
     
-    // Draw beak (yellow)
-    ctx.fillStyle = "#ffaa00";
-    ctx.fillRect(x - 1, y + 7, 3, 2);
+    // Draw shadow
+    ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+    ctx.fillRect(x, y + size + 2, size, 4);
     
-    // Draw eye (black)
+    // Draw rooster body with gradient
+    const bodyGradient = ctx.createLinearGradient(x, y, x, y + size);
+    bodyGradient.addColorStop(0, "#ff8c42");
+    bodyGradient.addColorStop(1, "#ff6b35");
+    ctx.fillStyle = bodyGradient;
+    ctx.fillRect(x + 4, y + 8 + bobOffset, size - 8, size - 12);
+    
+    // Draw wing with animation
+    ctx.fillStyle = "#ff5722";
+    const wingOffset = isMoving ? Math.sin(state.player.animationFrame * 0.8) * 3 : 0;
+    ctx.fillRect(x + 6, y + 10 + bobOffset + wingOffset, size - 12, 8);
+    
+    // Draw comb with more detail
+    ctx.fillStyle = "#d32f2f";
+    ctx.fillRect(x + 8, y + 2, 4, 6);
+    ctx.fillRect(x + 10, y, 4, 8);
+    ctx.fillRect(x + 14, y + 2, 4, 6);
+    
+    // Draw beak with depth
+    ctx.fillStyle = "#ff9800";
+    ctx.fillRect(x + size - 2, y + 12, 6, 4);
+    ctx.fillStyle = "#ff8f00";
+    ctx.fillRect(x + size - 2, y + 13, 4, 2);
+    
+    // Draw eye with pupil
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(x + 10, y + 10, 6, 6);
     ctx.fillStyle = "#000000";
-    ctx.fillRect(x + 5, y + 6, 2, 2);
+    ctx.fillRect(x + 12, y + 12, 2, 2);
     
-    // Draw legs (yellow)
-    ctx.fillStyle = "#ffaa00";
-    ctx.fillRect(x + 4, y + size - 2, 1, 3);
-    ctx.fillRect(x + 8, y + size - 2, 1, 3);
+    // Draw legs with animation
+    ctx.fillStyle = "#ff9800";
+    const legOffset = isMoving ? Math.sin(state.player.animationFrame * 0.6) * 1 : 0;
+    ctx.fillRect(x + 8, y + size - 4, 2, 6 + legOffset);
+    ctx.fillRect(x + 16, y + size - 4, 2, 6 - legOffset);
     
-    // Draw weapon
+    // Draw feet
+    ctx.fillStyle = "#ff8f00";
+    ctx.fillRect(x + 6, y + size + 2, 6, 2);
+    ctx.fillRect(x + 14, y + size + 2, 6, 2);
+    
+    // Draw weapon with muzzle flash
     const weapon = gameStateRef.current.player.weapon;
     ctx.fillStyle = WEAPONS_INFO[weapon].color;
-    ctx.fillRect(x + size, y + 16, 16, 4);
+    ctx.fillRect(x + size - 2, y + 16, 20, 6);
+    
+    // Add weapon details
+    ctx.fillStyle = "#333333";
+    ctx.fillRect(x + size + 12, y + 18, 4, 2);
+    
+    ctx.restore();
   }, []);
 
   const drawEnemy = useCallback((ctx: CanvasRenderingContext2D, enemy: any, screenX: number) => {
@@ -421,16 +550,24 @@ export default function FlappyBirdGame() {
     const state = gameStateRef.current;
 
     if (state.gameState === "playing") {
-      // Handle player horizontal movement (unlimited)
+      // Handle player horizontal movement and animation
       if (keysRef.current.has('ArrowLeft') || keysRef.current.has('KeyA')) {
         state.player.x -= GAME_CONFIG.player.moveSpeed;
-      }
-      if (keysRef.current.has('ArrowRight') || keysRef.current.has('KeyD')) {
+        state.player.direction = 'left';
+        state.player.animationFrame = (state.player.animationFrame + 1) % 8;
+      } else if (keysRef.current.has('ArrowRight') || keysRef.current.has('KeyD')) {
         state.player.x += GAME_CONFIG.player.moveSpeed;
+        state.player.direction = 'right';
+        state.player.animationFrame = (state.player.animationFrame + 1) % 8;
+      } else {
+        state.player.animationFrame = 0;
       }
 
-      // Camera follows player (keep player centered)
-      state.camera.x = state.player.x - GAME_CONFIG.canvas.width / 2;
+      // Camera follows player with shake effect
+      const shakeX = state.camera.shake > 0 ? (Math.random() - 0.5) * state.camera.shake : 0;
+      state.camera.x = state.player.x - GAME_CONFIG.canvas.width / 2 + shakeX;
+      state.camera.shake = Math.max(0, state.camera.shake - 0.5);
+      
       state.distance = Math.floor(Math.abs(state.player.x - 400) / 10);
       setDistance(state.distance);
 
@@ -456,11 +593,20 @@ export default function FlappyBirdGame() {
         }
       }
 
-      // Update bullets
+      // Update bullets and trails
       state.bullets.forEach((bullet) => {
+        // Add current position to trail
+        bullet.trail.push({ x: bullet.x, y: bullet.y });
+        if (bullet.trail.length > 5) {
+          bullet.trail.shift();
+        }
+        
         bullet.x += bullet.velocityX;
         bullet.y += bullet.velocityY;
       });
+
+      // Update particles
+      updateParticles();
 
       // Remove bullets that are off screen or hit obstacles
       state.bullets = state.bullets.filter(bullet => {
@@ -535,7 +681,13 @@ export default function FlappyBirdGame() {
             enemy.health -= bullet.damage;
             state.bullets.splice(i, 1);
             
+            // Create impact particles
+            createParticles(enemy.x + GAME_CONFIG.enemy.size / 2, enemy.y + GAME_CONFIG.enemy.size / 2, 'blood', 3);
+            
             if (enemy.health <= 0) {
+              // Create explosion particles for enemy death
+              createParticles(enemy.x + GAME_CONFIG.enemy.size / 2, enemy.y + GAME_CONFIG.enemy.size / 2, 'explosion', 8);
+              state.camera.shake = Math.max(state.camera.shake, 5);
               state.enemies.splice(j, 1);
               state.score += 100;
               setDisplayScore(state.score);
@@ -588,18 +740,41 @@ export default function FlappyBirdGame() {
     // Clear canvas
     ctx.clearRect(0, 0, GAME_CONFIG.canvas.width, GAME_CONFIG.canvas.height);
 
-    // Draw sky background
-    ctx.fillStyle = "#87CEEB";
+    // Draw gradient sky background
+    const gradient = ctx.createLinearGradient(0, 0, 0, GAME_CONFIG.world.groundLevel);
+    gradient.addColorStop(0, "#ff6b6b");
+    gradient.addColorStop(0.4, "#ffa726");
+    gradient.addColorStop(1, "#ffcc80");
+    ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, GAME_CONFIG.canvas.width, GAME_CONFIG.world.groundLevel);
 
-    // Draw prison background elements (moving with camera)
-    ctx.strokeStyle = "#696969";
-    ctx.lineWidth = 1;
-    for (let x = -(state.camera.x % 40); x < GAME_CONFIG.canvas.width; x += 40) {
+    // Draw prison background elements with depth
+    const parallaxOffset = state.camera.x * 0.3;
+    
+    // Background prison walls
+    ctx.fillStyle = "rgba(100, 100, 100, 0.3)";
+    for (let x = -(parallaxOffset % 120); x < GAME_CONFIG.canvas.width; x += 120) {
+      ctx.fillRect(x, 0, 8, GAME_CONFIG.world.groundLevel);
+    }
+    
+    // Foreground fence pattern
+    ctx.strokeStyle = "#556b2f";
+    ctx.lineWidth = 2;
+    for (let x = -(state.camera.x % 20); x < GAME_CONFIG.canvas.width; x += 20) {
       ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, GAME_CONFIG.canvas.height);
+      ctx.moveTo(x, GAME_CONFIG.world.groundLevel - 60);
+      ctx.lineTo(x, GAME_CONFIG.world.groundLevel);
       ctx.stroke();
+      
+      // Barbed wire effect
+      if (x % 40 === 0) {
+        ctx.strokeStyle = "#8b4513";
+        ctx.beginPath();
+        ctx.moveTo(x - 10, GAME_CONFIG.world.groundLevel - 80);
+        ctx.lineTo(x + 10, GAME_CONFIG.world.groundLevel - 80);
+        ctx.stroke();
+        ctx.strokeStyle = "#556b2f";
+      }
     }
 
     if (state.gameState !== "start") {
@@ -661,11 +836,32 @@ export default function FlappyBirdGame() {
         }
       });
 
-      // Draw bullets
-      ctx.fillStyle = "#ffff00";
+      // Draw bullets with trails
       state.bullets.forEach((bullet) => {
         const screenX = bullet.x - state.camera.x;
         if (screenX > -GAME_CONFIG.bullet.size && screenX < GAME_CONFIG.canvas.width) {
+          // Draw trail
+          ctx.strokeStyle = "rgba(255, 255, 136, 0.6)";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          for (let i = 0; i < bullet.trail.length; i++) {
+            const trailScreenX = bullet.trail[i].x - state.camera.x;
+            if (i === 0) {
+              ctx.moveTo(trailScreenX, bullet.trail[i].y);
+            } else {
+              ctx.lineTo(trailScreenX, bullet.trail[i].y);
+            }
+          }
+          ctx.stroke();
+          
+          // Draw bullet with glow
+          const bulletGradient = ctx.createRadialGradient(
+            screenX + GAME_CONFIG.bullet.size/2, bullet.y + GAME_CONFIG.bullet.size/2, 0,
+            screenX + GAME_CONFIG.bullet.size/2, bullet.y + GAME_CONFIG.bullet.size/2, GAME_CONFIG.bullet.size
+          );
+          bulletGradient.addColorStop(0, "#ffff88");
+          bulletGradient.addColorStop(1, "#ff8800");
+          ctx.fillStyle = bulletGradient;
           ctx.fillRect(screenX, bullet.y, GAME_CONFIG.bullet.size, GAME_CONFIG.bullet.size);
         }
       });
@@ -679,18 +875,76 @@ export default function FlappyBirdGame() {
         }
       });
 
-      // Draw HUD
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "16px Arial";
+      // Draw particles
+      state.particles.forEach((particle) => {
+        const screenX = particle.x - state.camera.x;
+        if (screenX > -10 && screenX < GAME_CONFIG.canvas.width + 10) {
+          const alpha = particle.life / particle.maxLife;
+          ctx.globalAlpha = alpha;
+          
+          if (particle.type === 'explosion') {
+            const radius = particle.size * (1 - alpha * 0.5);
+            const gradient = ctx.createRadialGradient(screenX, particle.y, 0, screenX, particle.y, radius);
+            gradient.addColorStop(0, particle.color);
+            gradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(screenX, particle.y, radius, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            ctx.fillStyle = particle.color;
+            ctx.fillRect(screenX - particle.size/2, particle.y - particle.size/2, particle.size, particle.size);
+          }
+          
+          ctx.globalAlpha = 1;
+        }
+      });
+
+      // Draw HUD with improved styling
+      ctx.font = "bold 18px Arial";
       ctx.textAlign = "left";
-      ctx.fillText(`Score: ${state.score}`, 10, 25);
-      ctx.fillText(`Distance: ${state.distance}m`, 10, 50);
-      ctx.fillText(`Health: ${state.player.health}`, 10, 75);
-      ctx.fillText(`${WEAPONS_INFO[state.player.weapon].name}: ${state.player.ammo}`, 10, 100);
+      
+      // Draw HUD background
+      ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+      ctx.fillRect(5, 5, 200, 110);
+      
+      // Score with glow effect
+      ctx.shadowColor = "#ffff88";
+      ctx.shadowBlur = 2;
+      ctx.fillStyle = "#ffff88";
+      ctx.fillText(`Score: ${state.score}`, 15, 30);
+      
+      // Distance
+      ctx.shadowColor = "#88ff88";
+      ctx.fillStyle = "#88ff88";
+      ctx.fillText(`Distance: ${state.distance}m`, 15, 55);
+      
+      // Health bar
+      ctx.shadowColor = "none";
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#ff4444";
+      ctx.fillRect(15, 65, 100, 10);
+      ctx.fillStyle = "#44ff44";
+      const healthPercent = state.player.health / GAME_CONFIG.player.maxHealth;
+      ctx.fillRect(15, 65, 100 * healthPercent, 10);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "12px Arial";
+      ctx.fillText(`Health: ${state.player.health}`, 15, 85);
+      
+      // Weapon info with color coding
+      ctx.font = "bold 16px Arial";
+      ctx.fillStyle = WEAPONS_INFO[state.player.weapon].color;
+      ctx.shadowColor = WEAPONS_INFO[state.player.weapon].color;
+      ctx.shadowBlur = 1;
+      ctx.fillText(`${WEAPONS_INFO[state.player.weapon].name}: ${state.player.ammo}`, 15, 105);
+      
+      // Reset shadow
+      ctx.shadowColor = "transparent";
+      ctx.shadowBlur = 0;
     }
 
     animationRef.current = requestAnimationFrame(gameLoop);
-  }, [drawPlayer, drawEnemy, checkCollision, applyGravity, generateObstacles, generateEnemies, generatePowerups]);
+  }, [drawPlayer, drawEnemy, checkCollision, applyGravity, generateObstacles, generateEnemies, generatePowerups, createParticles, updateParticles]);
 
   useEffect(() => {
     gameLoop();
