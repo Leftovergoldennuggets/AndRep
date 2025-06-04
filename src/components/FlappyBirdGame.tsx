@@ -25,14 +25,14 @@ const GAME_CONFIG = {
   bird: {
     x: 100,
     size: 20,
-    gravity: 0.6,
-    jumpForce: -12,
+    gravity: 0.3,
+    jumpForce: -6,
   },
   pipes: {
     width: 60,
-    gap: 150,
-    speed: 3,
-    spacing: 250,
+    gap: 180,
+    speed: 2,
+    spacing: 300,
   },
 };
 
@@ -52,6 +52,7 @@ export default function FlappyBirdGame() {
 
   const [displayScore, setDisplayScore] = useState(0);
   const [gameState, setGameState] = useState<"start" | "playing" | "gameOver">("start");
+
 
   const resetGame = useCallback(() => {
     gameStateRef.current = {
@@ -96,8 +97,8 @@ export default function FlappyBirdGame() {
   }, []);
 
   const checkCollision = useCallback((bird: GameState["bird"], pipes: GameState["pipes"]) => {
-    // Check ground/ceiling collision
-    if (bird.y <= 0 || bird.y >= GAME_CONFIG.canvas.height - GAME_CONFIG.bird.size) {
+    // Check ground/ceiling collision  
+    if (bird.y <= 0 || bird.y + GAME_CONFIG.bird.size >= GAME_CONFIG.canvas.height) {
       return true;
     }
 
@@ -168,50 +169,56 @@ export default function FlappyBirdGame() {
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, GAME_CONFIG.canvas.width, GAME_CONFIG.canvas.height);
 
-    // Draw pipes
-    ctx.fillStyle = "#228B22";
-    state.pipes.forEach((pipe) => {
-      // Top pipe
-      ctx.fillRect(pipe.x, 0, GAME_CONFIG.pipes.width, pipe.topHeight);
-      // Bottom pipe
-      ctx.fillRect(pipe.x, pipe.bottomY, GAME_CONFIG.pipes.width, GAME_CONFIG.canvas.height - pipe.bottomY);
-      
-      // Pipe caps
-      ctx.fillStyle = "#32CD32";
-      ctx.fillRect(pipe.x - 5, pipe.topHeight - 30, GAME_CONFIG.pipes.width + 10, 30);
-      ctx.fillRect(pipe.x - 5, pipe.bottomY, GAME_CONFIG.pipes.width + 10, 30);
+    // Draw pipes (only if playing or game over)
+    if (state.gameState !== "start") {
       ctx.fillStyle = "#228B22";
-    });
+      state.pipes.forEach((pipe) => {
+        // Top pipe
+        ctx.fillRect(pipe.x, 0, GAME_CONFIG.pipes.width, pipe.topHeight);
+        // Bottom pipe
+        ctx.fillRect(pipe.x, pipe.bottomY, GAME_CONFIG.pipes.width, GAME_CONFIG.canvas.height - pipe.bottomY);
+        
+        // Pipe caps
+        ctx.fillStyle = "#32CD32";
+        ctx.fillRect(pipe.x - 5, pipe.topHeight - 30, GAME_CONFIG.pipes.width + 10, 30);
+        ctx.fillRect(pipe.x - 5, pipe.bottomY, GAME_CONFIG.pipes.width + 10, 30);
+        ctx.fillStyle = "#228B22";
+      });
+    }
 
-    // Draw bird
-    ctx.fillStyle = "#FFD700";
-    ctx.beginPath();
-    ctx.arc(
-      state.bird.x + GAME_CONFIG.bird.size / 2,
-      state.bird.y + GAME_CONFIG.bird.size / 2,
-      GAME_CONFIG.bird.size / 2,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
+    // Draw bird (only if playing or game over)
+    if (state.gameState !== "start") {
+      ctx.fillStyle = "#FFD700";
+      ctx.beginPath();
+      ctx.arc(
+        state.bird.x + GAME_CONFIG.bird.size / 2,
+        state.bird.y + GAME_CONFIG.bird.size / 2,
+        GAME_CONFIG.bird.size / 2,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
 
-    // Draw eye
-    ctx.fillStyle = "#000";
-    ctx.beginPath();
-    ctx.arc(
-      state.bird.x + GAME_CONFIG.bird.size / 2 + 5,
-      state.bird.y + GAME_CONFIG.bird.size / 2 - 3,
-      3,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
+      // Draw eye
+      ctx.fillStyle = "#000";
+      ctx.beginPath();
+      ctx.arc(
+        state.bird.x + GAME_CONFIG.bird.size / 2 + 5,
+        state.bird.y + GAME_CONFIG.bird.size / 2 - 3,
+        3,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+    }
 
-    // Draw score
-    ctx.fillStyle = "#fff";
-    ctx.font = "bold 24px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText(state.score.toString(), GAME_CONFIG.canvas.width / 2, 50);
+    // Draw score (only if playing or game over)
+    if (state.gameState !== "start") {
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 24px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText(state.score.toString(), GAME_CONFIG.canvas.width / 2, 50);
+    }
 
     animationRef.current = requestAnimationFrame(gameLoop);
   }, [generatePipe, checkCollision]);
@@ -256,7 +263,7 @@ export default function FlappyBirdGame() {
         className="border-4 border-white rounded-lg shadow-2xl cursor-pointer"
       />
       
-      {gameState === "start" && (
+{gameState === "start" && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
           <div className="text-center text-white">
             <h1 className="text-4xl font-bold mb-4">Flappy Bird</h1>
