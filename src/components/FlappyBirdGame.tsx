@@ -59,14 +59,14 @@ type WeaponType = 'pistol' | 'shotgun' | 'rifle' | 'grenade';
 const GAME_CONFIG = {
   canvas: {
     width: 800,
-    height: 600,
+    height: 400,
   },
   player: {
-    size: 16,
+    size: 32,
     maxHealth: 100,
-    gravity: 0.4,
-    jumpForce: -12,
-    moveSpeed: 2,
+    gravity: 0.6,
+    jumpForce: -16,
+    moveSpeed: 6,
     scrollSpeed: 3, // How fast the world moves left
   },
   weapons: {
@@ -76,17 +76,17 @@ const GAME_CONFIG = {
     grenade: { damage: 80, fireRate: 2000, ammo: 5, spread: 0 },
   },
   enemy: {
-    size: 14,
+    size: 28,
     health: 60,
     fireRate: 1500,
-    gravity: 0.4,
+    gravity: 0.6,
   },
   bullet: {
-    speed: 8,
-    size: 3,
+    speed: 12,
+    size: 6,
   },
   world: {
-    groundLevel: 550, // Y position of the ground
+    groundLevel: 350, // Y position of the ground
   },
 };
 
@@ -321,9 +321,9 @@ export default function FlappyBirdGame() {
 
   const checkCollision = useCallback((rect1: any, rect2: any) => {
     return rect1.x < rect2.x + rect2.width &&
-           rect1.x + (rect1.size || rect1.width) > rect2.x &&
+           rect1.x + rect1.width > rect2.x &&
            rect1.y < rect2.y + rect2.height &&
-           rect1.y + (rect1.size || rect1.height) > rect2.y;
+           rect1.y + rect1.height > rect2.y;
   }, []);
 
   const applyGravity = useCallback((entity: any) => {
@@ -369,7 +369,7 @@ export default function FlappyBirdGame() {
     // Draw weapon
     const weapon = gameStateRef.current.player.weapon;
     ctx.fillStyle = WEAPONS_INFO[weapon].color;
-    ctx.fillRect(x + size, y + 8, 8, 2);
+    ctx.fillRect(x + size, y + 16, 16, 4);
   }, []);
 
   const drawEnemy = useCallback((ctx: CanvasRenderingContext2D, enemy: any, screenX: number) => {
@@ -443,8 +443,8 @@ export default function FlappyBirdGame() {
           const screenX = obstacle.x - state.camera.x;
           if (screenX > -obstacle.width && screenX < GAME_CONFIG.canvas.width) {
             if (checkCollision(
-              { x: state.player.x, y: state.player.y, size: GAME_CONFIG.player.size },
-              { x: screenX, y: obstacle.y, width: obstacle.width, height: obstacle.height }
+              { x: state.player.x, y: state.player.y, width: GAME_CONFIG.player.size, height: GAME_CONFIG.player.size },
+              { x: obstacle.x, y: obstacle.y, width: obstacle.width, height: obstacle.height }
             )) {
               if (state.player.velocityY > 0) { // Falling down
                 state.player.y = obstacle.y - GAME_CONFIG.player.size;
@@ -471,8 +471,10 @@ export default function FlappyBirdGame() {
         }
         
         for (const obstacle of state.obstacles) {
-          const obstacleScreenX = obstacle.x - state.camera.x;
-          if (checkCollision(bullet, { x: obstacleScreenX, y: obstacle.y, width: obstacle.width, height: obstacle.height })) {
+          if (checkCollision(
+            { x: bullet.x, y: bullet.y, width: GAME_CONFIG.bullet.size, height: GAME_CONFIG.bullet.size },
+            { x: obstacle.x, y: obstacle.y, width: obstacle.width, height: obstacle.height }
+          )) {
             return false;
           }
         }
@@ -526,7 +528,10 @@ export default function FlappyBirdGame() {
         const bullet = state.bullets[i];
         for (let j = state.enemies.length - 1; j >= 0; j--) {
           const enemy = state.enemies[j];
-          if (checkCollision(bullet, { ...enemy, width: GAME_CONFIG.enemy.size, height: GAME_CONFIG.enemy.size })) {
+          if (checkCollision(
+            { x: bullet.x, y: bullet.y, width: GAME_CONFIG.bullet.size, height: GAME_CONFIG.bullet.size },
+            { x: enemy.x, y: enemy.y, width: GAME_CONFIG.enemy.size, height: GAME_CONFIG.enemy.size }
+          )) {
             enemy.health -= bullet.damage;
             state.bullets.splice(i, 1);
             
@@ -562,8 +567,8 @@ export default function FlappyBirdGame() {
       for (let i = state.powerups.length - 1; i >= 0; i--) {
         const powerup = state.powerups[i];
         if (checkCollision(
-          { x: state.player.x, y: state.player.y, size: GAME_CONFIG.player.size },
-          { x: powerup.x, y: powerup.y, width: 12, height: 12 }
+          { x: state.player.x, y: state.player.y, width: GAME_CONFIG.player.size, height: GAME_CONFIG.player.size },
+          { x: powerup.x, y: powerup.y, width: 24, height: 24 }
         )) {
           if (powerup.type === 'health') {
             state.player.health = Math.min(GAME_CONFIG.player.maxHealth, state.player.health + 30);
@@ -625,7 +630,7 @@ export default function FlappyBirdGame() {
       // Draw powerups
       state.powerups.forEach((powerup) => {
         const screenX = powerup.x - state.camera.x;
-        if (screenX > -12 && screenX < GAME_CONFIG.canvas.width) {
+        if (screenX > -24 && screenX < GAME_CONFIG.canvas.width) {
           if (powerup.type === 'health') {
             ctx.fillStyle = "#ff0000";
           } else if (powerup.type === 'ammo') {
@@ -633,14 +638,14 @@ export default function FlappyBirdGame() {
           } else {
             ctx.fillStyle = "#00ff00";
           }
-          ctx.fillRect(screenX, powerup.y, 12, 12);
+          ctx.fillRect(screenX, powerup.y, 24, 24);
           
           // Add icon
           ctx.fillStyle = "#ffffff";
-          ctx.font = "8px Arial";
+          ctx.font = "16px Arial";
           ctx.textAlign = "center";
           const text = powerup.type === 'health' ? '+' : powerup.type === 'ammo' ? 'A' : 'W';
-          ctx.fillText(text, screenX + 6, powerup.y + 8);
+          ctx.fillText(text, screenX + 12, powerup.y + 16);
         }
       });
 
