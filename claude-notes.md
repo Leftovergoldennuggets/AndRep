@@ -251,6 +251,20 @@ Transformed overwhelming text wall into engaging cinematic experience that playe
 ## Latest Updates - Session Commits
 - [x] **TEMPORARY SIMPLIFICATION ATTEMPT**: Attempted gameplay simplification but reverted due to user preference
 - [x] **RESTORED COMPLEX VERSION**: git reset --hard 28506a5 - Back to full-featured game
+- [x] **SUPERPOWERS REMOVAL & BADASS HUD**: Current session
+  - Removed all special abilities: rage mode, shadow dash, battle cry, wing shield
+  - Removed combo system, stealth mechanics, and cover system
+  - Removed ability key bindings (Q, E, R, F keys) and related UI
+  - Implemented military-style tactical HUD with:
+    * Tactical green frames with corner brackets
+    * Military monospace fonts (Courier New)
+    * Advanced health bar with color-coded status
+    * Weapon display with ammo counter box
+    * 5-segment threat level indicator
+    * Mission objectives in military format
+    * Tactical compass pointing toward escape
+    * Professional event alerts with countdown timers
+  - Build test passed - no compilation errors
 - [x] **HEALTH & GUARD MOVEMENT UPDATE**: 273b5ef
   - Reduced player health from 100 to 3 hearts for more challenging gameplay
   - Added patrol movement to guards - they now walk back and forth when patrolling
@@ -289,6 +303,14 @@ Transformed overwhelming text wall into engaging cinematic experience that playe
   - Added special abilities, combo system, and dynamic events
   - Enhanced combat with new mechanics and visual effects
   - Improved game balance and player experience
+- [x] **REMOVED ABILITIES & COMBO SYSTEMS**: bf0fbcd
+  - Removed all special abilities (rageMode, shadowDash, battleCry, wingShield)
+  - Removed combo system and related multipliers
+  - Removed ability key bindings (Q, E, R, F keys)
+  - Simplified damage calculation to basic values only
+  - Removed ability UI displays and cooldown indicators
+  - Cleaned up unused imports and code references
+  - Game now focuses purely on core shooting and combat mechanics
 - [x] **TWO-STAGE VICTORY EXPERIENCE**: Current session
   - Added new "victoryIllustration" game state for victory artwork display
   - Victory triggers now show custom endscreenvictory.png illustration first

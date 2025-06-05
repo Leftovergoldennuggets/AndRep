@@ -2951,130 +2951,323 @@ export default function FlappyBirdGame() {
         }
       });
 
-      // Draw HUD with improved styling
-      ctx.font = "bold 18px Arial";
-      ctx.textAlign = "left";
-      
-      // Draw HUD background (bigger for objectives and level info)
-      ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-      ctx.fillRect(5, 5, 350, 180);
-      
-      // Level Information with glow effect
-      ctx.shadowColor = "#00ffff";
-      ctx.shadowBlur = 2;
-      ctx.fillStyle = "#00ffff";
-      ctx.fillText(`Level ${state.level.current}: ${state.level.name}`, 15, 30);
-      
-      // Score with glow effect
-      ctx.shadowColor = "#ffff88";
-      ctx.shadowBlur = 2;
-      ctx.fillStyle = "#ffff88";
-      ctx.fillText(`Score: ${state.score}`, 15, 55);
-      
-      // Distance
-      ctx.shadowColor = "#88ff88";
-      ctx.fillStyle = "#88ff88";
-      ctx.fillText(`Distance: ${state.distance}m`, 15, 80);
-      
-      // Heart display
-      ctx.shadowColor = "none";
+      // BADASS MILITARY-STYLE HUD
+      ctx.shadowColor = "transparent";
       ctx.shadowBlur = 0;
-      ctx.font = "20px Arial";
-      for (let i = 0; i < GAME_CONFIG.player.maxHealth; i++) {
-        const heartX = 15 + (i * 25);
-        const heartY = 95;
-        
-        if (i < state.player.health) {
-          // Full heart
-          ctx.fillStyle = "#ff4444";
-          ctx.fillText("♥", heartX, heartY);
-        } else {
-          // Empty heart
-          ctx.fillStyle = "#444444";
-          ctx.fillText("♡", heartX, heartY);
+      
+      // === TOP-LEFT TACTICAL DISPLAY ===
+      // Main HUD frame with military styling
+      const hudX = 10;
+      const hudY = 10;
+      const hudWidth = 380;
+      const hudHeight = 200;
+      
+      // Outer tactical frame (dark green military style)
+      ctx.fillStyle = "#0a1a0a";
+      ctx.fillRect(hudX - 3, hudY - 3, hudWidth + 6, hudHeight + 6);
+      
+      // Inner frame with subtle gradient
+      const gradient = ctx.createLinearGradient(hudX, hudY, hudX, hudY + hudHeight);
+      gradient.addColorStop(0, "rgba(20, 40, 20, 0.95)");
+      gradient.addColorStop(1, "rgba(10, 25, 10, 0.95)");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(hudX, hudY, hudWidth, hudHeight);
+      
+      // Corner brackets for tactical look
+      ctx.strokeStyle = "#00ff41";
+      ctx.lineWidth = 2;
+      const bracketSize = 15;
+      // Top-left corner
+      ctx.beginPath();
+      ctx.moveTo(hudX, hudY + bracketSize);
+      ctx.lineTo(hudX, hudY);
+      ctx.lineTo(hudX + bracketSize, hudY);
+      ctx.stroke();
+      // Top-right corner
+      ctx.beginPath();
+      ctx.moveTo(hudX + hudWidth - bracketSize, hudY);
+      ctx.lineTo(hudX + hudWidth, hudY);
+      ctx.lineTo(hudX + hudWidth, hudY + bracketSize);
+      ctx.stroke();
+      // Bottom-left corner
+      ctx.beginPath();
+      ctx.moveTo(hudX, hudY + hudHeight - bracketSize);
+      ctx.lineTo(hudX, hudY + hudHeight);
+      ctx.lineTo(hudX + bracketSize, hudY + hudHeight);
+      ctx.stroke();
+      // Bottom-right corner
+      ctx.beginPath();
+      ctx.moveTo(hudX + hudWidth - bracketSize, hudY + hudHeight);
+      ctx.lineTo(hudX + hudWidth, hudY + hudHeight);
+      ctx.lineTo(hudX + hudWidth, hudY + hudHeight - bracketSize);
+      ctx.stroke();
+      
+      // === MISSION HEADER ===
+      ctx.font = "bold 16px 'Courier New', monospace";
+      ctx.fillStyle = "#00ff41";
+      ctx.textAlign = "left";
+      ctx.fillText(`OPERATION: ${state.level.name.toUpperCase()}`, hudX + 15, hudY + 25);
+      
+      // === VITAL STATS ROW ===
+      const statsY = hudY + 50;
+      
+      // Health Display (Military style)
+      ctx.font = "bold 14px 'Courier New', monospace";
+      ctx.fillStyle = "#ff4444";
+      ctx.fillText("VITALS:", hudX + 15, statsY);
+      
+      // Health bar background
+      const healthBarX = hudX + 80;
+      const healthBarY = statsY - 12;
+      const healthBarWidth = 120;
+      const healthBarHeight = 16;
+      
+      ctx.fillStyle = "#330000";
+      ctx.fillRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
+      
+      // Health bar fill
+      const healthPercent = state.player.health / GAME_CONFIG.player.maxHealth;
+      const healthWidth = healthBarWidth * healthPercent;
+      const healthColor = healthPercent > 0.6 ? "#00ff00" : healthPercent > 0.3 ? "#ffaa00" : "#ff0000";
+      ctx.fillStyle = healthColor;
+      ctx.fillRect(healthBarX, healthBarY, healthWidth, healthBarHeight);
+      
+      // Health bar border
+      ctx.strokeStyle = "#666666";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
+      
+      // Health numbers
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "10px 'Courier New', monospace";
+      ctx.textAlign = "center";
+      ctx.fillText(`${state.player.health}/${GAME_CONFIG.player.maxHealth}`, healthBarX + healthBarWidth/2, statsY - 2);
+      
+      // === WEAPON DISPLAY ===
+      const weaponY = statsY + 25;
+      ctx.textAlign = "left";
+      ctx.font = "bold 14px 'Courier New', monospace";
+      ctx.fillStyle = "#ffaa00";
+      ctx.fillText("WEAPON:", hudX + 15, weaponY);
+      
+      // Weapon info with tactical styling
+      ctx.font = "bold 12px 'Courier New', monospace";
+      ctx.fillStyle = WEAPONS_INFO[state.player.weapon].color;
+      ctx.fillText(`${WEAPONS_INFO[state.player.weapon].name.toUpperCase()}`, hudX + 85, weaponY);
+      
+      // Ammo count with box
+      const ammoBoxX = hudX + 180;
+      const ammoBoxY = weaponY - 12;
+      ctx.fillStyle = "#1a1a1a";
+      ctx.fillRect(ammoBoxX, ammoBoxY, 50, 16);
+      ctx.strokeStyle = "#666666";
+      ctx.strokeRect(ammoBoxX, ammoBoxY, 50, 16);
+      
+      ctx.fillStyle = "#00ffff";
+      ctx.textAlign = "center";
+      ctx.fillText(`${state.player.ammo}`, ammoBoxX + 25, weaponY - 2);
+      
+      // === TACTICAL INTEL ===
+      const intelY = weaponY + 30;
+      ctx.textAlign = "left";
+      ctx.font = "bold 14px 'Courier New', monospace";
+      ctx.fillStyle = "#00aaff";
+      ctx.fillText("INTEL:", hudX + 15, intelY);
+      
+      // Score and Distance in tactical format
+      ctx.font = "11px 'Courier New', monospace";
+      ctx.fillStyle = "#aaaaaa";
+      ctx.fillText(`SCORE: ${state.score.toString().padStart(6, '0')}`, hudX + 70, intelY);
+      ctx.fillText(`DISTANCE: ${state.distance}M`, hudX + 200, intelY);
+      
+      // === ALERT LEVEL ===
+      const alertY = intelY + 25;
+      ctx.font = "bold 12px 'Courier New', monospace";
+      ctx.fillStyle = "#ff8800";
+      ctx.fillText("THREAT LEVEL:", hudX + 15, alertY);
+      
+      // Alert level bar with advanced styling
+      const alertBarX = hudX + 120;
+      const alertBarY = alertY - 10;
+      const alertBarWidth = 100;
+      const alertBarHeight = 12;
+      
+      // Alert bar background
+      ctx.fillStyle = "#001100";
+      ctx.fillRect(alertBarX, alertBarY, alertBarWidth, alertBarHeight);
+      
+      // Alert bar segments
+      const alertPercent = state.alertLevel / 100;
+      const segmentWidth = alertBarWidth / 5;
+      for (let i = 0; i < 5; i++) {
+        const segmentFill = Math.max(0, Math.min(1, (alertPercent * 5) - i));
+        if (segmentFill > 0) {
+          let segmentColor;
+          if (i < 2) segmentColor = "#00ff00";
+          else if (i < 4) segmentColor = "#ffaa00";
+          else segmentColor = "#ff0000";
+          
+          ctx.fillStyle = segmentColor;
+          ctx.fillRect(alertBarX + (i * segmentWidth) + 1, alertBarY + 1, (segmentWidth - 2) * segmentFill, alertBarHeight - 2);
         }
       }
+      
+      // Alert level border
+      ctx.strokeStyle = "#444444";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(alertBarX, alertBarY, alertBarWidth, alertBarHeight);
+      
+      // Alert level text
+      const alertLevel = Math.floor(alertPercent * 5) + 1;
+      const alertLabels = ["CLEAR", "LOW", "MEDIUM", "HIGH", "CRITICAL"];
       ctx.fillStyle = "#ffffff";
-      ctx.font = "12px Arial";
-      ctx.fillText("Hearts", 15, 110);
+      ctx.font = "9px 'Courier New', monospace";
+      ctx.textAlign = "center";
+      ctx.fillText(alertLabels[Math.min(4, alertLevel - 1)], alertBarX + alertBarWidth/2, alertY + 5);
       
-      // Weapon info with color coding
-      ctx.font = "bold 16px Arial";
-      ctx.fillStyle = WEAPONS_INFO[state.player.weapon].color;
-      ctx.shadowColor = WEAPONS_INFO[state.player.weapon].color;
-      ctx.shadowBlur = 1;
-      ctx.fillText(`${WEAPONS_INFO[state.player.weapon].name}: ${state.player.ammo}`, 15, 130);
+      // === MISSION OBJECTIVES ===
+      const objStartY = alertY + 25;
+      ctx.textAlign = "left";
+      ctx.font = "bold 12px 'Courier New', monospace";
+      ctx.fillStyle = "#ffff00";
+      ctx.fillText("MISSION OBJECTIVES:", hudX + 15, objStartY);
       
-      // Alert Level
-      ctx.font = "12px Arial";
-      ctx.fillStyle = "#ffffff";
-      ctx.fillText(`Alert Level:`, 15, 150);
-      
-      // Alert level bar
-      ctx.fillStyle = "#333333";
-      ctx.fillRect(100, 140, 100, 8);
-      const alertPercent = state.alertLevel / 100;
-      const alertColor = alertPercent > 0.7 ? "#ff4444" : alertPercent > 0.4 ? "#ffaa44" : "#44ff44";
-      ctx.fillStyle = alertColor;
-      ctx.fillRect(100, 140, 100 * alertPercent, 8);
-      
-      // Objectives
-      ctx.font = "bold 14px Arial";
-      ctx.fillStyle = "#ffff88";
-      ctx.fillText("OBJECTIVES:", 15, 170);
-      
-      ctx.font = "11px Arial";
-      let objY = 180;
+      ctx.font = "10px 'Courier New', monospace";
+      let objY = objStartY + 15;
       state.objectives.forEach((objective, _index) => {
-        const color = objective.completed ? "#44ff44" : "#ffffff";
+        const color = objective.completed ? "#00ff00" : "#ffffff";
         ctx.fillStyle = color;
-        const status = objective.completed ? "✓" : "○";
-        let text = `${status} ${objective.description}`;
+        const status = objective.completed ? "[✓]" : "[ ]";
+        let text = `${status} ${objective.description.toUpperCase()}`;
         
         if (objective.targetCount) {
           text += ` (${objective.currentCount}/${objective.targetCount})`;
         }
         if (objective.timeRemaining !== undefined) {
           const seconds = Math.ceil(objective.timeRemaining / 1000);
-          text += ` (${seconds}s)`;
+          text += ` - ${seconds}S`;
         }
         
-        ctx.fillText(text, 25, objY);
+        ctx.fillText(text, hudX + 20, objY);
         objY += 12;
       });
       
       
-      // Active Events Display
+      // === BOTTOM-RIGHT TACTICAL EVENTS DISPLAY ===
       if (state.events.active.length > 0) {
-        ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-        ctx.fillRect(GAME_CONFIG.canvas.width - 300, GAME_CONFIG.canvas.height - 80, 290, 70);
+        const eventX = GAME_CONFIG.canvas.width - 320;
+        const eventY = GAME_CONFIG.canvas.height - 100;
+        const eventWidth = 310;
+        const eventHeight = 90;
         
-        ctx.font = "bold 14px Arial";
-        ctx.fillStyle = "#ff8844";
-        ctx.fillText("ACTIVE EVENT:", GAME_CONFIG.canvas.width - 295, GAME_CONFIG.canvas.height - 60);
+        // Event frame with military styling
+        ctx.fillStyle = "#1a0a0a";
+        ctx.fillRect(eventX - 3, eventY - 3, eventWidth + 6, eventHeight + 6);
+        
+        const eventGradient = ctx.createLinearGradient(eventX, eventY, eventX, eventY + eventHeight);
+        eventGradient.addColorStop(0, "rgba(40, 10, 10, 0.95)");
+        eventGradient.addColorStop(1, "rgba(25, 5, 5, 0.95)");
+        ctx.fillStyle = eventGradient;
+        ctx.fillRect(eventX, eventY, eventWidth, eventHeight);
+        
+        // Danger corner brackets
+        ctx.strokeStyle = "#ff4444";
+        ctx.lineWidth = 2;
+        const eventBracketSize = 12;
+        // Corners
+        ctx.beginPath();
+        ctx.moveTo(eventX, eventY + eventBracketSize);
+        ctx.lineTo(eventX, eventY);
+        ctx.lineTo(eventX + eventBracketSize, eventY);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(eventX + eventWidth - eventBracketSize, eventY);
+        ctx.lineTo(eventX + eventWidth, eventY);
+        ctx.lineTo(eventX + eventWidth, eventY + eventBracketSize);
+        ctx.stroke();
+        
+        // Alert header
+        ctx.font = "bold 14px 'Courier New', monospace";
+        ctx.fillStyle = "#ff4444";
+        ctx.textAlign = "left";
+        ctx.fillText("⚠ TACTICAL ALERT ⚠", eventX + 15, eventY + 25);
         
         const event = state.events.active[0];
         const now = Date.now();
         const eventTimeLeft = Math.max(0, (event.startTime + event.duration - now) / 1000);
         
-        ctx.font = "12px Arial";
-        ctx.fillStyle = "#ffffff";
+        // Event name with timer
+        ctx.font = "bold 12px 'Courier New', monospace";
+        ctx.fillStyle = "#ffaa00";
         const eventName = event.type.toUpperCase().replace('_', ' ');
-        ctx.fillText(`${eventName} (${eventTimeLeft.toFixed(1)}s)`, GAME_CONFIG.canvas.width - 295, GAME_CONFIG.canvas.height - 40);
+        ctx.fillText(`${eventName}`, eventX + 15, eventY + 45);
         
+        // Countdown timer
+        ctx.fillStyle = "#ff6666";
+        ctx.textAlign = "right";
+        ctx.fillText(`T-${eventTimeLeft.toFixed(1)}S`, eventX + eventWidth - 15, eventY + 45);
+        
+        // Event description
         let eventDesc = "";
         switch (event.type) {
-          case 'riot': eventDesc = "Multiple enemies spawned! Chaos mode!"; break;
-          case 'lockdown': eventDesc = "Movement speed reduced! Security alert!"; break;
-          case 'supply_drop': eventDesc = "Weapons and ammo available! Grab them!"; break;
-          case 'weather': eventDesc = "Storm effects active! Reduced visibility!"; break;
+          case 'riot': eventDesc = "MULTIPLE HOSTILES INCOMING - BRACE FOR COMBAT"; break;
+          case 'lockdown': eventDesc = "FACILITY LOCKDOWN - MOVEMENT RESTRICTED"; break;
+          case 'supply_drop': eventDesc = "SUPPLY CACHE AVAILABLE - RESUPPLY NOW"; break;
+          case 'weather': eventDesc = "SEVERE WEATHER - VISIBILITY COMPROMISED"; break;
         }
-        ctx.fillText(eventDesc, GAME_CONFIG.canvas.width - 295, GAME_CONFIG.canvas.height - 20);
+        
+        ctx.font = "10px 'Courier New', monospace";
+        ctx.fillStyle = "#cccccc";
+        ctx.textAlign = "left";
+        ctx.fillText(eventDesc, eventX + 15, eventY + 65);
       }
       
-      // Reset shadow
+      // === TOP-RIGHT COMPASS AND STATUS ===
+      const compassX = GAME_CONFIG.canvas.width - 120;
+      const compassY = 20;
+      const compassSize = 80;
+      
+      // Compass background
+      ctx.fillStyle = "rgba(10, 20, 10, 0.9)";
+      ctx.fillRect(compassX, compassY, compassSize, compassSize);
+      
+      // Compass border
+      ctx.strokeStyle = "#00ff41";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(compassX, compassY, compassSize, compassSize);
+      
+      // Compass circle
+      const compassCenterX = compassX + compassSize / 2;
+      const compassCenterY = compassY + compassSize / 2;
+      const compassRadius = 30;
+      
+      ctx.strokeStyle = "#666666";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(compassCenterX, compassCenterY, compassRadius, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      // Direction indicator (always points right for "EAST" toward escape)
+      ctx.strokeStyle = "#ff4444";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(compassCenterX, compassCenterY);
+      ctx.lineTo(compassCenterX + compassRadius * 0.8, compassCenterY);
+      ctx.stroke();
+      
+      // Compass labels
+      ctx.font = "bold 10px 'Courier New', monospace";
+      ctx.fillStyle = "#ffffff";
+      ctx.textAlign = "center";
+      ctx.fillText("E", compassCenterX + compassRadius + 8, compassCenterY + 4);
+      ctx.fillText("ESCAPE", compassCenterX, compassY + compassSize + 12);
+      
+      // Reset all drawing settings
       ctx.shadowColor = "transparent";
       ctx.shadowBlur = 0;
+      ctx.textAlign = "left";
+      ctx.lineWidth = 1;
     }
 
     animationRef.current = requestAnimationFrame(gameLoop);
