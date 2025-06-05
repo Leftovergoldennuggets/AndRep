@@ -1176,15 +1176,16 @@ export default function FlappyBirdGame() {
     ctx.fillStyle = "#ff8f00";
     ctx.fillRect(x + 11*pixelSize, y + 4*pixelSize, pixelSize, pixelSize);
     
-    // 8-BIT TAIL FEATHERS
+    // 8-BIT TAIL FEATHERS - properly attached to body
     ctx.fillStyle = "#2e7d32";
-    ctx.fillRect(x - 2*pixelSize, y + 4*pixelSize, 2*pixelSize, 8*pixelSize);
-    ctx.fillRect(x - 3*pixelSize, y + 6*pixelSize, pixelSize, 6*pixelSize);
-    ctx.fillRect(x - pixelSize, y + 5*pixelSize, pixelSize, 6*pixelSize);
+    // Main tail connected to back of body
+    ctx.fillRect(x + 2*pixelSize, y + 8*pixelSize + bobOffset, 2*pixelSize, 6*pixelSize);
+    ctx.fillRect(x + pixelSize, y + 9*pixelSize + bobOffset, pixelSize, 5*pixelSize);
+    ctx.fillRect(x, y + 10*pixelSize + bobOffset, pixelSize, 4*pixelSize);
     
     // Tail feather highlights
     ctx.fillStyle = "#4caf50";
-    ctx.fillRect(x - 2*pixelSize, y + 5*pixelSize, pixelSize, 4*pixelSize);
+    ctx.fillRect(x + 2*pixelSize, y + 9*pixelSize + bobOffset, pixelSize, 3*pixelSize);
     
     // 8-BIT SUNGLASSES - badass pixel shades
     ctx.fillStyle = "#000000";
@@ -1197,25 +1198,6 @@ export default function FlappyBirdGame() {
     ctx.fillRect(x + 6*pixelSize, y + 3*pixelSize, pixelSize, pixelSize);
     ctx.fillRect(x + 9*pixelSize, y + 3*pixelSize, pixelSize, pixelSize);
     
-    // 8-BIT CIGAR - pixel smoking
-    ctx.fillStyle = "#8b4513";
-    ctx.fillRect(x + 12*pixelSize, y + 3*pixelSize, 3*pixelSize, pixelSize);
-    
-    // Cigar tip - glowing red
-    ctx.fillStyle = "#ff4444";
-    ctx.fillRect(x + 15*pixelSize, y + 3*pixelSize, pixelSize, pixelSize);
-    
-    // Cigar band - gold pixel
-    ctx.fillStyle = "#ffd700";
-    ctx.fillRect(x + 13*pixelSize, y + 3*pixelSize, pixelSize, pixelSize);
-    
-    // 8-bit smoke particles
-    ctx.fillStyle = "rgba(200, 200, 200, 0.8)";
-    for (let i = 0; i < 3; i++) {
-      const smokeX = x + 16*pixelSize + i * 2*pixelSize + Math.sin((state.player.animationFrame + i) * 0.2) * pixelSize;
-      const smokeY = y + 2*pixelSize - i * pixelSize;
-      ctx.fillRect(smokeX, smokeY, pixelSize, pixelSize);
-    }
     
     // 8-BIT ROOSTER LEGS
     ctx.fillStyle = "#ff8800";
@@ -1242,21 +1224,43 @@ export default function FlappyBirdGame() {
     ctx.fillRect(x + 7*pixelSize, y + 17*pixelSize - legOffset, pixelSize, pixelSize);
     ctx.fillRect(x + 11*pixelSize, y + 17*pixelSize - legOffset, pixelSize, pixelSize);
     
-    // Draw BADASS WEAPON
+    // 8-BIT BADASS WEAPON
     const weapon = gameStateRef.current.player.weapon;
-    const weaponGradient = ctx.createLinearGradient(x + size, y + 14, x + size + 20, y + 20);
-    weaponGradient.addColorStop(0, WEAPONS_INFO[weapon].color);
-    weaponGradient.addColorStop(1, "#000000");
-    ctx.fillStyle = weaponGradient;
-    ctx.fillRect(x + size - 2, y + 14, 22, 8);
     
-    // Weapon details - scope, barrel, etc.
+    // Weapon body - main gun structure
+    ctx.fillStyle = WEAPONS_INFO[weapon].color;
+    ctx.fillRect(x + 12*pixelSize, y + 8*pixelSize + bobOffset, 6*pixelSize, 2*pixelSize);
+    
+    // Gun barrel
+    ctx.fillStyle = "#333333";
+    ctx.fillRect(x + 18*pixelSize, y + 8*pixelSize + bobOffset, 3*pixelSize, pixelSize);
+    
+    // Trigger guard
     ctx.fillStyle = "#666666";
-    ctx.fillRect(x + size + 2, y + 16, 2, 2);
-    ctx.fillRect(x + size + 8, y + 15, 8, 1);
-    ctx.fillRect(x + size + 8, y + 21, 8, 1);
+    ctx.fillRect(x + 14*pixelSize, y + 10*pixelSize + bobOffset, 2*pixelSize, pixelSize);
+    
+    // Scope/sight
+    ctx.fillStyle = "#888888";
+    ctx.fillRect(x + 15*pixelSize, y + 7*pixelSize + bobOffset, 2*pixelSize, pixelSize);
+    
+    // Weapon details based on type
+    if (weapon === 'shotgun') {
+      // Double barrel
+      ctx.fillStyle = "#333333";
+      ctx.fillRect(x + 18*pixelSize, y + 9*pixelSize + bobOffset, 3*pixelSize, pixelSize);
+    } else if (weapon === 'rifle') {
+      // Longer barrel
+      ctx.fillStyle = "#333333";
+      ctx.fillRect(x + 18*pixelSize, y + 8*pixelSize + bobOffset, 4*pixelSize, pixelSize);
+    } else if (weapon === 'grenade') {
+      // Grenade launcher
+      ctx.fillStyle = "#555555";
+      ctx.fillRect(x + 17*pixelSize, y + 7*pixelSize + bobOffset, 2*pixelSize, 3*pixelSize);
+    }
+    
+    // Muzzle flash effect
     ctx.fillStyle = "#ff8800";
-    ctx.fillRect(x + size + 16, y + 17, 2, 2);
+    ctx.fillRect(x + 21*pixelSize, y + 8*pixelSize + bobOffset, pixelSize, pixelSize);
     
     ctx.restore();
   }, []);
