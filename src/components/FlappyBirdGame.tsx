@@ -208,7 +208,7 @@ const LEVELS = {
   1: {
     name: "Prison Yard",
     theme: 'yard' as const,
-    width: 2000,
+    width: 4000,
     boss: {
       type: 'warden' as const,
       name: "The Corrupt Warden",
@@ -877,16 +877,17 @@ export default function FlappyBirdGame() {
         if (enemy.alertLevel > 30) {
           enemy.aiState = 'chase';
         }
-        // Patrol movement for guards
-        if (enemy.type === 'guard' && enemy.onGround) {
+        // Patrol movement for guards and K9 dogs
+        if ((enemy.type === 'guard' || enemy.type === 'dog') && enemy.onGround) {
           // Initialize patrol direction if not set
           if (!enemy.patrolDirection) {
             enemy.patrolDirection = Math.random() > 0.5 ? 1 : -1;
             enemy.patrolStartX = enemy.x;
           }
           
-          const patrolSpeed = 0.5;
-          const patrolRange = 100;
+          // Dogs patrol faster than guards
+          const patrolSpeed = enemy.type === 'dog' ? 1.2 : 0.5;
+          const patrolRange = enemy.type === 'dog' ? 150 : 100;
           
           // Move in patrol direction
           enemy.x += enemy.patrolDirection * patrolSpeed;
@@ -905,8 +906,9 @@ export default function FlappyBirdGame() {
           enemy.aiState = 'patrol';
         }
         // Move towards player
-        if (enemy.type === 'guard' && enemy.onGround) {
-          const moveSpeed = 1;
+        if ((enemy.type === 'guard' || enemy.type === 'dog') && enemy.onGround) {
+          // Dogs move faster when chasing
+          const moveSpeed = enemy.type === 'dog' ? 2.5 : 1;
           enemy.x += dx > 0 ? moveSpeed : -moveSpeed;
         }
         break;
@@ -1902,6 +1904,41 @@ export default function FlappyBirdGame() {
           if (state.player.health <= 0) {
             state.gameState = "gameOver";
             setGameState("gameOver");
+          }
+        }
+      }
+
+      // Check player-enemy collisions for contact damage
+      for (const enemy of state.enemies) {
+        if (enemy.type !== 'camera') { // Cameras don't cause contact damage
+          const screenX = enemy.x - state.camera.x;
+          if (screenX > -100 && screenX < GAME_CONFIG.canvas.width + 100) {
+            const playerRect = { x: state.player.x, y: state.player.y, width: GAME_CONFIG.player.size, height: GAME_CONFIG.player.size };
+            const enemySize = enemy.type === 'boss' ? 90 : GAME_CONFIG.enemy.size;
+            const enemyRect = { x: enemy.x, y: enemy.y, width: enemySize, height: enemySize };
+            
+            if (checkCollision(playerRect, enemyRect)) {
+              // Take contact damage (1 heart for guards/dogs, 2 hearts for boss)
+              const contactDamage = enemy.type === 'boss' ? 2 : 1;
+              state.player.health -= contactDamage;
+              
+              // Knockback effect - push player away from enemy
+              const dx = state.player.x - enemy.x;
+              const knockbackForce = 30;
+              state.player.x += dx > 0 ? knockbackForce : -knockbackForce;
+              
+              // Add camera shake for impact
+              state.camera.shake = Math.max(state.camera.shake, 8);
+              
+              // Create blood particles at collision point
+              createParticles(state.player.x, state.player.y, 'blood', 3);
+              
+              if (state.player.health <= 0) {
+                state.gameState = "gameOver";
+                setGameState("gameOver");
+              }
+              break; // Only take damage from one enemy per frame
+            }
           }
         }
       }

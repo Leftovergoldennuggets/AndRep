@@ -362,6 +362,19 @@ Transformed overwhelming text wall into engaging cinematic experience that playe
   - Removed weather effects (rain animation) and event UI notifications
   - Removed lockdown speed penalties affecting player movement
   - Game now has simpler, cleaner gameplay without overwhelming platform jumping
+- [x] **MAP EXPANSION & K9 MOVEMENT**: Current session
+  - Doubled map size from 2000 to 4000 units for longer gameplay experience
+  - Added patrol movement to K9 dogs with faster movement than guards
+  - Dogs patrol in 150-unit ranges at 1.2 speed (vs guards: 100 units at 0.5 speed)
+  - Dogs chase players at 2.5 speed when alerted (vs guards: 1.0 speed)
+  - Both guards and dogs now actively patrol their territories
+- [x] **CONTACT DAMAGE SYSTEM**: Current session
+  - Implemented collision damage when player runs into enemies
+  - Guards/dogs deal 1 heart damage on contact, boss deals 2 hearts
+  - Added knockback effect pushing player away from enemy collision
+  - Added camera shake and blood particles for visual impact feedback
+  - Prevents damage stacking by limiting to one enemy hit per frame
+  - Cameras don't cause contact damage (only shoot bullets)
 
 ## Remaining Enhancement Ideas
 - Sound effects and music for boss encounters
