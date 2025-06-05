@@ -2565,7 +2565,7 @@ export default function FlappyBirdGame() {
       
       {gameState === "start" && (
         <div 
-          className="absolute inset-0 flex items-center justify-center"
+          className="absolute inset-0"
           style={{
             backgroundImage: 'url(/background.png)',
             backgroundSize: 'contain',
@@ -2575,18 +2575,20 @@ export default function FlappyBirdGame() {
           }}
         >
           {/* Blinking Start Button */}
-          <button
-            onClick={startGame}
-            className="arcade-start-button text-4xl font-bold px-12 py-6 border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-50 hover:bg-yellow-300 hover:text-black transition-colors"
-            style={{
-              fontFamily: 'monospace',
-              letterSpacing: '3px',
-              textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
-              animation: 'blink 1.5s infinite'
-            }}
-          >
-            START
-          </button>
+          <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2">
+            <button
+              onClick={startGame}
+              className="arcade-start-button text-4xl font-bold px-12 py-6 border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-50 hover:bg-yellow-300 hover:text-black transition-colors"
+              style={{
+                fontFamily: 'monospace',
+                letterSpacing: '3px',
+                textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
+                animation: 'blink 1.5s infinite'
+              }}
+            >
+              START
+            </button>
+          </div>
         </div>
       )}
 
