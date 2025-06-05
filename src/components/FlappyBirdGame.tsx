@@ -228,45 +228,6 @@ const LEVELS = {
       description: "The corrupt warden blocks your escape with his massive shotgun!",
     },
   },
-  2: {
-    name: "Cell Block Alpha",
-    theme: 'cellblock' as const,
-    width: 2500,
-    boss: {
-      type: 'captain' as const,
-      name: "Riot Captain",
-      health: 180,
-      size: 82,
-      attackPattern: "shield_slam",
-      description: "The armored riot captain charges with shield and baton!",
-    },
-  },
-  3: {
-    name: "Security Center",
-    theme: 'security' as const,
-    width: 3000,
-    boss: {
-      type: 'chief' as const,
-      name: "Cyber Security Chief",
-      health: 240,
-      size: 75,
-      attackPattern: "tech_assault",
-      description: "The high-tech security chief activates all cyber defenses!",
-    },
-  },
-  4: {
-    name: "Escape Route",
-    theme: 'escape' as const,
-    width: 3500,
-    boss: {
-      type: 'helicopter' as const,
-      name: "Attack Helicopter",
-      health: 300,
-      size: 120,
-      attackPattern: "aerial_barrage",
-      description: "Military helicopter blocks your final escape with aerial bombardment!",
-    },
-  },
 };
 
 export default function FlappyBirdGame() {
@@ -770,72 +731,6 @@ export default function FlappyBirdGame() {
         }
         break;
         
-      case 'captain': // Level 2 - Riot Captain with shield slam
-        if (playerInRange) {
-          const direction = player.x > boss.x ? 1 : -1;
-          boss.x += direction * 1.5; // Moderate movement with shield
-          
-          if (Date.now() - boss.lastShotTime > 2000) {
-            // Multi-shot burst after shield charge
-            for (let i = 0; i < 3; i++) {
-              setTimeout(() => {
-                state.enemyBullets.push({
-                  x: boss.x,
-                  y: boss.y + 25,
-                  velocityX: direction * (8 + i),
-                  velocityY: -1 + Math.random() * 2,
-                });
-              }, i * 200);
-            }
-            boss.lastShotTime = Date.now();
-          }
-        }
-        break;
-        
-      case 'chief': // Level 3 - Cyber Security Chief with tech assault
-        if (playerInRange) {
-          const direction = player.x > boss.x ? 1 : -1;
-          // Chief maintains distance, tech-based attacks
-          if (Math.abs(player.x - boss.x) < 200) {
-            boss.x += direction * -1; // Retreat to maintain distance
-          }
-          
-          if (Date.now() - boss.lastShotTime > 1800) {
-            // Homing cyber bullets
-            for (let i = 0; i < 3; i++) {
-              state.enemyBullets.push({
-                x: boss.x,
-                y: boss.y + 15,
-                velocityX: direction * (6 + Math.random() * 2),
-                velocityY: -2 + Math.random() * 4,
-              });
-            }
-            boss.lastShotTime = Date.now();
-          }
-        }
-        break;
-        
-      case 'helicopter': // Level 4 - Attack Helicopter with aerial barrage
-        if (playerInRange) {
-          // Helicopter hovers and moves horizontally
-          boss.y += Math.sin(Date.now() * 0.003) * 0.5; // Hovering motion
-          const direction = player.x > boss.x ? 1 : -1;
-          boss.x += direction * 0.8; // Slow aerial movement
-          
-          if (Date.now() - boss.lastShotTime > 1400) {
-            // Carpet bombing - multiple bombs
-            for (let i = 0; i < 2; i++) {
-              state.enemyBullets.push({
-                x: boss.x + (i * 30),
-                y: boss.y + 40,
-                velocityX: Math.random() * 2 - 1,
-                velocityY: 3 + Math.random() * 2, // Bombs fall down
-              });
-            }
-            boss.lastShotTime = Date.now();
-          }
-        }
-        break;
     }
     
     // Check if boss is defeated
@@ -869,55 +764,11 @@ export default function FlappyBirdGame() {
 
   const advanceToNextLevel = useCallback(() => {
     const state = gameStateRef.current;
-    const nextLevel = state.level.current + 1;
     
-    if (nextLevel > 4) {
-      // Game completed!
-      state.gameState = "victoryIllustration";
-      setGameState("victoryIllustration");
-      return;
-    }
-    
-    // Set up next level
-    const levelConfig = LEVELS[nextLevel as keyof typeof LEVELS];
-    state.level = {
-      current: nextLevel,
-      name: levelConfig.name,
-      theme: levelConfig.theme,
-      startX: 0,
-      endX: levelConfig.width,
-      bossSpawned: false,
-      bossDefeated: false,
-    };
-    
-    // Reset player position
-    state.player.x = 400;
-    state.player.y = GAME_CONFIG.world.groundLevel - GAME_CONFIG.player.size;
-    state.player.health = GAME_CONFIG.player.maxHealth; // Full health for new level
-    
-    // Clear existing entities
-    state.enemies = [];
-    state.bullets = [];
-    state.enemyBullets = [];
-    state.particles = [];
-    
-    // Generate new level content
-    const newObstacles = generateObstacles(state.level.startX, state.level.endX);
-    const newEnemies = generateEnemies(state.level.startX + 400, state.level.endX - 400);
-    const newPowerups = generatePowerups(state.level.startX + 200, state.level.endX - 200);
-    const newObjectives = generateObjectives();
-    const newPrisoners = generatePrisoners(state.level.startX + 300, state.level.endX - 300);
-    
-    state.obstacles = newObstacles;
-    state.enemies = newEnemies;
-    state.powerups = newPowerups;
-    state.objectives = newObjectives;
-    state.prisoners = newPrisoners;
-    
-    // Start playing the new level
-    state.gameState = "playing";
-    setGameState("playing");
-  }, [generateObstacles, generateEnemies, generatePowerups, generateObjectives, generatePrisoners]);
+    // Game completed after level 1!
+    state.gameState = "victoryIllustration";
+    setGameState("victoryIllustration");
+  }, []);
 
   const startGame = useCallback(() => {
     const state = gameStateRef.current;
