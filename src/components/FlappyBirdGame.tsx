@@ -1124,183 +1124,123 @@ export default function FlappyBirdGame() {
     ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
     ctx.fillRect(x, y + size + 2, size + 4, 6);
     
-    // Draw rooster body with smooth, organic curves
-    const bodyGradient = ctx.createRadialGradient(x + size/2, y + size/2, 0, x + size/2, y + size/2, size/2);
-    bodyGradient.addColorStop(0, "#ff8c42");
-    bodyGradient.addColorStop(0.7, "#ff6b35");
-    bodyGradient.addColorStop(1, "#e55100");
-    ctx.fillStyle = bodyGradient;
+    // 8-BIT ROOSTER BODY - pixel art style
+    const pixelSize = Math.max(1, Math.floor(size / 16)); // Scale pixels based on character size
     
-    // Main rooster body - oval/egg shape
-    ctx.beginPath();
-    ctx.ellipse(x + size/2, y + size/2 + bobOffset, size/3, size/2.5, 0, 0, Math.PI * 2);
-    ctx.fill();
+    // Rooster body - orange/red blocks
+    ctx.fillStyle = "#ff6b35";
+    ctx.fillRect(x + 4*pixelSize, y + 6*pixelSize + bobOffset, 8*pixelSize, 6*pixelSize);
+    ctx.fillRect(x + 6*pixelSize, y + 4*pixelSize + bobOffset, 4*pixelSize, 2*pixelSize);
     
-    // Chest area - smaller oval
-    ctx.beginPath();
-    ctx.ellipse(x + size/2, y + size/3 + bobOffset, size/4, size/4, 0, 0, Math.PI * 2);
-    ctx.fill();
+    // Body shading - darker orange
+    ctx.fillStyle = "#e55100";
+    ctx.fillRect(x + 10*pixelSize, y + 6*pixelSize + bobOffset, 2*pixelSize, 6*pixelSize);
+    ctx.fillRect(x + 8*pixelSize, y + 10*pixelSize + bobOffset, 4*pixelSize, 2*pixelSize);
     
-    // Draw BLACK LEATHER JACKET over body
-    const jacketGradient = ctx.createLinearGradient(x, y, x, y + size);
-    jacketGradient.addColorStop(0, "#1a1a1a");
-    jacketGradient.addColorStop(0.3, "#000000");
-    jacketGradient.addColorStop(1, "#333333");
-    ctx.fillStyle = jacketGradient;
-    
-    // Jacket body - curved shape
-    ctx.beginPath();
-    ctx.ellipse(x + size/2, y + size/2 + bobOffset, size/3.5, size/3, 0, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Jacket details - zipper
-    ctx.fillStyle = "#555555";
-    ctx.fillRect(x + size/2 - 1, y + size/4 + bobOffset, 2, size/2);
-    
-    // Jacket seams and details
-    ctx.fillStyle = "#666666";
-    ctx.beginPath();
-    ctx.arc(x + size/4, y + size/3 + bobOffset, 2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(x + size * 0.75, y + size/3 + bobOffset, 2, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Rooster chest feathers peeking out
-    ctx.fillStyle = "#ffb74d";
-    ctx.beginPath();
-    ctx.ellipse(x + size/2, y + size/4 + bobOffset, size/6, size/12, 0, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Draw rooster head with smooth curves
-    const headGradient = ctx.createRadialGradient(x + size/2, y + size/6, 0, x + size/2, y + size/6, size/3);
-    headGradient.addColorStop(0, "#ff8c42");
-    headGradient.addColorStop(1, "#ff6b35");
-    ctx.fillStyle = headGradient;
-    
-    // Head - smooth oval shape
-    ctx.beginPath();
-    ctx.ellipse(x + size/2, y + size/6, size/4, size/5, 0, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Neck - curved connection
-    ctx.beginPath();
-    ctx.ellipse(x + size/2, y + size/3.5, size/6, size/8, 0, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Draw prominent rooster comb with curves
-    ctx.fillStyle = "#d32f2f";
-    // Multiple curved comb segments
-    for (let i = 0; i < 4; i++) {
-      ctx.beginPath();
-      const combX = x + size/3 + i * size/12;
-      const combHeight = (i === 1 || i === 2) ? size/4 : size/6;
-      ctx.ellipse(combX, y - size/12, size/24, combHeight, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    
-    // Draw curved beak
-    ctx.fillStyle = "#ff9800";
-    ctx.beginPath();
-    // Upper beak
-    ctx.ellipse(x + size * 0.8, y + size/6, size/8, size/12, -0.3, 0, Math.PI * 2);
-    ctx.fill();
-    
-    ctx.fillStyle = "#ff8f00";
-    ctx.beginPath();
-    // Lower beak
-    ctx.ellipse(x + size * 0.82, y + size/5, size/12, size/16, -0.3, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Draw flowing tail feathers with curves
-    ctx.fillStyle = "#2e7d32";
-    // Main tail feathers
-    for (let i = 0; i < 3; i++) {
-      ctx.beginPath();
-      const featherX = x - size/6 - i * size/12;
-      const featherY = y + size/3 + i * size/8;
-      ctx.ellipse(featherX, featherY, size/12, size/2.5, Math.PI * 0.1 * i, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    
-    // Accent tail feathers
-    ctx.fillStyle = "#4caf50";
-    ctx.beginPath();
-    ctx.ellipse(x - size/8, y + size/2.5, size/16, size/3, 0.2, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Draw SUNGLASSES - total badass
+    // BLACK LEATHER JACKET - 8-bit style
     ctx.fillStyle = "#000000";
-    ctx.fillRect(x + 8, y + 4, 12, 6);
+    ctx.fillRect(x + 5*pixelSize, y + 7*pixelSize + bobOffset, 6*pixelSize, 5*pixelSize);
+    ctx.fillRect(x + 6*pixelSize, y + 6*pixelSize + bobOffset, 4*pixelSize, pixelSize);
+    
+    // Jacket highlights
+    ctx.fillStyle = "#333333";
+    ctx.fillRect(x + 5*pixelSize, y + 7*pixelSize + bobOffset, pixelSize, 4*pixelSize);
+    ctx.fillRect(x + 6*pixelSize, y + 6*pixelSize + bobOffset, pixelSize, pixelSize);
+    
+    // Zipper - silver pixels
+    ctx.fillStyle = "#888888";
+    ctx.fillRect(x + 8*pixelSize, y + 7*pixelSize + bobOffset, pixelSize, 4*pixelSize);
+    
+    // Chest feathers showing
+    ctx.fillStyle = "#ffb74d";
+    ctx.fillRect(x + 7*pixelSize, y + 5*pixelSize + bobOffset, 2*pixelSize, pixelSize);
+    
+    // 8-BIT ROOSTER HEAD
+    ctx.fillStyle = "#ff8c42";
+    ctx.fillRect(x + 6*pixelSize, y + 2*pixelSize, 4*pixelSize, 4*pixelSize);
+    ctx.fillRect(x + 7*pixelSize, y + pixelSize, 2*pixelSize, pixelSize);
+    
+    // Head shading
+    ctx.fillStyle = "#ff6b35";
+    ctx.fillRect(x + 8*pixelSize, y + 2*pixelSize, 2*pixelSize, 3*pixelSize);
+    
+    // 8-BIT ROOSTER COMB
+    ctx.fillStyle = "#d32f2f";
+    ctx.fillRect(x + 6*pixelSize, y, 2*pixelSize, 2*pixelSize);
+    ctx.fillRect(x + 7*pixelSize, y - pixelSize, 2*pixelSize, 2*pixelSize);
+    ctx.fillRect(x + 8*pixelSize, y, pixelSize, 2*pixelSize);
+    
+    // 8-BIT BEAK
+    ctx.fillStyle = "#ff9800";
+    ctx.fillRect(x + 10*pixelSize, y + 3*pixelSize, 2*pixelSize, pixelSize);
+    ctx.fillStyle = "#ff8f00";
+    ctx.fillRect(x + 11*pixelSize, y + 4*pixelSize, pixelSize, pixelSize);
+    
+    // 8-BIT TAIL FEATHERS
+    ctx.fillStyle = "#2e7d32";
+    ctx.fillRect(x - 2*pixelSize, y + 4*pixelSize, 2*pixelSize, 8*pixelSize);
+    ctx.fillRect(x - 3*pixelSize, y + 6*pixelSize, pixelSize, 6*pixelSize);
+    ctx.fillRect(x - pixelSize, y + 5*pixelSize, pixelSize, 6*pixelSize);
+    
+    // Tail feather highlights
+    ctx.fillStyle = "#4caf50";
+    ctx.fillRect(x - 2*pixelSize, y + 5*pixelSize, pixelSize, 4*pixelSize);
+    
+    // 8-BIT SUNGLASSES - badass pixel shades
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(x + 6*pixelSize, y + 3*pixelSize, 2*pixelSize, 2*pixelSize); // Left lens
+    ctx.fillRect(x + 9*pixelSize, y + 3*pixelSize, 2*pixelSize, 2*pixelSize); // Right lens
+    ctx.fillRect(x + 8*pixelSize, y + 3*pixelSize, pixelSize, pixelSize); // Bridge
+    
     // Lens reflections
-    ctx.fillStyle = "#333333";
-    ctx.fillRect(x + 9, y + 5, 4, 2);
-    ctx.fillRect(x + 15, y + 5, 4, 2);
-    // Bridge
-    ctx.fillRect(x + 13, y + 6, 2, 1);
+    ctx.fillStyle = "#666666";
+    ctx.fillRect(x + 6*pixelSize, y + 3*pixelSize, pixelSize, pixelSize);
+    ctx.fillRect(x + 9*pixelSize, y + 3*pixelSize, pixelSize, pixelSize);
     
-    // Draw CIGAR - smoking badass
+    // 8-BIT CIGAR - pixel smoking
     ctx.fillStyle = "#8b4513";
-    ctx.beginPath();
-    ctx.ellipse(x + size + 6, y + size/6, size/6, size/24, 0, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillRect(x + 12*pixelSize, y + 3*pixelSize, 3*pixelSize, pixelSize);
     
-    // Cigar tip
+    // Cigar tip - glowing red
     ctx.fillStyle = "#ff4444";
-    ctx.beginPath();
-    ctx.arc(x + size + size/4, y + size/6, size/48, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillRect(x + 15*pixelSize, y + 3*pixelSize, pixelSize, pixelSize);
     
-    // Cigar band
+    // Cigar band - gold pixel
     ctx.fillStyle = "#ffd700";
-    ctx.fillRect(x + size + size/12, y + size/6 - 1, size/24, 2);
+    ctx.fillRect(x + 13*pixelSize, y + 3*pixelSize, pixelSize, pixelSize);
     
-    // Smoke particles - more realistic
+    // 8-bit smoke particles
     ctx.fillStyle = "rgba(200, 200, 200, 0.8)";
-    for (let i = 0; i < 5; i++) {
-      const smokeX = x + size + size/4 + i * 3 + Math.sin((state.player.animationFrame + i) * 0.2) * 3;
-      const smokeY = y + size/8 - i * 3 + Math.cos((state.player.animationFrame + i) * 0.3) * 2;
-      ctx.beginPath();
-      ctx.arc(smokeX, smokeY, 1 + Math.sin(state.player.animationFrame * 0.1 + i) * 0.5, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    
-    // Draw rooster legs with smooth curves
-    ctx.fillStyle = "#ff8800";
-    const legOffset = isMoving ? Math.sin(state.player.animationFrame * 0.6) * 2 : 0;
-    
-    // Organic leg shapes
-    ctx.beginPath();
-    ctx.ellipse(x + size/2.5, y + size * 0.85 + legOffset, size/24, size/4, 0, 0, Math.PI * 2);
-    ctx.fill();
-    
-    ctx.beginPath();
-    ctx.ellipse(x + size * 0.65, y + size * 0.85 - legOffset, size/24, size/4, 0, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Rooster feet with leather boots (curved)
-    ctx.fillStyle = "#1a1a1a";
-    ctx.beginPath();
-    ctx.ellipse(x + size/2.5, y + size + 4 + legOffset, size/8, size/12, 0, 0, Math.PI * 2);
-    ctx.fill();
-    
-    ctx.beginPath();
-    ctx.ellipse(x + size * 0.65, y + size + 4 - legOffset, size/8, size/12, 0, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Talon details - small curved claws
-    ctx.fillStyle = "#333333";
     for (let i = 0; i < 3; i++) {
-      // Left foot talons
-      ctx.beginPath();
-      ctx.ellipse(x + size/2.5 - size/16 + i * size/24, y + size + 6 + legOffset, size/48, size/32, 0, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // Right foot talons  
-      ctx.beginPath();
-      ctx.ellipse(x + size * 0.65 - size/16 + i * size/24, y + size + 6 - legOffset, size/48, size/32, 0, 0, Math.PI * 2);
-      ctx.fill();
+      const smokeX = x + 16*pixelSize + i * 2*pixelSize + Math.sin((state.player.animationFrame + i) * 0.2) * pixelSize;
+      const smokeY = y + 2*pixelSize - i * pixelSize;
+      ctx.fillRect(smokeX, smokeY, pixelSize, pixelSize);
     }
+    
+    // 8-BIT ROOSTER LEGS
+    ctx.fillStyle = "#ff8800";
+    const legOffset = isMoving ? Math.floor(Math.sin(state.player.animationFrame * 0.6) * pixelSize) : 0;
+    
+    // Pixel legs
+    ctx.fillRect(x + 6*pixelSize, y + 12*pixelSize + legOffset, pixelSize, 3*pixelSize);
+    ctx.fillRect(x + 9*pixelSize, y + 12*pixelSize - legOffset, pixelSize, 3*pixelSize);
+    
+    // 8-bit leather boots
+    ctx.fillStyle = "#1a1a1a";
+    ctx.fillRect(x + 5*pixelSize, y + 15*pixelSize + legOffset, 3*pixelSize, 2*pixelSize);
+    ctx.fillRect(x + 8*pixelSize, y + 15*pixelSize - legOffset, 3*pixelSize, 2*pixelSize);
+    
+    // Boot highlights
+    ctx.fillStyle = "#333333";
+    ctx.fillRect(x + 5*pixelSize, y + 15*pixelSize + legOffset, pixelSize, pixelSize);
+    ctx.fillRect(x + 8*pixelSize, y + 15*pixelSize - legOffset, pixelSize, pixelSize);
+    
+    // Pixel talons
+    ctx.fillStyle = "#555555";
+    ctx.fillRect(x + 4*pixelSize, y + 17*pixelSize + legOffset, pixelSize, pixelSize);
+    ctx.fillRect(x + 8*pixelSize, y + 17*pixelSize + legOffset, pixelSize, pixelSize);
+    ctx.fillRect(x + 7*pixelSize, y + 17*pixelSize - legOffset, pixelSize, pixelSize);
+    ctx.fillRect(x + 11*pixelSize, y + 17*pixelSize - legOffset, pixelSize, pixelSize);
     
     // Draw BADASS WEAPON
     const weapon = gameStateRef.current.player.weapon;
