@@ -36,7 +36,7 @@ interface GameState {
     velocityY: number;
     health: number;
     maxHealth: number;
-    type: 'guard' | 'dog' | 'camera' | 'boss';
+    type: 'guard' | 'dog' | 'boss';
     bossType?: 'warden' | 'captain' | 'chief' | 'helicopter';
     attackPattern?: string;
     phase?: number;
@@ -60,7 +60,7 @@ interface GameState {
     y: number;
     width: number;
     height: number;
-    type: 'wall' | 'fence' | 'crate' | 'platform' | 'ground' | 'barrel' | 'door' | 'switch';
+    type: 'wall' | 'fence' | 'crate' | 'platform' | 'ground' | 'door' | 'switch';
     health?: number;
     maxHealth?: number;
     isDestructible: boolean;
@@ -367,20 +367,6 @@ export default function FlappyBirdGame() {
           isDestructible: false,
           isInteractive: false,
         });
-      } else if (obstacleType < 0.6) {
-        // EXPLOSIVE BARREL - destructible!
-        obstacles.push({
-          x: x + Math.random() * 100,
-          y: GAME_CONFIG.world.groundLevel - 40,
-          width: 40,
-          height: 40,
-          type: 'barrel',
-          health: 50,
-          maxHealth: 50,
-          isDestructible: true,
-          isInteractive: false,
-          explosionRadius: 80,
-        });
       } else if (obstacleType < 0.75) {
         // SECURITY DOOR - interactive!
         obstacles.push({
@@ -422,10 +408,8 @@ export default function FlappyBirdGame() {
     const safeZoneEnd = playerSpawnX + safeZoneRadius;
     
     for (let x = startX; x < endX; x += 200 + Math.random() * 200) {
-      const enemyType = Math.random() < 0.7 ? 'guard' : Math.random() < 0.9 ? 'dog' : 'camera';
-      const enemyY = enemyType === 'camera' ? 
-        GAME_CONFIG.world.groundLevel - 100 - Math.random() * 200 : 
-        GAME_CONFIG.world.groundLevel - GAME_CONFIG.enemy.size;
+      const enemyType = Math.random() < 0.7 ? 'guard' : 'dog'; // Removed camera/tower enemies
+      const enemyY = GAME_CONFIG.world.groundLevel - GAME_CONFIG.enemy.size;
       
       const enemyX = x + Math.random() * 200;
       
@@ -453,21 +437,8 @@ export default function FlappyBirdGame() {
   }, []);
 
   const generatePowerups = useCallback((startX: number, endX: number) => {
-    const powerups: GameState['powerups'] = [];
-    
-    for (let x = startX; x < endX; x += 250 + Math.random() * 250) {
-      const powerupType = Math.random() < 0.4 ? 'health' : Math.random() < 0.7 ? 'ammo' : 'weapon';
-      powerups.push({
-        x: x + Math.random() * 200,
-        y: GAME_CONFIG.world.groundLevel - 40 - Math.random() * 200,
-        type: powerupType,
-        weaponType: powerupType === 'weapon' ? 
-          (['shotgun', 'rifle', 'grenade'] as WeaponType[])[Math.floor(Math.random() * 3)] : 
-          undefined,
-      });
-    }
-    
-    return powerups;
+    // Powerups removed for simplified gameplay
+    return [];
   }, []);
 
   const generateObjectives = useCallback(() => {
@@ -1759,32 +1730,7 @@ export default function FlappyBirdGame() {
               createParticles(obstacle.x + obstacle.width/2, obstacle.y + obstacle.height/2, 'spark', 3);
               
               if (obstacle.health <= 0) {
-                // EXPLOSIVE BARREL EXPLOSION!
-                if (obstacle.type === 'barrel') {
-                  createParticles(obstacle.x + obstacle.width/2, obstacle.y + obstacle.height/2, 'explosion', 15);
-                  state.camera.shake = Math.max(state.camera.shake, 8);
-                  
-                  // Damage nearby enemies and player
-                  const explosionRadius = obstacle.explosionRadius || 80;
-                  state.enemies.forEach(enemy => {
-                    const dx = enemy.x - (obstacle.x + obstacle.width/2);
-                    const dy = enemy.y - (obstacle.y + obstacle.height/2);
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < explosionRadius) {
-                      enemy.health -= 80;
-                      createParticles(enemy.x, enemy.y, 'blood', 5);
-                    }
-                  });
-                  
-                  // Check objective progress
-                  const destroyObjective = state.objectives.find(obj => obj.type === 'destroy');
-                  if (destroyObjective && !destroyObjective.completed) {
-                    destroyObjective.currentCount++;
-                    if (destroyObjective.currentCount >= (destroyObjective.targetCount || 0)) {
-                      destroyObjective.completed = true;
-                    }
-                  }
-                }
+                // Remove destroyed obstacle (barrels removed)
                 
                 state.obstacles.splice(i, 1);
               }
@@ -1968,24 +1914,7 @@ export default function FlappyBirdGame() {
         }
       }
 
-      // Check powerup collisions
-      for (let i = state.powerups.length - 1; i >= 0; i--) {
-        const powerup = state.powerups[i];
-        if (checkCollision(
-          { x: state.player.x, y: state.player.y, width: GAME_CONFIG.player.size, height: GAME_CONFIG.player.size },
-          { x: powerup.x, y: powerup.y, width: 36, height: 36 }
-        )) {
-          if (powerup.type === 'health') {
-            state.player.health = Math.min(GAME_CONFIG.player.maxHealth, state.player.health + 1);
-          } else if (powerup.type === 'ammo') {
-            state.player.ammo += 20;
-          } else if (powerup.type === 'weapon' && powerup.weaponType) {
-            state.player.weapon = powerup.weaponType;
-            state.player.ammo = GAME_CONFIG.weapons[powerup.weaponType].ammo;
-          }
-          state.powerups.splice(i, 1);
-        }
-      }
+      // Powerup collisions removed for simplified gameplay
 
       // Check prisoner rescue
       for (let i = state.prisoners.length - 1; i >= 0; i--) {
@@ -2327,24 +2256,7 @@ export default function FlappyBirdGame() {
       state.obstacles.forEach((obstacle) => {
         const screenX = obstacle.x - state.camera.x;
         if (screenX > -obstacle.width && screenX < GAME_CONFIG.canvas.width) {
-          if (obstacle.type === 'barrel') {
-            // EXPLOSIVE BARREL - orange with warning stripes
-            const barrelGradient = ctx.createLinearGradient(screenX, obstacle.y, screenX + obstacle.width, obstacle.y + obstacle.height);
-            barrelGradient.addColorStop(0, "#ff8800");
-            barrelGradient.addColorStop(1, "#cc4400");
-            ctx.fillStyle = barrelGradient;
-            ctx.fillRect(screenX, obstacle.y, obstacle.width, obstacle.height);
-            
-            // Warning stripes
-            ctx.fillStyle = "#ffff00";
-            for (let i = 0; i < 3; i++) {
-              ctx.fillRect(screenX + 5, obstacle.y + 5 + i * 12, obstacle.width - 10, 3);
-            }
-            
-            // Hazard symbol
-            ctx.fillStyle = "#000000";
-            ctx.fillRect(screenX + obstacle.width/2 - 4, obstacle.y + obstacle.height/2 - 4, 8, 8);
-          } else if (obstacle.type === 'door') {
+          if (obstacle.type === 'door') {
             // SECURITY DOOR - metallic with health bar
             const doorGradient = ctx.createLinearGradient(screenX, obstacle.y, screenX + obstacle.width, obstacle.y);
             doorGradient.addColorStop(0, "#555555");
@@ -2444,27 +2356,7 @@ export default function FlappyBirdGame() {
         }
       });
 
-      // Draw powerups
-      state.powerups.forEach((powerup) => {
-        const screenX = powerup.x - state.camera.x;
-        if (screenX > -24 && screenX < GAME_CONFIG.canvas.width) {
-          if (powerup.type === 'health') {
-            ctx.fillStyle = "#ff0000";
-          } else if (powerup.type === 'ammo') {
-            ctx.fillStyle = "#ffff00";
-          } else {
-            ctx.fillStyle = "#00ff00";
-          }
-          ctx.fillRect(screenX, powerup.y, 36, 36);
-          
-          // Add icon
-          ctx.fillStyle = "#ffffff";
-          ctx.font = "16px Arial";
-          ctx.textAlign = "center";
-          const text = powerup.type === 'health' ? '+' : powerup.type === 'ammo' ? 'A' : 'W';
-          ctx.fillText(text, screenX + 12, powerup.y + 16);
-        }
-      });
+      // Powerups removed for simplified gameplay
 
       // Draw farm animals (captured prisoners)
       state.prisoners.forEach((prisoner) => {
