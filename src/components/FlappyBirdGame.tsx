@@ -519,48 +519,21 @@ export default function FlappyBirdGame() {
   const generateObjectives = useCallback(() => {
     const objectives = [];
     
-    // Random mission type
-    const missionType = Math.random();
-    
-    if (missionType < 0.3) {
-      // RESCUE MISSION
-      objectives.push({
-        id: 'rescue',
-        type: 'rescue' as const,
-        description: 'Rescue 3 farm animals - Free your fellow creatures',
-        targetCount: 3,
-        currentCount: 0,
-        completed: false,
-      });
-    } else if (missionType < 0.6) {
-      // DESTRUCTION MISSION
-      objectives.push({
-        id: 'destroy',
-        type: 'destroy' as const,
-        description: 'Destroy 5 explosive barrels - Sabotage the system',
-        targetCount: 5,
-        currentCount: 0,
-        completed: false,
-      });
-    } else {
-      // SURVIVAL MISSION
-      objectives.push({
-        id: 'survive',
-        type: 'survive' as const,
-        description: 'Survive for 60 seconds - Stay strong like Wilbur',
-        timeLimit: 60000,
-        timeRemaining: 60000,
-        currentCount: 0,
-        completed: false,
-      });
-    }
-    
-    // Always add escape objective
+    // Fixed win condition: Save 3 animals and kill the corrupt warden
     objectives.push({
-      id: 'escape',
-      type: 'escape' as const,
-      description: 'Reach the escape point - Expose the truth!',
-      target: { x: 2000, y: GAME_CONFIG.world.groundLevel - 50 },
+      id: 'rescue',
+      type: 'rescue' as const,
+      description: 'Save 3 animals from the corrupt farm program',
+      targetCount: 3,
+      currentCount: 0,
+      completed: false,
+    });
+    
+    objectives.push({
+      id: 'kill_warden',
+      type: 'destroy' as const,
+      description: 'Eliminate the corrupt warden - Justice for Wilbur',
+      targetCount: 1,
       currentCount: 0,
       completed: false,
     });
@@ -2066,10 +2039,22 @@ export default function FlappyBirdGame() {
               // Create explosion particles for enemy death
               createParticles(enemy.x + GAME_CONFIG.enemy.size / 2, enemy.y + GAME_CONFIG.enemy.size / 2, 'explosion', 8);
               state.camera.shake = Math.max(state.camera.shake, 5);
+              
+              // Check if this is the warden boss for objective tracking
+              if (enemy.type === 'boss' && enemy.bossType === 'warden') {
+                const wardenObjective = state.objectives.find(obj => obj.id === 'kill_warden');
+                if (wardenObjective && !wardenObjective.completed) {
+                  wardenObjective.currentCount++;
+                  if (wardenObjective.currentCount >= (wardenObjective.targetCount || 0)) {
+                    wardenObjective.completed = true;
+                  }
+                }
+              }
+              
               state.enemies.splice(j, 1);
               
               // Basic score
-              const scoreGain = 100;
+              const scoreGain = enemy.type === 'boss' ? 500 : 100;
               state.score += scoreGain;
               setDisplayScore(state.score);
             }

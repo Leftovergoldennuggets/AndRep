@@ -265,6 +265,15 @@ Transformed overwhelming text wall into engaging cinematic experience that playe
     * Tactical compass pointing toward escape
     * Professional event alerts with countdown timers
   - Build test passed - no compilation errors
+- [x] **NEW WIN CONDITION**: Current session  
+  - Changed win condition to: Save 3 animals and kill the corrupt warden
+  - Updated objective system to show specific clear goals:
+    * "Save 3 animals from the corrupt farm program" (rescue objective)
+    * "Eliminate the corrupt warden - Justice for Wilbur" (boss kill objective)
+  - Modified enemy death logic to track warden kills for objective completion
+  - Victory triggers when BOTH objectives are completed (rescue 3 animals AND kill warden)
+  - Removed random mission types - now focused story-driven objectives
+  - Enhanced objective tracking for boss defeats with higher score rewards (500 vs 100)
 - [x] **HEALTH & GUARD MOVEMENT UPDATE**: 273b5ef
   - Reduced player health from 100 to 3 hearts for more challenging gameplay
   - Added patrol movement to guards - they now walk back and forth when patrolling
