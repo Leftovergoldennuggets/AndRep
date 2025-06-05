@@ -111,16 +111,6 @@ interface GameState {
   distance: number;
   gameState: "start" | "story" | "playing" | "gameOver" | "missionComplete" | "victoryIllustration" | "bossIntro" | "levelComplete";
   storySlide: number;
-  // New dynamic events system
-  events: {
-    active: Array<{
-      type: 'riot' | 'lockdown' | 'supply_drop' | 'betrayal' | 'weather';
-      startTime: number;
-      duration: number;
-      data?: any;
-    }>;
-    nextEventTime: number;
-  };
 }
 
 type WeaponType = 'pistol' | 'shotgun' | 'rifle' | 'grenade';
@@ -270,11 +260,6 @@ export default function FlappyBirdGame() {
     distance: 0,
     gameState: "start",
     storySlide: 0,
-    // Initialize events system
-    events: {
-      active: [],
-      nextEventTime: Date.now() + 30000, // First event in 30 seconds
-    },
   });
   
   const animationRef = useRef<number>(0);
@@ -325,11 +310,6 @@ export default function FlappyBirdGame() {
       distance: 0,
       gameState: "start",
       storySlide: 0,
-      // Reset events system
-      events: {
-        active: [],
-        nextEventTime: Date.now() + 30000,
-      },
     };
     setDisplayScore(0);
     setGameState("start");
@@ -371,23 +351,20 @@ export default function FlappyBirdGame() {
           isDestructible: false,
           isInteractive: false,
         });
+      } else if (obstacleType < 0.2) {
+        // Single platform only - much less frequent
+        const height = 80 + Math.random() * 40;
+        const width = 60 + Math.random() * 40;
+        obstacles.push({
+          x: x + Math.random() * 50,
+          y: GAME_CONFIG.world.groundLevel - height,
+          width: width,
+          height: 15 + Math.random() * 10,
+          type: 'platform',
+          isDestructible: false,
+          isInteractive: false,
+        });
       } else if (obstacleType < 0.6) {
-        // Multiple platform levels for complex jumping
-        const platformCount = 1 + Math.floor(Math.random() * 3);
-        for (let level = 0; level < platformCount; level++) {
-          const height = 80 + level * 60 + Math.random() * 40;
-          const width = 60 + Math.random() * 60;
-          obstacles.push({
-            x: x + Math.random() * 50 + level * 20,
-            y: GAME_CONFIG.world.groundLevel - height,
-            width: width,
-            height: 15 + Math.random() * 10,
-            type: 'platform',
-            isDestructible: false,
-            isInteractive: false,
-          });
-        }
-      } else if (obstacleType < 0.75) {
         // EXPLOSIVE BARREL - destructible!
         obstacles.push({
           x: x + Math.random() * 100,
@@ -401,7 +378,7 @@ export default function FlappyBirdGame() {
           isInteractive: false,
           explosionRadius: 80,
         });
-      } else if (obstacleType < 0.85) {
+      } else if (obstacleType < 0.75) {
         // SECURITY DOOR - interactive!
         obstacles.push({
           x: x + Math.random() * 100,
@@ -1678,14 +1655,8 @@ export default function FlappyBirdGame() {
     const state = gameStateRef.current;
 
     if (state.gameState === "playing") {
-      // Handle player horizontal movement and animation with event effects
+      // Handle player horizontal movement and animation
       let currentMoveSpeed = GAME_CONFIG.player.moveSpeed;
-        
-      // Apply lockdown penalty if active
-      const lockdownEvent = state.events.active.find(event => event.type === 'lockdown');
-      if (lockdownEvent) {
-        currentMoveSpeed *= lockdownEvent.data.speedPenalty;
-      }
         
       if (keysRef.current.has('ArrowLeft') || keysRef.current.has('KeyA')) {
         state.player.x -= currentMoveSpeed;
@@ -2002,83 +1973,6 @@ export default function FlappyBirdGame() {
         setGameState("victoryIllustration");
       }
 
-      // Dynamic Events System
-      const now = Date.now();
-      
-      // Remove expired events
-      state.events.active = state.events.active.filter(event => 
-        now - event.startTime < event.duration
-      );
-      
-      // Check if it's time for a new event
-      if (now >= state.events.nextEventTime && state.events.active.length === 0) {
-        const eventTypes = ['riot', 'lockdown', 'supply_drop', 'weather'];
-        const randomEvent = eventTypes[Math.floor(Math.random() * eventTypes.length)];
-        
-        let eventData = {};
-        let duration = 15000; // 15 seconds default
-        
-        switch (randomEvent) {
-          case 'riot':
-            // Spawn multiple enemies in chaos
-            duration = 20000; // 20 seconds
-            eventData = { enemyCount: 5, spawnRate: 2000 };
-            for (let i = 0; i < 3; i++) {
-              state.enemies.push({
-                x: state.player.x + 200 + (i * 100),
-                y: GAME_CONFIG.world.groundLevel - GAME_CONFIG.enemy.size,
-                velocityY: 0,
-                health: GAME_CONFIG.enemy.health * 0.7, // Weaker but more numerous
-                maxHealth: GAME_CONFIG.enemy.health * 0.7,
-                type: 'guard',
-                lastShotTime: 0,
-                onGround: true,
-                aiState: 'chase', // Aggressive from start
-                alertLevel: 100,
-                lastPlayerSeen: now,
-                patrolDirection: 1,
-                patrolStartX: state.player.x + 200 + (i * 100)
-              });
-            }
-            break;
-            
-          case 'lockdown':
-            // Temporary speed reduction, spawn barriers
-            duration = 12000; // 12 seconds
-            eventData = { speedPenalty: 0.5 };
-            break;
-            
-          case 'supply_drop':
-            // Spawn valuable powerups
-            duration = 10000; // 10 seconds
-            eventData = { powerupCount: 3 };
-            for (let i = 0; i < 2; i++) {
-              state.powerups.push({
-                x: state.player.x + 150 + (i * 200),
-                y: GAME_CONFIG.world.groundLevel - 40,
-                type: Math.random() > 0.5 ? 'weapon' : 'ammo',
-                weaponType: Math.random() > 0.5 ? 'rifle' : 'shotgun'
-              });
-            }
-            break;
-            
-          case 'weather':
-            // Visual effects and slight gameplay changes
-            duration = 25000; // 25 seconds
-            eventData = { type: 'storm', visibility: 0.7 };
-            break;
-        }
-        
-        state.events.active.push({
-          type: randomEvent as any,
-          startTime: now,
-          duration,
-          data: eventData
-        });
-        
-        // Schedule next event
-        state.events.nextEventTime = now + 45000 + Math.random() * 30000; // 45-75 seconds
-      }
 
       // No need to generate or remove content - static world
     }
@@ -2086,41 +1980,15 @@ export default function FlappyBirdGame() {
     // Clear canvas
     ctx.clearRect(0, 0, GAME_CONFIG.canvas.width, GAME_CONFIG.canvas.height);
 
-    // Draw dark, gritty prison sky background with weather effects
-    const weatherEvent = state.events.active.find(event => event.type === 'weather');
+    // Draw dark, gritty prison sky background
     const gradient = ctx.createLinearGradient(0, 0, 0, GAME_CONFIG.world.groundLevel);
-    
-    if (weatherEvent) {
-      // Storm effects - darker and more ominous
-      gradient.addColorStop(0, "#1A0F08"); // Darker brown-red
-      gradient.addColorStop(0.3, "#0F0F0F"); // Very very dark gray
-      gradient.addColorStop(0.7, "#222222"); // Darker gray
-      gradient.addColorStop(1, "#333333"); // Dark gray
-    } else {
-      gradient.addColorStop(0, "#2C1810"); // Dark brown-red
-      gradient.addColorStop(0.3, "#1A1A1A"); // Very dark gray
-      gradient.addColorStop(0.7, "#333333"); // Dark gray
-      gradient.addColorStop(1, "#4A4A4A"); // Medium gray
-    }
+    gradient.addColorStop(0, "#2C1810"); // Dark brown-red
+    gradient.addColorStop(0.3, "#1A1A1A"); // Very dark gray
+    gradient.addColorStop(0.7, "#333333"); // Dark gray
+    gradient.addColorStop(1, "#4A4A4A"); // Medium gray
     
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, GAME_CONFIG.canvas.width, GAME_CONFIG.world.groundLevel);
-    
-    // Add storm rain effect
-    if (weatherEvent) {
-      ctx.globalAlpha = 0.3;
-      ctx.strokeStyle = "#888888";
-      ctx.lineWidth = 1;
-      for (let i = 0; i < 100; i++) {
-        const x = (Date.now() * 0.1 + i * 37) % GAME_CONFIG.canvas.width;
-        const y = (Date.now() * 0.5 + i * 23) % GAME_CONFIG.canvas.height;
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x - 5, y + 15);
-        ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-    }
 
     // Draw high-security prison background elements with depth
     const parallaxOffset = state.camera.x * 0.2;
@@ -2991,75 +2859,6 @@ export default function FlappyBirdGame() {
       });
       
       
-      // === BOTTOM-RIGHT TACTICAL EVENTS DISPLAY ===
-      if (state.events.active.length > 0) {
-        const eventX = GAME_CONFIG.canvas.width - 320;
-        const eventY = GAME_CONFIG.canvas.height - 100;
-        const eventWidth = 310;
-        const eventHeight = 90;
-        
-        // Event frame with military styling
-        ctx.fillStyle = "#1a0a0a";
-        ctx.fillRect(eventX - 3, eventY - 3, eventWidth + 6, eventHeight + 6);
-        
-        const eventGradient = ctx.createLinearGradient(eventX, eventY, eventX, eventY + eventHeight);
-        eventGradient.addColorStop(0, "rgba(40, 10, 10, 0.95)");
-        eventGradient.addColorStop(1, "rgba(25, 5, 5, 0.95)");
-        ctx.fillStyle = eventGradient;
-        ctx.fillRect(eventX, eventY, eventWidth, eventHeight);
-        
-        // Danger corner brackets
-        ctx.strokeStyle = "#ff4444";
-        ctx.lineWidth = 2;
-        const eventBracketSize = 12;
-        // Corners
-        ctx.beginPath();
-        ctx.moveTo(eventX, eventY + eventBracketSize);
-        ctx.lineTo(eventX, eventY);
-        ctx.lineTo(eventX + eventBracketSize, eventY);
-        ctx.stroke();
-        
-        ctx.beginPath();
-        ctx.moveTo(eventX + eventWidth - eventBracketSize, eventY);
-        ctx.lineTo(eventX + eventWidth, eventY);
-        ctx.lineTo(eventX + eventWidth, eventY + eventBracketSize);
-        ctx.stroke();
-        
-        // Alert header
-        ctx.font = "bold 14px 'Courier New', monospace";
-        ctx.fillStyle = "#ff4444";
-        ctx.textAlign = "left";
-        ctx.fillText("⚠ TACTICAL ALERT ⚠", eventX + 15, eventY + 25);
-        
-        const event = state.events.active[0];
-        const now = Date.now();
-        const eventTimeLeft = Math.max(0, (event.startTime + event.duration - now) / 1000);
-        
-        // Event name with timer
-        ctx.font = "bold 12px 'Courier New', monospace";
-        ctx.fillStyle = "#ffaa00";
-        const eventName = event.type.toUpperCase().replace('_', ' ');
-        ctx.fillText(`${eventName}`, eventX + 15, eventY + 45);
-        
-        // Countdown timer
-        ctx.fillStyle = "#ff6666";
-        ctx.textAlign = "right";
-        ctx.fillText(`T-${eventTimeLeft.toFixed(1)}S`, eventX + eventWidth - 15, eventY + 45);
-        
-        // Event description
-        let eventDesc = "";
-        switch (event.type) {
-          case 'riot': eventDesc = "MULTIPLE HOSTILES INCOMING - BRACE FOR COMBAT"; break;
-          case 'lockdown': eventDesc = "FACILITY LOCKDOWN - MOVEMENT RESTRICTED"; break;
-          case 'supply_drop': eventDesc = "SUPPLY CACHE AVAILABLE - RESUPPLY NOW"; break;
-          case 'weather': eventDesc = "SEVERE WEATHER - VISIBILITY COMPROMISED"; break;
-        }
-        
-        ctx.font = "10px 'Courier New', monospace";
-        ctx.fillStyle = "#cccccc";
-        ctx.textAlign = "left";
-        ctx.fillText(eventDesc, eventX + 15, eventY + 65);
-      }
       
       // === TOP-RIGHT COMPASS AND STATUS ===
       const compassX = GAME_CONFIG.canvas.width - 120;

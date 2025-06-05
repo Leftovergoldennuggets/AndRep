@@ -354,6 +354,14 @@ Transformed overwhelming text wall into engaging cinematic experience that playe
   - Removed unused boss attack patterns (captain, chief, helicopter)
   - Game now completes after single level victory instead of multi-level campaign
   - Streamlined experience focuses on core Prison Yard escape scenario
+- [x] **PLATFORM REDUCTION & EVENT REMOVAL**: Current session
+  - Reduced platform generation from 50% to 20% frequency for easier navigation
+  - Changed from 1-3 multi-level platforms to single platforms only
+  - Removed all special events system: riot, rain, lockdown, supply_drop, betrayal, weather
+  - Removed event generation logic from game loop
+  - Removed weather effects (rain animation) and event UI notifications
+  - Removed lockdown speed penalties affecting player movement
+  - Game now has simpler, cleaner gameplay without overwhelming platform jumping
 
 ## Remaining Enhancement Ideas
 - Sound effects and music for boss encounters
