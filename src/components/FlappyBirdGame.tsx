@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Play, RotateCcw } from "lucide-react";
 
 interface GameState {
   player: {
@@ -12,47 +11,6 @@ interface GameState {
     onGround: boolean;
     animationFrame: number;
     direction: 'left' | 'right';
-    // New special abilities system
-    abilities: {
-      rageMode: {
-        active: boolean;
-        duration: number;
-        cooldown: number;
-        lastUsed: number;
-      };
-      shadowDash: {
-        active: boolean;
-        duration: number;
-        cooldown: number;
-        lastUsed: number;
-        distance: number;
-      };
-      battleCry: {
-        cooldown: number;
-        lastUsed: number;
-      };
-      wingShield: {
-        active: boolean;
-        duration: number;
-        cooldown: number;
-        lastUsed: number;
-      };
-    };
-    // New combat mechanics
-    combo: {
-      kills: number;
-      multiplier: number;
-      lastKillTime: number;
-      timeWindow: number;
-    };
-    stealth: {
-      hidden: boolean;
-      detectionLevel: number;
-    };
-    cover: {
-      inCover: boolean;
-      coverObject?: { x: number; y: number; width: number; height: number };
-    };
   };
   level: {
     current: number;
@@ -132,7 +90,7 @@ interface GameState {
   };
   objectives: Array<{
     id: string;
-    type: 'rescue' | 'destroy' | 'survive' | 'escape' | 'stealth';
+    type: 'rescue' | 'destroy' | 'survive' | 'escape';
     description: string;
     target?: { x: number; y: number };
     targetCount?: number;
@@ -198,37 +156,6 @@ const GAME_CONFIG = {
   },
   world: {
     groundLevel: window.innerHeight - 50, // Y position of the ground
-  },
-  // New special abilities configuration
-  abilities: {
-    rageMode: {
-      duration: 5000, // 5 seconds
-      cooldown: 20000, // 20 seconds
-      damageMultiplier: 2,
-      speedMultiplier: 1.5,
-    },
-    shadowDash: {
-      duration: 300, // 0.3 seconds
-      cooldown: 8000, // 8 seconds
-      distance: 200,
-      invulnerable: true,
-    },
-    battleCry: {
-      cooldown: 15000, // 15 seconds
-      stunDuration: 3000, // 3 seconds
-      radius: 200,
-    },
-    wingShield: {
-      duration: 4000, // 4 seconds
-      cooldown: 25000, // 25 seconds
-      reflectDamage: 1.5,
-    },
-  },
-  // Combo system configuration
-  combo: {
-    timeWindow: 3000, // 3 seconds between kills to maintain combo
-    maxMultiplier: 5,
-    multiplierIncrement: 0.5,
   },
 };
 
@@ -355,17 +282,6 @@ export default function FlappyBirdGame() {
       onGround: true,
       animationFrame: 0,
       direction: 'right',
-      // Initialize new abilities system
-      abilities: {
-        rageMode: { active: false, duration: 0, cooldown: GAME_CONFIG.abilities.rageMode.cooldown, lastUsed: 0 },
-        shadowDash: { active: false, duration: 0, cooldown: GAME_CONFIG.abilities.shadowDash.cooldown, lastUsed: 0, distance: GAME_CONFIG.abilities.shadowDash.distance },
-        battleCry: { cooldown: GAME_CONFIG.abilities.battleCry.cooldown, lastUsed: 0 },
-        wingShield: { active: false, duration: 0, cooldown: GAME_CONFIG.abilities.wingShield.cooldown, lastUsed: 0 },
-      },
-      // Initialize combat mechanics
-      combo: { kills: 0, multiplier: 1, lastKillTime: 0, timeWindow: GAME_CONFIG.combo.timeWindow },
-      stealth: { hidden: false, detectionLevel: 0 },
-      cover: { inCover: false, coverObject: undefined },
     },
     level: {
       current: 1,
@@ -421,17 +337,6 @@ export default function FlappyBirdGame() {
         onGround: true,
         animationFrame: 0,
         direction: 'right',
-        // Reset abilities system
-        abilities: {
-          rageMode: { active: false, duration: 0, cooldown: GAME_CONFIG.abilities.rageMode.cooldown, lastUsed: 0 },
-          shadowDash: { active: false, duration: 0, cooldown: GAME_CONFIG.abilities.shadowDash.cooldown, lastUsed: 0, distance: GAME_CONFIG.abilities.shadowDash.distance },
-          battleCry: { cooldown: GAME_CONFIG.abilities.battleCry.cooldown, lastUsed: 0 },
-          wingShield: { active: false, duration: 0, cooldown: GAME_CONFIG.abilities.wingShield.cooldown, lastUsed: 0 },
-        },
-        // Reset combat mechanics
-        combo: { kills: 0, multiplier: 1, lastKillTime: 0, timeWindow: GAME_CONFIG.combo.timeWindow },
-        stealth: { hidden: false, detectionLevel: 0 },
-        cover: { inCover: false, coverObject: undefined },
       },
       level: {
         current: 1,
@@ -708,8 +613,6 @@ export default function FlappyBirdGame() {
 
   const restartCurrentLevel = useCallback(() => {
     const state = gameStateRef.current;
-    const currentLevel = state.level.current;
-    const levelConfig = LEVELS[currentLevel as keyof typeof LEVELS];
     
     // Reset player to start of current level
     state.player.x = 400;
@@ -1934,47 +1837,9 @@ export default function FlappyBirdGame() {
     }
   }, []);
 
-  // Combo System
-  const registerKill = useCallback(() => {
-    const now = Date.now();
-    const state = gameStateRef.current;
-    const combo = state.player.combo;
-    
-    // Check if this kill is within the combo time window
-    if (now - combo.lastKillTime <= combo.timeWindow) {
-      combo.kills++;
-      combo.multiplier = Math.min(
-        1 + (combo.kills * GAME_CONFIG.combo.multiplierIncrement),
-        GAME_CONFIG.combo.maxMultiplier
-      );
-    } else {
-      // Reset combo if too much time has passed
-      combo.kills = 1;
-      combo.multiplier = 1 + GAME_CONFIG.combo.multiplierIncrement;
-    }
-    
-    combo.lastKillTime = now;
-    
-    // Visual feedback for combo
-    if (combo.kills > 1) {
-      createParticles(state.player.x, state.player.y - 30, "spark", "#ffff00", 10);
-    }
-  }, [createParticles]);
-
-  // Enhanced damage calculation considering abilities and combo
+  // Basic damage calculation
   const calculateDamage = useCallback((baseDamage: number) => {
-    const state = gameStateRef.current;
-    let damage = baseDamage;
-    
-    // Apply rage mode multiplier
-    if (state.player.abilities.rageMode.active) {
-      damage *= GAME_CONFIG.abilities.rageMode.damageMultiplier;
-    }
-    
-    // Apply combo multiplier
-    damage *= state.player.combo.multiplier;
-    
-    return Math.round(damage);
+    return Math.round(baseDamage);
   }, []);
 
   const gameLoop = useCallback(() => {
@@ -1987,10 +1852,8 @@ export default function FlappyBirdGame() {
     const state = gameStateRef.current;
 
     if (state.gameState === "playing") {
-      // Handle player horizontal movement and animation with rage mode speed boost and event effects
-      let currentMoveSpeed = state.player.abilities.rageMode.active 
-        ? GAME_CONFIG.player.moveSpeed * GAME_CONFIG.abilities.rageMode.speedMultiplier
-        : GAME_CONFIG.player.moveSpeed;
+      // Handle player horizontal movement and animation with event effects
+      let currentMoveSpeed = GAME_CONFIG.player.moveSpeed;
         
       // Apply lockdown penalty if active
       const lockdownEvent = state.events.active.find(event => event.type === 'lockdown');
@@ -2200,16 +2063,13 @@ export default function FlappyBirdGame() {
             createParticles(enemy.x + GAME_CONFIG.enemy.size / 2, enemy.y + GAME_CONFIG.enemy.size / 2, 'blood', 3);
             
             if (enemy.health <= 0) {
-              // Register kill for combo system
-              registerKill();
-              
               // Create explosion particles for enemy death
               createParticles(enemy.x + GAME_CONFIG.enemy.size / 2, enemy.y + GAME_CONFIG.enemy.size / 2, 'explosion', 8);
               state.camera.shake = Math.max(state.camera.shake, 5);
               state.enemies.splice(j, 1);
               
-              // Enhanced score with combo multiplier
-              const scoreGain = Math.round(100 * state.player.combo.multiplier);
+              // Basic score
+              const scoreGain = 100;
               state.score += scoreGain;
               setDisplayScore(state.score);
             }
@@ -2226,38 +2086,13 @@ export default function FlappyBirdGame() {
         const bulletRect = { x: bullet.x, y: bullet.y, width: GAME_CONFIG.bullet.size, height: GAME_CONFIG.bullet.size };
         
         if (checkCollision(playerRect, bulletRect)) {
-          // Check if wing shield is active
-          if (state.player.abilities.wingShield.active) {
-            // Reflect bullet back as player bullet with enhanced damage
-            const reflectedBullet = {
-              x: bullet.x,
-              y: bullet.y,
-              velocityX: -bullet.velocityX * 1.2, // Reverse and boost speed
-              velocityY: -bullet.velocityY * 1.2,
-              damage: Math.round(20 * GAME_CONFIG.abilities.wingShield.reflectDamage),
-              trail: [] as Array<{x: number, y: number}>
-            };
-            state.bullets.push(reflectedBullet);
-            
-            // Remove enemy bullet
-            state.enemyBullets.splice(i, 1);
-            
-            // Visual effect for shield activation
-            createParticles(state.player.x, state.player.y, "spark", "#00ffff", 15);
-            state.camera.shake = Math.max(state.camera.shake, 3);
-          } else if (state.player.abilities.shadowDash.active) {
-            // Invulnerable during shadow dash
-            state.enemyBullets.splice(i, 1);
-            createParticles(bullet.x, bullet.y, "smoke", "#333333", 5);
-          } else {
-            // Normal damage
-            state.player.health -= 1;
-            state.enemyBullets.splice(i, 1);
-            
-            if (state.player.health <= 0) {
-              state.gameState = "gameOver";
-              setGameState("gameOver");
-            }
+          // Normal damage
+          state.player.health -= 1;
+          state.enemyBullets.splice(i, 1);
+          
+          if (state.player.health <= 0) {
+            state.gameState = "gameOver";
+            setGameState("gameOver");
           }
         }
       }
@@ -3208,53 +3043,6 @@ export default function FlappyBirdGame() {
         objY += 12;
       });
       
-      // Special Abilities HUD
-      ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-      ctx.fillRect(GAME_CONFIG.canvas.width - 220, 5, 210, 130);
-      
-      ctx.font = "bold 14px Arial";
-      ctx.fillStyle = "#ffff88";
-      ctx.fillText("SPECIAL ABILITIES:", GAME_CONFIG.canvas.width - 210, 25);
-      
-      ctx.font = "11px Arial";
-      let abilityY = 40;
-      const now = Date.now();
-      
-      // Rage Mode (Q)
-      const rageCooldown = Math.max(0, (state.player.abilities.rageMode.lastUsed + state.player.abilities.rageMode.cooldown - now) / 1000);
-      ctx.fillStyle = state.player.abilities.rageMode.active ? "#ff4444" : rageCooldown > 0 ? "#888888" : "#44ff44";
-      ctx.fillText(`Q: Rage Mode ${state.player.abilities.rageMode.active ? "(ACTIVE)" : rageCooldown > 0 ? `(${rageCooldown.toFixed(1)}s)` : "(READY)"}`, GAME_CONFIG.canvas.width - 205, abilityY);
-      
-      abilityY += 15;
-      
-      // Shadow Dash (E)
-      const dashCooldown = Math.max(0, (state.player.abilities.shadowDash.lastUsed + state.player.abilities.shadowDash.cooldown - now) / 1000);
-      ctx.fillStyle = state.player.abilities.shadowDash.active ? "#333333" : dashCooldown > 0 ? "#888888" : "#44ff44";
-      ctx.fillText(`E: Shadow Dash ${state.player.abilities.shadowDash.active ? "(ACTIVE)" : dashCooldown > 0 ? `(${dashCooldown.toFixed(1)}s)` : "(READY)"}`, GAME_CONFIG.canvas.width - 205, abilityY);
-      
-      abilityY += 15;
-      
-      // Battle Cry (R)
-      const cryCooldown = Math.max(0, (state.player.abilities.battleCry.lastUsed + state.player.abilities.battleCry.cooldown - now) / 1000);
-      ctx.fillStyle = cryCooldown > 0 ? "#888888" : "#44ff44";
-      ctx.fillText(`R: Battle Cry ${cryCooldown > 0 ? `(${cryCooldown.toFixed(1)}s)` : "(READY)"}`, GAME_CONFIG.canvas.width - 205, abilityY);
-      
-      abilityY += 15;
-      
-      // Wing Shield (F)
-      const shieldCooldown = Math.max(0, (state.player.abilities.wingShield.lastUsed + state.player.abilities.wingShield.cooldown - now) / 1000);
-      ctx.fillStyle = state.player.abilities.wingShield.active ? "#00ffff" : shieldCooldown > 0 ? "#888888" : "#44ff44";
-      ctx.fillText(`F: Wing Shield ${state.player.abilities.wingShield.active ? "(ACTIVE)" : shieldCooldown > 0 ? `(${shieldCooldown.toFixed(1)}s)` : "(READY)"}`, GAME_CONFIG.canvas.width - 205, abilityY);
-      
-      abilityY += 20;
-      
-      // Combo Display
-      if (state.player.combo.kills > 0) {
-        ctx.fillStyle = "#ffff00";
-        ctx.font = "bold 12px Arial";
-        ctx.fillText(`COMBO: ${state.player.combo.kills} KILLS`, GAME_CONFIG.canvas.width - 205, abilityY);
-        ctx.fillText(`Damage x${state.player.combo.multiplier.toFixed(1)}`, GAME_CONFIG.canvas.width - 205, abilityY + 12);
-      }
       
       // Active Events Display
       if (state.events.active.length > 0) {
@@ -3266,6 +3054,7 @@ export default function FlappyBirdGame() {
         ctx.fillText("ACTIVE EVENT:", GAME_CONFIG.canvas.width - 295, GAME_CONFIG.canvas.height - 60);
         
         const event = state.events.active[0];
+        const now = Date.now();
         const eventTimeLeft = Math.max(0, (event.startTime + event.duration - now) / 1000);
         
         ctx.font = "12px Arial";
@@ -3289,96 +3078,8 @@ export default function FlappyBirdGame() {
     }
 
     animationRef.current = requestAnimationFrame(gameLoop);
-  }, [drawPlayer, drawEnemy, checkCollision, applyGravity, generateObstacles, generateEnemies, generatePowerups, createParticles, updateParticles, updateEnemyAI, spawnBoss, updateBoss, registerKill, calculateDamage]);
+  }, [drawPlayer, drawEnemy, checkCollision, applyGravity, generateObstacles, generateEnemies, generatePowerups, createParticles, updateParticles, updateEnemyAI, spawnBoss, updateBoss, calculateDamage]);
 
-  // Special Abilities System
-  const activateRageMode = useCallback(() => {
-    const now = Date.now();
-    const state = gameStateRef.current;
-    const ability = state.player.abilities.rageMode;
-    
-    if (!ability.active && now - ability.lastUsed >= ability.cooldown) {
-      ability.active = true;
-      ability.duration = GAME_CONFIG.abilities.rageMode.duration;
-      ability.lastUsed = now;
-      
-      // Add visual effects
-      createParticles(state.player.x, state.player.y, "explosion", "#ff4444", 20);
-      
-      setTimeout(() => {
-        state.player.abilities.rageMode.active = false;
-      }, GAME_CONFIG.abilities.rageMode.duration);
-    }
-  }, [createParticles]);
-
-  const activateShadowDash = useCallback(() => {
-    const now = Date.now();
-    const state = gameStateRef.current;
-    const ability = state.player.abilities.shadowDash;
-    
-    if (!ability.active && now - ability.lastUsed >= ability.cooldown) {
-      ability.active = true;
-      ability.duration = GAME_CONFIG.abilities.shadowDash.duration;
-      ability.lastUsed = now;
-      
-      // Dash forward
-      const dashDistance = state.player.direction === 'right' ? ability.distance : -ability.distance;
-      state.player.x += dashDistance;
-      
-      // Add shadow trail effect
-      createParticles(state.player.x, state.player.y, "smoke", "#333333", 15);
-      
-      setTimeout(() => {
-        state.player.abilities.shadowDash.active = false;
-      }, GAME_CONFIG.abilities.shadowDash.duration);
-    }
-  }, [createParticles]);
-
-  const activateBattleCry = useCallback(() => {
-    const now = Date.now();
-    const state = gameStateRef.current;
-    const ability = state.player.abilities.battleCry;
-    
-    if (now - ability.lastUsed >= ability.cooldown) {
-      ability.lastUsed = now;
-      
-      // Stun all nearby enemies
-      state.enemies.forEach(enemy => {
-        const distance = Math.abs(enemy.x - state.player.x);
-        if (distance <= GAME_CONFIG.abilities.battleCry.radius) {
-          enemy.aiState = 'retreat';
-          // Temporary stun effect
-          setTimeout(() => {
-            if (enemy.aiState === 'retreat') {
-              enemy.aiState = 'patrol';
-            }
-          }, GAME_CONFIG.abilities.battleCry.stunDuration);
-        }
-      });
-      
-      // Add sound wave effect
-      createParticles(state.player.x, state.player.y, "spark", "#ffff00", 25);
-    }
-  }, [createParticles]);
-
-  const activateWingShield = useCallback(() => {
-    const now = Date.now();
-    const state = gameStateRef.current;
-    const ability = state.player.abilities.wingShield;
-    
-    if (!ability.active && now - ability.lastUsed >= ability.cooldown) {
-      ability.active = true;
-      ability.duration = GAME_CONFIG.abilities.wingShield.duration;
-      ability.lastUsed = now;
-      
-      // Add shield visual effect
-      createParticles(state.player.x, state.player.y, "spark", "#00ffff", 30);
-      
-      setTimeout(() => {
-        state.player.abilities.wingShield.active = false;
-      }, GAME_CONFIG.abilities.wingShield.duration);
-    }
-  }, [createParticles]);
 
   useEffect(() => {
     gameLoop();
@@ -3400,23 +3101,6 @@ export default function FlappyBirdGame() {
       if (e.code === "KeyX" || e.code === "KeyZ") {
         e.preventDefault();
         shoot();
-      }
-      // Special Abilities
-      if (e.code === "KeyQ") {
-        e.preventDefault();
-        activateRageMode();
-      }
-      if (e.code === "KeyE") {
-        e.preventDefault();
-        activateShadowDash();
-      }
-      if (e.code === "KeyR") {
-        e.preventDefault();
-        activateBattleCry();
-      }
-      if (e.code === "KeyF") {
-        e.preventDefault();
-        activateWingShield();
       }
     };
 
