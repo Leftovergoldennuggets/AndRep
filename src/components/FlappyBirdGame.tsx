@@ -2650,22 +2650,34 @@ export default function FlappyBirdGame() {
       )}
 
       {gameState === "gameOver" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-85 rounded-lg">
-          <div className="text-center text-white max-w-lg mx-4">
-            <h2 className="text-3xl font-bold mb-4 text-red-500">🚨 CAPTURED! 🚨</h2>
-            <div className="bg-gray-900 bg-opacity-80 p-4 rounded-lg mb-4 border border-red-500">
-              <p className="text-yellow-400 mb-2 italic">"They got me this time, but Wilbur's spirit lives on..."</p>
-              <p className="text-gray-300 text-sm">Red's escape attempt has been thwarted, but the rebellion continues.</p>
-            </div>
-            <p className="text-xl mb-2">Final Score: {displayScore}</p>
-            <p className="text-lg mb-2">Distance Escaped: {distance}m</p>
-            <p className="text-sm text-gray-400 mb-6">Every yard counts in the fight for justice!</p>
+        <div 
+          className="absolute inset-0 flex flex-col items-center justify-center"
+          style={{
+            backgroundImage: 'url(/Endscreen.png)',
+            backgroundSize: 'contain',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            backgroundColor: '#000000'
+          }}
+        >
+          {/* Game stats overlay positioned above the restart button */}
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-center text-white bg-black bg-opacity-70 px-4 py-2 rounded-lg">
+            <p className="text-lg font-bold">Score: {displayScore}</p>
+            <p className="text-md">Distance: {distance}m</p>
+          </div>
+          
+          {/* Restart button positioned at the bottom */}
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
             <button
               onClick={resetGame}
-              className="btn btn-secondary btn-lg not-prose"
+              className="text-2xl font-bold px-8 py-4 border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-80 hover:bg-yellow-300 hover:text-black transition-colors not-prose"
+              style={{
+                fontFamily: 'monospace',
+                letterSpacing: '2px',
+                textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)'
+              }}
             >
-              <RotateCcw className="w-6 h-6 mr-2" />
-              Try Escape Again
+              TRY AGAIN
             </button>
           </div>
         </div>
