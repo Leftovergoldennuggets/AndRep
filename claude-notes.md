@@ -248,6 +248,13 @@ The rooster is no longer just a character - he's Red, a rebel with a cause and t
 
 Transformed overwhelming text wall into engaging cinematic experience that players actually want to watch!
 
+## Latest Updates - Session Commits
+- [x] **HEALTH & GUARD MOVEMENT UPDATE**: 273b5ef
+  - Reduced player health from 100 to 3 hearts for more challenging gameplay
+  - Added patrol movement to guards - they now walk back and forth when patrolling
+  - Health pickups now restore 1 heart instead of 30 points
+  - Guards patrol in 100-unit ranges at 0.5 speed when not alerted
+
 ## Remaining Enhancement Ideas
 - Sound effects and music for boss encounters
 - Score persistence/high scores across levels

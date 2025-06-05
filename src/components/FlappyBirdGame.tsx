@@ -1927,7 +1927,7 @@ export default function FlappyBirdGame() {
         const bulletRect = { x: bullet.x, y: bullet.y, width: GAME_CONFIG.bullet.size, height: GAME_CONFIG.bullet.size };
         
         if (checkCollision(playerRect, bulletRect)) {
-          state.player.health -= 10;
+          state.player.health -= 1;
           state.enemyBullets.splice(i, 1);
           
           if (state.player.health <= 0) {
@@ -2419,17 +2419,27 @@ export default function FlappyBirdGame() {
       ctx.fillStyle = "#88ff88";
       ctx.fillText(`Distance: ${state.distance}m`, 15, 80);
       
-      // Health bar
+      // Heart display
       ctx.shadowColor = "none";
       ctx.shadowBlur = 0;
-      ctx.fillStyle = "#ff4444";
-      ctx.fillRect(15, 90, 100, 10);
-      ctx.fillStyle = "#44ff44";
-      const healthPercent = state.player.health / GAME_CONFIG.player.maxHealth;
-      ctx.fillRect(15, 90, 100 * healthPercent, 10);
+      ctx.font = "20px Arial";
+      for (let i = 0; i < GAME_CONFIG.player.maxHealth; i++) {
+        const heartX = 15 + (i * 25);
+        const heartY = 95;
+        
+        if (i < state.player.health) {
+          // Full heart
+          ctx.fillStyle = "#ff4444";
+          ctx.fillText("♥", heartX, heartY);
+        } else {
+          // Empty heart
+          ctx.fillStyle = "#444444";
+          ctx.fillText("♡", heartX, heartY);
+        }
+      }
       ctx.fillStyle = "#ffffff";
       ctx.font = "12px Arial";
-      ctx.fillText(`Health: ${state.player.health}`, 15, 110);
+      ctx.fillText("Hearts", 15, 110);
       
       // Weapon info with color coding
       ctx.font = "bold 16px Arial";
