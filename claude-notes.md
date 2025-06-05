@@ -266,7 +266,7 @@ Transformed overwhelming text wall into engaging cinematic experience that playe
   - Positioned restart button at bottom with proper arcade styling
   - Game stats (score, distance) displayed as overlay at top
   - Full image visibility with proper contain sizing and black background
-- [x] **UNIQUE BOSSES & LEVEL PROGRESSION FIX**: Next commit
+- [x] **UNIQUE BOSSES & LEVEL PROGRESSION FIX**: 1766db0
   - Fixed level progression - players now restart current level instead of going to start menu
   - Created 4 unique bosses with distinct behaviors and 8-bit pixel art designs:
     * Level 1: The Corrupt Warden (rapid shotgun attacks, aggressive charging)
@@ -275,6 +275,14 @@ Transformed overwhelming text wall into engaging cinematic experience that playe
     * Level 4: Attack Helicopter (aerial barrage, carpet bombing, hovering motion)
   - Updated boss names and victory screen to reflect unique boss encounters
   - Added restartCurrentLevel function to maintain progression while allowing retries
+- [x] **NEW ENDSCREEN & TIMER OPTIMIZATION**: Next commit
+  - Updated endscreen to use new newendscreen.png showing Red being escorted by guard
+  - Improved game pacing by speeding up slow timers:
+    * Boss intro screen: 3s → 2s (faster transitions)
+    * Level progression: 3s → 1.5s (quicker level advancement)
+    * Riot Captain attacks: 3s → 2s (more engaging combat)
+    * Security Chief attacks: 2.5s → 1.8s (increased challenge)
+    * Attack Helicopter bombs: 1.8s → 1.4s (intense final boss)
 
 ## Remaining Enhancement Ideas
 - Sound effects and music for boss encounters

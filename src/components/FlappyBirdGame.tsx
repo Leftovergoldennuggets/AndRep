@@ -742,13 +742,13 @@ export default function FlappyBirdGame() {
     state.gameState = "bossIntro";
     setGameState("bossIntro");
     
-    // Show boss intro for 3 seconds, then return to playing
+    // Show boss intro for 2 seconds, then return to playing
     setTimeout(() => {
       if (gameStateRef.current.gameState === "bossIntro") {
         gameStateRef.current.gameState = "playing";
         setGameState("playing");
       }
-    }, 3000);
+    }, 2000);
   }, []);
 
   const updateBoss = useCallback((boss: typeof gameStateRef.current.enemies[0], _deltaTime: number) => {
@@ -786,7 +786,7 @@ export default function FlappyBirdGame() {
           const direction = player.x > boss.x ? 1 : -1;
           boss.x += direction * 1.5; // Moderate movement with shield
           
-          if (Date.now() - boss.lastShotTime > 3000) {
+          if (Date.now() - boss.lastShotTime > 2000) {
             // Multi-shot burst after shield charge
             for (let i = 0; i < 3; i++) {
               setTimeout(() => {
@@ -811,7 +811,7 @@ export default function FlappyBirdGame() {
             boss.x += direction * -1; // Retreat to maintain distance
           }
           
-          if (Date.now() - boss.lastShotTime > 2500) {
+          if (Date.now() - boss.lastShotTime > 1800) {
             // Homing cyber bullets
             for (let i = 0; i < 3; i++) {
               state.enemyBullets.push({
@@ -833,7 +833,7 @@ export default function FlappyBirdGame() {
           const direction = player.x > boss.x ? 1 : -1;
           boss.x += direction * 0.8; // Slow aerial movement
           
-          if (Date.now() - boss.lastShotTime > 1800) {
+          if (Date.now() - boss.lastShotTime > 1400) {
             // Carpet bombing - multiple bombs
             for (let i = 0; i < 2; i++) {
               state.enemyBullets.push({
@@ -869,12 +869,12 @@ export default function FlappyBirdGame() {
       state.gameState = "levelComplete";
       setGameState("levelComplete");
       
-      // Auto-advance to next level after 3 seconds
+      // Auto-advance to next level after 1.5 seconds
       setTimeout(() => {
         if (gameStateRef.current.gameState === "levelComplete") {
           advanceToNextLevel();
         }
-      }, 3000);
+      }, 1500);
     }
   }, [createParticles]);
 
@@ -2784,7 +2784,7 @@ export default function FlappyBirdGame() {
         <div 
           className="absolute inset-0 flex flex-col items-center justify-center"
           style={{
-            backgroundImage: 'url(/Endscreen.png)',
+            backgroundImage: 'url(/newendscreen.png)',
             backgroundSize: 'contain',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
