@@ -402,52 +402,6 @@ export default function FlappyBirdGame() {
     keysRef.current.clear();
   }, []);
 
-  const restartCurrentLevel = useCallback(() => {
-    const state = gameStateRef.current;
-    const currentLevel = state.level.current;
-    const levelConfig = LEVELS[currentLevel as keyof typeof LEVELS];
-    
-    // Reset player to start of current level
-    state.player.x = 400;
-    state.player.y = GAME_CONFIG.world.groundLevel - GAME_CONFIG.player.size;
-    state.player.velocityY = 0;
-    state.player.health = GAME_CONFIG.player.maxHealth;
-    state.player.weapon = 'pistol';
-    state.player.ammo = GAME_CONFIG.weapons.pistol.ammo;
-    state.player.onGround = true;
-    state.player.animationFrame = 0;
-    state.player.direction = 'right';
-    
-    // Reset level progress but keep current level
-    state.level.bossSpawned = false;
-    state.level.bossDefeated = false;
-    
-    // Clear all entities
-    state.bullets = [];
-    state.enemies = [];
-    state.enemyBullets = [];
-    state.particles = [];
-    state.alertLevel = 0;
-    state.camera = { x: 0, shake: 0 };
-    
-    // Generate new level content
-    const newObstacles = generateObstacles(state.level.startX, state.level.endX);
-    const newEnemies = generateEnemies(state.level.startX + 400, state.level.endX - 400);
-    const newPowerups = generatePowerups(state.level.startX + 200, state.level.endX - 200);
-    const newObjectives = generateObjectives();
-    const newPrisoners = generatePrisoners(state.level.startX + 300, state.level.endX - 300);
-    
-    state.obstacles = newObstacles;
-    state.enemies = newEnemies;
-    state.powerups = newPowerups;
-    state.objectives = newObjectives;
-    state.prisoners = newPrisoners;
-    
-    // Start playing the current level again
-    state.gameState = "playing";
-    setGameState("playing");
-  }, [generateObstacles, generateEnemies, generatePowerups, generateObjectives, generatePrisoners]);
-
   const generateObstacles = useCallback((startX: number, endX: number) => {
     const state = gameStateRef.current;
     const obstacles: typeof state.obstacles = [];
@@ -652,6 +606,52 @@ export default function FlappyBirdGame() {
     
     return prisoners;
   }, []);
+
+  const restartCurrentLevel = useCallback(() => {
+    const state = gameStateRef.current;
+    const currentLevel = state.level.current;
+    const levelConfig = LEVELS[currentLevel as keyof typeof LEVELS];
+    
+    // Reset player to start of current level
+    state.player.x = 400;
+    state.player.y = GAME_CONFIG.world.groundLevel - GAME_CONFIG.player.size;
+    state.player.velocityY = 0;
+    state.player.health = GAME_CONFIG.player.maxHealth;
+    state.player.weapon = 'pistol';
+    state.player.ammo = GAME_CONFIG.weapons.pistol.ammo;
+    state.player.onGround = true;
+    state.player.animationFrame = 0;
+    state.player.direction = 'right';
+    
+    // Reset level progress but keep current level
+    state.level.bossSpawned = false;
+    state.level.bossDefeated = false;
+    
+    // Clear all entities
+    state.bullets = [];
+    state.enemies = [];
+    state.enemyBullets = [];
+    state.particles = [];
+    state.alertLevel = 0;
+    state.camera = { x: 0, shake: 0 };
+    
+    // Generate new level content
+    const newObstacles = generateObstacles(state.level.startX, state.level.endX);
+    const newEnemies = generateEnemies(state.level.startX + 400, state.level.endX - 400);
+    const newPowerups = generatePowerups(state.level.startX + 200, state.level.endX - 200);
+    const newObjectives = generateObjectives();
+    const newPrisoners = generatePrisoners(state.level.startX + 300, state.level.endX - 300);
+    
+    state.obstacles = newObstacles;
+    state.enemies = newEnemies;
+    state.powerups = newPowerups;
+    state.objectives = newObjectives;
+    state.prisoners = newPrisoners;
+    
+    // Start playing the current level again
+    state.gameState = "playing";
+    setGameState("playing");
+  }, [generateObstacles, generateEnemies, generatePowerups, generateObjectives, generatePrisoners]);
 
   const createParticles = useCallback((x: number, y: number, type: 'explosion' | 'spark' | 'smoke' | 'blood', count: number = 5) => {
     const state = gameStateRef.current;
