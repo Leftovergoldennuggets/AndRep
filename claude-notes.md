@@ -254,6 +254,12 @@ Transformed overwhelming text wall into engaging cinematic experience that playe
   - Added patrol movement to guards - they now walk back and forth when patrolling
   - Health pickups now restore 1 heart instead of 30 points
   - Guards patrol in 100-unit ranges at 0.5 speed when not alerted
+- [x] **BILLY THE EVIL FARMER BOSS**: Next commit
+  - Transformed all boss characters into unified "Billy the Evil Farmer" design
+  - Created 8-bit pixel art style farmer with overalls, straw hat, and pitchfork
+  - Features evil grin, missing teeth, weathered appearance, and farm tools
+  - Updated all boss names and victory screen text to reflect the transformation
+  - Replaced warden, captain, chief, and helicopter with single memorable villain
 
 ## Remaining Enhancement Ideas
 - Sound effects and music for boss encounters
