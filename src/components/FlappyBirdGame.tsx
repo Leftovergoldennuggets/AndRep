@@ -46,6 +46,8 @@ interface GameState {
     alertLevel: number;
     lastPlayerSeen: number;
     coverPosition?: { x: number; y: number };
+    patrolDirection?: number;
+    patrolStartX?: number;
   }>;
   enemyBullets: Array<{
     x: number;
@@ -119,7 +121,7 @@ const GAME_CONFIG = {
   },
   player: {
     size: 32,
-    maxHealth: 100,
+    maxHealth: 3,
     gravity: 0.6,
     jumpForce: -16,
     moveSpeed: 6,
@@ -989,6 +991,25 @@ export default function FlappyBirdGame() {
       case 'patrol':
         if (enemy.alertLevel > 30) {
           enemy.aiState = 'chase';
+        }
+        // Patrol movement for guards
+        if (enemy.type === 'guard' && enemy.onGround) {
+          // Initialize patrol direction if not set
+          if (!enemy.patrolDirection) {
+            enemy.patrolDirection = Math.random() > 0.5 ? 1 : -1;
+            enemy.patrolStartX = enemy.x;
+          }
+          
+          const patrolSpeed = 0.5;
+          const patrolRange = 100;
+          
+          // Move in patrol direction
+          enemy.x += enemy.patrolDirection * patrolSpeed;
+          
+          // Check if we've reached patrol boundary
+          if (Math.abs(enemy.x - enemy.patrolStartX) > patrolRange) {
+            enemy.patrolDirection *= -1; // Reverse direction
+          }
         }
         break;
         
@@ -1924,7 +1945,7 @@ export default function FlappyBirdGame() {
           { x: powerup.x, y: powerup.y, width: 24, height: 24 }
         )) {
           if (powerup.type === 'health') {
-            state.player.health = Math.min(GAME_CONFIG.player.maxHealth, state.player.health + 30);
+            state.player.health = Math.min(GAME_CONFIG.player.maxHealth, state.player.health + 1);
           } else if (powerup.type === 'ammo') {
             state.player.ammo += 20;
           } else if (powerup.type === 'weapon' && powerup.weaponType) {
