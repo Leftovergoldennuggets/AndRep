@@ -2565,7 +2565,7 @@ export default function FlappyBirdGame() {
       
       {gameState === "start" && (
         <div 
-          className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-90 rounded-lg"
+          className="absolute inset-0 flex flex-col items-center justify-center"
           style={{
             backgroundImage: 'url(/background.png)',
             backgroundSize: 'cover',
@@ -2573,37 +2573,31 @@ export default function FlappyBirdGame() {
             backgroundRepeat: 'no-repeat'
           }}
         >
-          <div className="text-center text-white max-w-lg mx-4 bg-black bg-opacity-70 p-8 rounded-lg">
-            <h1 className="text-4xl font-bold mb-6 text-red-500">Prison Break Rooster</h1>
-            
-            <div className="bg-gray-900 bg-opacity-80 p-6 rounded-lg mb-6 border border-red-500">
-              <h2 className="text-xl font-bold mb-3 text-yellow-400">🐓 The Rebel's Tale 🐓</h2>
-              <p className="text-gray-300 mb-4">
-                Experience the epic story of Red, a rooster who dared to fight back against corruption.
-              </p>
-              <div className="space-y-2 text-sm text-gray-400">
-                <p>Space/W/↑: Jump</p>
-                <p>A/D/←/→: Move Left/Right</p>
-                <p>X/Z/Click: Shoot</p>
-              </div>
-            </div>
-            
-            <div className="space-y-3">
-              <button
-                onClick={startStory}
-                className="btn btn-primary btn-lg not-prose w-full"
-              >
-                <Play className="w-6 h-6 mr-2" />
-                WATCH THE STORY
-              </button>
-              <button
-                onClick={startGame}
-                className="btn btn-secondary btn-md not-prose w-full"
-              >
-                SKIP TO GAME
-              </button>
-            </div>
-          </div>
+          {/* Game Title */}
+          <h1 
+            className="text-6xl font-bold mb-16 text-white text-center"
+            style={{
+              textShadow: '4px 4px 8px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 255, 255, 0.3)',
+              fontFamily: 'monospace',
+              letterSpacing: '4px'
+            }}
+          >
+            PRISON BREAK<br />ROOSTER
+          </h1>
+          
+          {/* Blinking Start Button */}
+          <button
+            onClick={startGame}
+            className="arcade-start-button text-4xl font-bold px-12 py-6 border-4 text-yellow-300 border-yellow-300 bg-transparent hover:bg-yellow-300 hover:text-black transition-colors"
+            style={{
+              fontFamily: 'monospace',
+              letterSpacing: '3px',
+              textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
+              animation: 'blink 1.5s infinite'
+            }}
+          >
+            START
+          </button>
         </div>
       )}
 
