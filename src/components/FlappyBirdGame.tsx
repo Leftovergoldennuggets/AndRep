@@ -326,6 +326,7 @@ export default function FlappyBirdGame() {
   const [gameState, setGameState] = useState<"start" | "story" | "playing" | "gameOver" | "missionComplete" | "bossIntro" | "levelComplete">("start");
   const [distance, setDistance] = useState(0);
   const [storySlide, setStorySlide] = useState(0);
+  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
 
   const resetGame = useCallback(() => {
     gameStateRef.current = {
@@ -909,6 +910,17 @@ export default function FlappyBirdGame() {
   const skipStory = useCallback(() => {
     startGame();
   }, [startGame]);
+
+  const handleImageUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setBackgroundImage(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  }, []);
 
   const jump = useCallback(() => {
     const state = gameStateRef.current;
@@ -2564,8 +2576,16 @@ export default function FlappyBirdGame() {
       />
       
       {gameState === "start" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-90 rounded-lg">
-          <div className="text-center text-white max-w-lg mx-4">
+        <div 
+          className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-90 rounded-lg"
+          style={{
+            backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        >
+          <div className="text-center text-white max-w-lg mx-4 bg-black bg-opacity-70 p-8 rounded-lg">
             <h1 className="text-4xl font-bold mb-6 text-red-500">Prison Break Rooster</h1>
             
             <div className="bg-gray-900 bg-opacity-80 p-6 rounded-lg mb-6 border border-red-500">
@@ -2578,6 +2598,21 @@ export default function FlappyBirdGame() {
                 <p>A/D/←/→: Move Left/Right</p>
                 <p>X/Z/Click: Shoot</p>
               </div>
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                🖼️ Upload Background Image (optional)
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="file-input file-input-bordered file-input-sm w-full bg-gray-800 border-gray-600 text-white"
+              />
+              {backgroundImage && (
+                <p className="text-xs text-green-400 mt-1">✓ Background image loaded</p>
+              )}
             </div>
             
             <div className="space-y-3">
