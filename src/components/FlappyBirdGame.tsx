@@ -145,11 +145,13 @@ interface GameState {
     x: number;
     y: number;
     isRescued: boolean;
+    animalType: 'pig' | 'cow' | 'sheep' | 'duck' | 'goat' | 'horse';
+    size: number;
   }>;
   alertLevel: number;
   score: number;
   distance: number;
-  gameState: "start" | "story" | "playing" | "gameOver" | "missionComplete" | "bossIntro" | "levelComplete";
+  gameState: "start" | "story" | "playing" | "gameOver" | "missionComplete" | "victoryIllustration" | "bossIntro" | "levelComplete";
   storySlide: number;
   // New dynamic events system
   events: {
@@ -239,92 +241,46 @@ const WEAPONS_INFO = {
 
 const STORY_SLIDES = [
   {
-    title: "INTRODUCING RED!",
-    subtitle: "THE CHAMPION ROOSTER",
-    text: "Once the beloved prize-winning rooster of Blackwater Maximum Security Prison's agricultural program, Red was the pride of the farm!",
-    panel: `
-    ══════ DAILY PLANET ══════
-    🏆 PRIZE ROOSTER WINNER! 🏆
-    
-    ⭐ RED THE MAGNIFICENT ⭐
-    🐓 CHAMPION OF THE COOP 🐓
-    
-    "Best in Show Three Years Running!"
-    ════════════════════════
-    `,
+    title: "THE LEGEND OF RED",
+    subtitle: "PRIDE OF BLACKWATER FARM",
+    text: "In the depths of Blackwater Maximum Security Prison, one rooster stood above all others. Red the Magnificent - three-time champion, beloved by all, and guardian of the farm. His golden feathers caught the morning sun as he proudly protected his fellow animals...",
+    image: "/panel1.png",
     color: "text-yellow-400",
     bgColor: "from-yellow-900 to-yellow-700",
     panelBg: "bg-yellow-100 text-black"
   },
   {
-    title: "CORRUPTION EXPOSED!",
-    subtitle: "GUARDS TURN EVIL", 
-    text: "But Red discovered the dark truth - corrupt guards were abusing the innocent farm animals for their twisted entertainment!",
-    panel: `
-    ⚡ SHOCKING REVELATION! ⚡
-    
-    💀 EVIL GUARDS ATTACK! 💀
-    👮‍♂️💥 BEATING HELPLESS 🐷
-    👮‍♂️⚡ ANIMALS FOR FUN! 🐄
-    
-    😡 RED WITNESSES HORROR!
-    "This injustice must end!"
-    `,
+    title: "DARKNESS REVEALED",
+    subtitle: "THE CORRUPT CONSPIRACY", 
+    text: "But beneath the surface, evil festered. Red discovered the horrifying truth - corrupt guards were torturing innocent farm animals for sport. What he witnessed that dark night would haunt him forever. The system was rotten to its core...",
+    image: "/panel2.png",
     color: "text-red-400",
     bgColor: "from-red-900 to-red-700", 
     panelBg: "bg-red-100 text-black"
   },
   {
-    title: "TRAGIC SACRIFICE!",
-    subtitle: "WILBUR'S HEROIC END",
-    text: "When Red's best friend Wilbur the pig tried to protect the younger animals, the guards... Red's world changed forever that night.",
-    panel: `
-    💔 HEARTBREAKING MOMENT! 💔
-    
-    🐷💭 "Stay strong, Red...
-          Fight for justice!"
-    
-    ⚰️ WILBUR'S FINAL WORDS ⚰️
-    😭🐓 RED SWEARS VENGEANCE
-    
-    "I'LL NEVER FORGET YOU!"
-    `,
+    title: "BLOOD AND BETRAYAL",
+    subtitle: "WILBUR'S ULTIMATE SACRIFICE",
+    text: "When Wilbur the pig - Red's dearest friend and moral compass - stepped forward to shield the younglings from brutal punishment, the guards showed no mercy. With his dying breath, Wilbur whispered: 'Promise me... fight for them all...'",
+    image: "/panel3.png",
     color: "text-purple-400",
     bgColor: "from-purple-900 to-purple-700",
     panelBg: "bg-purple-100 text-black"
   },
   {
-    title: "EXPLOSIVE REVENGE!",
-    subtitle: "RED STRIKES BACK",
-    text: "Armed with righteous fury, Red launched his one-rooster rebellion - taking down three corrupt guards in an epic barnyard battle!",
-    panel: `
-    💥 POW! KAPOW! WHAM! 💥
-    
-    🐓🔫 RED THE AVENGER!
-    😵👮‍♂️ GUARDS DEFEATED!
-    💥⚡ JUSTICE SERVED! ⚡💥
-    
-    "FOR WILBUR! FOR FREEDOM!"
-    `,
+    title: "VENGEANCE UNLEASHED",
+    subtitle: "THE ONE-ROOSTER WAR",
+    text: "Grief transformed into fury. Fury became unstoppable force. In a blaze of righteous violence, Red carved through the corrupt guards like a feathered hurricane. Three fell that night. Justice was served in blood and thunder. The rebellion had begun...",
+    image: "/panel4.png",
     color: "text-orange-400",
     bgColor: "from-orange-900 to-orange-700",
     panelBg: "bg-orange-100 text-black"
   },
   {
-    title: "MAXIMUM SECURITY!",
-    subtitle: "THE GREAT ESCAPE BEGINS",
-    text: "Now locked in the most dangerous cell block, Red must escape to expose the corruption and honor Wilbur's memory!",
-    panel: `
-    🔒 MAXIMUM SECURITY! 🔒
-    
-    ┌─ CELL BLOCK D ─┐
-    │ 🐓⛓️ RED      │
-    │ PLANNING...   │
-    └───────────────┘
-    
-    💭 "Time to fly the coop!"
-    🏃‍♂️💨 THE ESCAPE BEGINS!
-    `,
+    title: "THE FINAL GAMBIT",
+    subtitle: "ESCAPE OR DIE TRYING",
+    text: "Now branded the most dangerous prisoner in Blackwater's history, Red faces his ultimate test. Locked in maximum security, surrounded by enemies, with only his wits and warrior spirit. Tonight, he breaks free - or dies in the attempt. For Wilbur. For justice. For freedom.",
+    image: "/panel5.png",
     color: "text-green-400", 
     bgColor: "from-green-900 to-green-700",
     panelBg: "bg-green-100 text-black"
@@ -449,7 +405,7 @@ export default function FlappyBirdGame() {
   const lastShotTime = useRef<number>(0);
 
   const [displayScore, setDisplayScore] = useState(0);
-  const [gameState, setGameState] = useState<"start" | "story" | "playing" | "gameOver" | "missionComplete" | "bossIntro" | "levelComplete">("start");
+  const [gameState, setGameState] = useState<"start" | "story" | "playing" | "gameOver" | "missionComplete" | "victoryIllustration" | "bossIntro" | "levelComplete">("start");
   const [distance, setDistance] = useState(0);
   const [storySlide, setStorySlide] = useState(0);
 
@@ -666,7 +622,7 @@ export default function FlappyBirdGame() {
       objectives.push({
         id: 'rescue',
         type: 'rescue' as const,
-        description: 'Rescue 3 prisoners - Honor Wilbur\'s memory',
+        description: 'Rescue 3 farm animals - Free your fellow creatures',
         targetCount: 3,
         currentCount: 0,
         completed: false,
@@ -709,12 +665,41 @@ export default function FlappyBirdGame() {
 
   const generatePrisoners = useCallback((startX: number, endX: number) => {
     const prisoners = [];
+    const animalTypes: Array<'pig' | 'cow' | 'sheep' | 'duck' | 'goat' | 'horse'> = ['pig', 'cow', 'sheep', 'duck', 'goat', 'horse'];
     
     for (let x = startX; x < endX; x += 300 + Math.random() * 300) {
+      const animalType = animalTypes[Math.floor(Math.random() * animalTypes.length)];
+      let size = 48;
+      let yOffset = 48;
+      
+      // Different sizes for different animals
+      switch (animalType) {
+        case 'cow':
+        case 'horse':
+          size = 64;
+          yOffset = 64;
+          break;
+        case 'pig':
+        case 'goat':
+          size = 48;
+          yOffset = 48;
+          break;
+        case 'sheep':
+          size = 52;
+          yOffset = 52;
+          break;
+        case 'duck':
+          size = 36;
+          yOffset = 36;
+          break;
+      }
+      
       prisoners.push({
         x: x + Math.random() * 200,
-        y: GAME_CONFIG.world.groundLevel - 48,
+        y: GAME_CONFIG.world.groundLevel - yOffset,
         isRescued: false,
+        animalType,
+        size,
       });
     }
     
@@ -767,28 +752,42 @@ export default function FlappyBirdGame() {
     setGameState("playing");
   }, [generateObstacles, generateEnemies, generatePowerups, generateObjectives, generatePrisoners]);
 
-  const createParticles = useCallback((x: number, y: number, type: 'explosion' | 'spark' | 'smoke' | 'blood', count: number = 5) => {
+  const createParticles = useCallback((x: number, y: number, type: 'explosion' | 'spark' | 'smoke' | 'blood', colorOrCount?: string | number, count?: number) => {
     const state = gameStateRef.current;
-    for (let i = 0; i < count; i++) {
+    
+    // Handle parameter variations: (x, y, type, count) or (x, y, type, color, count)
+    let customColor: string | undefined;
+    let particleCount: number;
+    
+    if (typeof colorOrCount === 'string') {
+      // Called with custom color: (x, y, type, color, count)
+      customColor = colorOrCount;
+      particleCount = count || 5;
+    } else {
+      // Called without custom color: (x, y, type, count)
+      particleCount = colorOrCount || 5;
+    }
+    
+    for (let i = 0; i < particleCount; i++) {
       let color, life, size;
       switch (type) {
         case 'explosion':
-          color = `hsl(${Math.random() * 60 + 15}, 100%, ${50 + Math.random() * 30}%)`;
+          color = customColor || `hsl(${Math.random() * 60 + 15}, 100%, ${50 + Math.random() * 30}%)`;
           life = 20 + Math.random() * 20;
           size = 3 + Math.random() * 4;
           break;
         case 'spark':
-          color = '#ffff88';
+          color = customColor || '#ffff88';
           life = 10 + Math.random() * 10;
           size = 1 + Math.random() * 2;
           break;
         case 'smoke':
-          color = `hsl(0, 0%, ${20 + Math.random() * 40}%)`;
+          color = customColor || `hsl(0, 0%, ${20 + Math.random() * 40}%)`;
           life = 30 + Math.random() * 30;
           size = 4 + Math.random() * 6;
           break;
         case 'blood':
-          color = `hsl(0, 80%, ${30 + Math.random() * 20}%)`;
+          color = customColor || `hsl(0, 80%, ${30 + Math.random() * 20}%)`;
           life = 15 + Math.random() * 15;
           size = 2 + Math.random() * 3;
           break;
@@ -998,8 +997,8 @@ export default function FlappyBirdGame() {
     
     if (nextLevel > 4) {
       // Game completed!
-      state.gameState = "missionComplete";
-      setGameState("missionComplete");
+      state.gameState = "victoryIllustration";
+      setGameState("victoryIllustration");
       return;
     }
     
@@ -1754,39 +1753,92 @@ export default function FlappyBirdGame() {
       
       switch (enemy.bossType) {
         case 'warden':
-          // CORRUPT PRISON WARDEN - 8-bit pixel art style
+          // CORRUPT PRISON WARDEN - Enhanced intimidating design
           const pixelSize = Math.max(1, Math.floor(bossSize / 32));
           
-          // LARGE HUMAN HEAD - Menacing features
-          ctx.fillStyle = "#d4a574"; // Skin tone
-          ctx.fillRect(screenX + 8*pixelSize, enemy.y + 2*pixelSize, 16*pixelSize, 12*pixelSize);
+          // MENACING SILHOUETTE - Dark shadow effect
+          ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+          ctx.fillRect(screenX + 2, enemy.y + 2, bossSize + 4, bossSize + 4);
           
-          // COLD, CRUEL EYES
+          // LARGE SCARRED HEAD - Battle-worn features
+          ctx.fillStyle = "#b8956e"; // Darker, weathered skin
+          ctx.fillRect(screenX + 8*pixelSize, enemy.y + 2*pixelSize, 16*pixelSize, 14*pixelSize);
+          
+          // FACIAL SCARS - Cross scar over left eye
+          ctx.fillStyle = "#8b6f47";
+          ctx.fillRect(screenX + 10*pixelSize, enemy.y + 4*pixelSize, 2*pixelSize, 8*pixelSize);
+          ctx.fillRect(screenX + 8*pixelSize, enemy.y + 6*pixelSize, 6*pixelSize, 2*pixelSize);
+          
+          // MENACING EYES - Glowing red with rage
           ctx.fillStyle = "#ffffff";
-          ctx.fillRect(screenX + 10*pixelSize, enemy.y + 6*pixelSize, 3*pixelSize, 2*pixelSize);
-          ctx.fillRect(screenX + 17*pixelSize, enemy.y + 6*pixelSize, 3*pixelSize, 2*pixelSize);
-          ctx.fillStyle = "#000000"; // Dark pupils
-          ctx.fillRect(screenX + 11*pixelSize, enemy.y + 7*pixelSize, pixelSize, pixelSize);
-          ctx.fillRect(screenX + 18*pixelSize, enemy.y + 7*pixelSize, pixelSize, pixelSize);
+          ctx.fillRect(screenX + 10*pixelSize, enemy.y + 6*pixelSize, 4*pixelSize, 3*pixelSize);
+          ctx.fillRect(screenX + 18*pixelSize, enemy.y + 6*pixelSize, 4*pixelSize, 3*pixelSize);
+          ctx.fillStyle = "#ff0000"; // Blood-red pupils
+          ctx.fillRect(screenX + 11*pixelSize, enemy.y + 7*pixelSize, 2*pixelSize, 2*pixelSize);
+          ctx.fillRect(screenX + 19*pixelSize, enemy.y + 7*pixelSize, 2*pixelSize, 2*pixelSize);
           
-          // WARDEN CAP
-          ctx.fillStyle = "#1a1a1a";
-          ctx.fillRect(screenX + 6*pixelSize, enemy.y, 20*pixelSize, 3*pixelSize);
-          ctx.fillRect(screenX + 8*pixelSize, enemy.y - 2*pixelSize, 16*pixelSize, 2*pixelSize);
+          // ANGRY FURROWED BROW
+          ctx.fillStyle = "#8b6f47";
+          ctx.fillRect(screenX + 9*pixelSize, enemy.y + 5*pixelSize, 6*pixelSize, pixelSize);
+          ctx.fillRect(screenX + 17*pixelSize, enemy.y + 5*pixelSize, 6*pixelSize, pixelSize);
           
-          // Cap badge
+          // WARDEN CAP - More detailed and intimidating
+          ctx.fillStyle = "#0a0a0a"; // Darker black
+          ctx.fillRect(screenX + 6*pixelSize, enemy.y, 20*pixelSize, 4*pixelSize);
+          ctx.fillRect(screenX + 7*pixelSize, enemy.y - 3*pixelSize, 18*pixelSize, 3*pixelSize);
+          
+          // Cap badge - Skull and crossbones
           ctx.fillStyle = "#ffd700";
-          ctx.fillRect(screenX + 14*pixelSize, enemy.y + pixelSize, 4*pixelSize, 2*pixelSize);
+          ctx.fillRect(screenX + 13*pixelSize, enemy.y + pixelSize, 6*pixelSize, 3*pixelSize);
+          ctx.fillStyle = "#000000";
+          ctx.fillRect(screenX + 14*pixelSize, enemy.y + pixelSize, 2*pixelSize, pixelSize);
+          ctx.fillRect(screenX + 17*pixelSize, enemy.y + pixelSize, 2*pixelSize, pixelSize);
+          ctx.fillRect(screenX + 15*pixelSize, enemy.y + 2*pixelSize, 2*pixelSize, pixelSize);
           
-          // MASSIVE BODY - Uniform
-          ctx.fillStyle = "#1a1a1a";
-          ctx.fillRect(screenX + 6*pixelSize, enemy.y + 14*pixelSize, 20*pixelSize, bossSize - 20*pixelSize);
+          // MASSIVE MUSCULAR BODY - Dark uniform with details
+          ctx.fillStyle = "#0a0a0a";
+          ctx.fillRect(screenX + 4*pixelSize, enemy.y + 16*pixelSize, 24*pixelSize, bossSize - 22*pixelSize);
           
-          // SHOTGUN - Warden's weapon
+          // Uniform details - Rank stripes
+          ctx.fillStyle = "#ffd700";
+          for (let stripe = 0; stripe < 4; stripe++) {
+            ctx.fillRect(screenX + 6*pixelSize, enemy.y + 18*pixelSize + stripe * 3*pixelSize, 8*pixelSize, pixelSize);
+          }
+          
+          // Body armor plating
           ctx.fillStyle = "#333333";
-          ctx.fillRect(screenX - 6*pixelSize, enemy.y + 18*pixelSize, 12*pixelSize, 3*pixelSize);
+          ctx.fillRect(screenX + 8*pixelSize, enemy.y + 20*pixelSize, 16*pixelSize, 8*pixelSize);
+          ctx.fillStyle = "#555555";
+          ctx.fillRect(screenX + 10*pixelSize, enemy.y + 22*pixelSize, 4*pixelSize, 4*pixelSize);
+          ctx.fillRect(screenX + 18*pixelSize, enemy.y + 22*pixelSize, 4*pixelSize, 4*pixelSize);
+          
+          // MASSIVE COMBAT SHOTGUN - More detailed and threatening
+          ctx.fillStyle = "#2a2a2a";
+          ctx.fillRect(screenX - 8*pixelSize, enemy.y + 18*pixelSize, 16*pixelSize, 4*pixelSize);
+          
+          // Shotgun details
           ctx.fillStyle = "#666666";
-          ctx.fillRect(screenX - 8*pixelSize, enemy.y + 19*pixelSize, 2*pixelSize, pixelSize);
+          ctx.fillRect(screenX - 10*pixelSize, enemy.y + 19*pixelSize, 3*pixelSize, 2*pixelSize);
+          ctx.fillRect(screenX + 6*pixelSize, enemy.y + 19*pixelSize, 4*pixelSize, 2*pixelSize);
+          
+          // Muzzle flash effect (if recently fired)
+          if (Date.now() - enemy.lastShotTime < 200) {
+            ctx.fillStyle = "#ffff00";
+            ctx.fillRect(screenX - 12*pixelSize, enemy.y + 17*pixelSize, 4*pixelSize, 6*pixelSize);
+            ctx.fillStyle = "#ff8800";
+            ctx.fillRect(screenX - 10*pixelSize, enemy.y + 18*pixelSize, 2*pixelSize, 4*pixelSize);
+          }
+          
+          // MASSIVE HANDS/ARMS
+          ctx.fillStyle = "#b8956e";
+          ctx.fillRect(screenX + 26*pixelSize, enemy.y + 16*pixelSize, 6*pixelSize, 8*pixelSize);
+          ctx.fillRect(screenX - 4*pixelSize, enemy.y + 16*pixelSize, 6*pixelSize, 8*pixelSize);
+          
+          // Prison keys hanging from belt
+          ctx.fillStyle = "#c0c0c0";
+          ctx.fillRect(screenX + 20*pixelSize, enemy.y + 28*pixelSize, 2*pixelSize, 6*pixelSize);
+          ctx.fillRect(screenX + 18*pixelSize, enemy.y + 30*pixelSize, 2*pixelSize, 2*pixelSize);
+          
           break;
           
         case 'captain':
@@ -1880,6 +1932,49 @@ export default function FlappyBirdGame() {
           break;
       }
     }
+  }, []);
+
+  // Combo System
+  const registerKill = useCallback(() => {
+    const now = Date.now();
+    const state = gameStateRef.current;
+    const combo = state.player.combo;
+    
+    // Check if this kill is within the combo time window
+    if (now - combo.lastKillTime <= combo.timeWindow) {
+      combo.kills++;
+      combo.multiplier = Math.min(
+        1 + (combo.kills * GAME_CONFIG.combo.multiplierIncrement),
+        GAME_CONFIG.combo.maxMultiplier
+      );
+    } else {
+      // Reset combo if too much time has passed
+      combo.kills = 1;
+      combo.multiplier = 1 + GAME_CONFIG.combo.multiplierIncrement;
+    }
+    
+    combo.lastKillTime = now;
+    
+    // Visual feedback for combo
+    if (combo.kills > 1) {
+      createParticles(state.player.x, state.player.y - 30, "spark", "#ffff00", 10);
+    }
+  }, [createParticles]);
+
+  // Enhanced damage calculation considering abilities and combo
+  const calculateDamage = useCallback((baseDamage: number) => {
+    const state = gameStateRef.current;
+    let damage = baseDamage;
+    
+    // Apply rage mode multiplier
+    if (state.player.abilities.rageMode.active) {
+      damage *= GAME_CONFIG.abilities.rageMode.damageMultiplier;
+    }
+    
+    // Apply combo multiplier
+    damage *= state.player.combo.multiplier;
+    
+    return Math.round(damage);
   }, []);
 
   const gameLoop = useCallback(() => {
@@ -2191,10 +2286,10 @@ export default function FlappyBirdGame() {
         const prisoner = state.prisoners[i];
         if (!prisoner.isRescued && checkCollision(
           { x: state.player.x, y: state.player.y, width: GAME_CONFIG.player.size, height: GAME_CONFIG.player.size },
-          { x: prisoner.x, y: prisoner.y, width: 48, height: 48 }
+          { x: prisoner.x, y: prisoner.y, width: prisoner.size, height: prisoner.size }
         )) {
           prisoner.isRescued = true;
-          createParticles(prisoner.x + 16, prisoner.y + 16, 'spark', 8);
+          createParticles(prisoner.x + prisoner.size / 2, prisoner.y + prisoner.size / 2, 'spark', 8);
           state.score += 500;
           setDisplayScore(state.score);
           
@@ -2230,8 +2325,8 @@ export default function FlappyBirdGame() {
       // Check if mission is complete
       const allCompleted = state.objectives.every(obj => obj.completed);
       if (allCompleted && state.gameState === "playing") {
-        state.gameState = "missionComplete";
-        setGameState("missionComplete");
+        state.gameState = "victoryIllustration";
+        setGameState("victoryIllustration");
       }
 
       // Dynamic Events System
@@ -2386,38 +2481,186 @@ export default function FlappyBirdGame() {
       ctx.fillStyle = "rgba(80, 80, 80, 0.5)";
     }
     
-    // Foreground - razor wire fence and security elements
+    // Foreground - stable razor wire fence and security elements
+    const fenceSpacing = 25;
+    const startX = Math.floor(-state.camera.x / fenceSpacing) * fenceSpacing - state.camera.x;
+    
     ctx.strokeStyle = "#666666";
     ctx.lineWidth = 3;
-    for (let x = -(state.camera.x % 25); x < GAME_CONFIG.canvas.width; x += 25) {
+    for (let x = startX; x < GAME_CONFIG.canvas.width + fenceSpacing; x += fenceSpacing) {
+      const worldX = x + state.camera.x;
+      
       // Main fence posts
       ctx.beginPath();
       ctx.moveTo(x, GAME_CONFIG.world.groundLevel - 80);
       ctx.lineTo(x, GAME_CONFIG.world.groundLevel);
       ctx.stroke();
       
-      // Razor wire coils
-      if (x % 50 === 0) {
+      // Horizontal fence wires
+      ctx.strokeStyle = "#888888";
+      ctx.lineWidth = 1;
+      for (let h = 0; h < 4; h++) {
+        ctx.beginPath();
+        ctx.moveTo(x, GAME_CONFIG.world.groundLevel - 20 - h * 15);
+        ctx.lineTo(x + fenceSpacing, GAME_CONFIG.world.groundLevel - 20 - h * 15);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = "#666666";
+      ctx.lineWidth = 3;
+      
+      // Razor wire coils (more stable positioning)
+      if (Math.floor(worldX / 50) % 2 === 0) {
         ctx.strokeStyle = "#C0C0C0";
         ctx.lineWidth = 2;
-        for (let i = 0; i < 4; i++) {
+        
+        // Create more realistic coiled razor wire
+        const coilY = GAME_CONFIG.world.groundLevel - 95;
+        for (let i = 0; i < 3; i++) {
+          const coilX = x + i * 8;
+          // Main coil circle
           ctx.beginPath();
-          ctx.arc(x, GAME_CONFIG.world.groundLevel - 90 + i * 5, 8, 0, Math.PI * 2);
+          ctx.arc(coilX, coilY, 6, 0, Math.PI * 2);
           ctx.stroke();
+          
+          // Sharp points/barbs
+          ctx.strokeStyle = "#A0A0A0";
+          ctx.lineWidth = 1;
+          for (let barb = 0; barb < 6; barb++) {
+            const angle = (barb * Math.PI * 2) / 6;
+            const bX = coilX + Math.cos(angle) * 6;
+            const bY = coilY + Math.sin(angle) * 6;
+            ctx.beginPath();
+            ctx.moveTo(bX, bY);
+            ctx.lineTo(bX + Math.cos(angle) * 3, bY + Math.sin(angle) * 3);
+            ctx.stroke();
+          }
+          ctx.strokeStyle = "#C0C0C0";
+          ctx.lineWidth = 2;
         }
+        
         ctx.strokeStyle = "#666666";
         ctx.lineWidth = 3;
       }
       
-      // Security cameras on poles
-      if (x % 100 === 50) {
+      // Security cameras on poles (more stable positioning)
+      if (Math.floor((worldX + 25) / 100) % 2 === 0) {
         ctx.fillStyle = "#333333";
         ctx.fillRect(x - 3, GAME_CONFIG.world.groundLevel - 100, 6, 15);
+        // Camera housing
+        ctx.fillRect(x - 5, GAME_CONFIG.world.groundLevel - 105, 10, 8);
+        // Red recording light
         ctx.fillStyle = "#FF0000";
         ctx.fillRect(x - 1, GAME_CONFIG.world.groundLevel - 98, 2, 2);
+        // Lens
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(x - 2, GAME_CONFIG.world.groundLevel - 103, 4, 3);
       }
     }
 
+    // Enhanced background details - prison buildings and structures
+    ctx.fillStyle = "rgba(45, 45, 45, 0.6)";
+    for (let x = -(slowParallax % 400); x < GAME_CONFIG.canvas.width; x += 400) {
+      // Prison dormitory blocks
+      ctx.fillRect(x + 50, 80, 120, 160);
+      ctx.fillRect(x + 200, 100, 100, 140);
+      
+      // Windows with bars
+      ctx.fillStyle = "rgba(255, 255, 150, 0.2)";
+      for (let row = 0; row < 6; row++) {
+        for (let col = 0; col < 8; col++) {
+          ctx.fillRect(x + 55 + col * 14, 90 + row * 25, 10, 15);
+        }
+      }
+      ctx.fillStyle = "rgba(60, 60, 60, 0.8)";
+      for (let row = 0; row < 6; row++) {
+        for (let col = 0; col < 8; col++) {
+          // Vertical bars
+          ctx.fillRect(x + 57 + col * 14, 88 + row * 25, 1, 19);
+          ctx.fillRect(x + 61 + col * 14, 88 + row * 25, 1, 19);
+          ctx.fillRect(x + 65 + col * 14, 88 + row * 25, 1, 19);
+        }
+      }
+      
+      // Air conditioning units and vents
+      ctx.fillStyle = "rgba(80, 80, 80, 0.7)";
+      ctx.fillRect(x + 60, 70, 25, 12);
+      ctx.fillRect(x + 90, 75, 20, 8);
+      ctx.fillRect(x + 130, 72, 15, 10);
+      
+      // Electrical equipment and satellite dishes
+      ctx.fillStyle = "rgba(120, 120, 120, 0.5)";
+      ctx.fillRect(x + 75, 65, 8, 8);
+      ctx.fillRect(x + 110, 60, 12, 12);
+      // Satellite dish
+      ctx.beginPath();
+      ctx.arc(x + 140, 65, 8, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = "rgba(45, 45, 45, 0.6)";
+    }
+    
+    // Prison yard infrastructure
+    for (let x = -(parallaxOffset % 300); x < GAME_CONFIG.canvas.width; x += 300) {
+      // Guard towers with more detail
+      ctx.fillStyle = "rgba(55, 55, 55, 0.8)";
+      ctx.fillRect(x + 20, 30, 30, 70);
+      // Tower roof
+      ctx.fillStyle = "rgba(40, 40, 40, 0.9)";
+      ctx.fillRect(x + 15, 25, 40, 10);
+      // Windows
+      ctx.fillStyle = "rgba(255, 255, 100, 0.3)";
+      ctx.fillRect(x + 25, 40, 8, 12);
+      ctx.fillRect(x + 37, 40, 8, 12);
+      ctx.fillRect(x + 25, 60, 8, 12);
+      ctx.fillRect(x + 37, 60, 8, 12);
+      
+      // Communication antennas
+      ctx.strokeStyle = "#888888";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x + 35, 25);
+      ctx.lineTo(x + 35, 10);
+      ctx.stroke();
+      
+      // Floodlight fixtures
+      ctx.fillStyle = "rgba(200, 200, 200, 0.6)";
+      ctx.fillRect(x + 30, 35, 12, 6);
+      ctx.fillRect(x + 30, 55, 12, 6);
+      
+      // Prison yard equipment
+      ctx.fillStyle = "rgba(100, 100, 100, 0.4)";
+      // Basketball hoops
+      ctx.fillRect(x + 80, GAME_CONFIG.world.groundLevel - 80, 4, 80);
+      ctx.fillRect(x + 76, GAME_CONFIG.world.groundLevel - 85, 12, 6);
+      // Benches
+      ctx.fillRect(x + 120, GAME_CONFIG.world.groundLevel - 15, 40, 8);
+      ctx.fillRect(x + 125, GAME_CONFIG.world.groundLevel - 20, 4, 15);
+      ctx.fillRect(x + 155, GAME_CONFIG.world.groundLevel - 20, 4, 15);
+      
+      // Garbage containers
+      ctx.fillStyle = "rgba(60, 80, 60, 0.7)";
+      ctx.fillRect(x + 180, GAME_CONFIG.world.groundLevel - 25, 15, 25);
+      ctx.fillRect(x + 200, GAME_CONFIG.world.groundLevel - 25, 15, 25);
+    }
+    
+    // Ground details - more realistic prison yard
+    ctx.fillStyle = "rgba(120, 120, 120, 0.3)";
+    for (let x = -(state.camera.x % 50); x < GAME_CONFIG.canvas.width; x += 50) {
+      // Concrete slab lines
+      ctx.fillRect(x, GAME_CONFIG.world.groundLevel - 2, 2, 2);
+      // Drain grates
+      if (x % 200 === 0) {
+        ctx.fillStyle = "rgba(40, 40, 40, 0.8)";
+        ctx.fillRect(x - 8, GAME_CONFIG.world.groundLevel - 8, 16, 8);
+        // Grate lines
+        ctx.fillStyle = "rgba(20, 20, 20, 0.9)";
+        for (let i = 0; i < 4; i++) {
+          ctx.fillRect(x - 6 + i * 3, GAME_CONFIG.world.groundLevel - 7, 1, 6);
+        }
+        ctx.fillStyle = "rgba(120, 120, 120, 0.3)";
+      }
+    }
+    
     // Add dramatic lighting effects for badass atmosphere
     if (state.gameState !== "start") {
       // Searchlight sweeps across the prison yard
@@ -2454,6 +2697,25 @@ export default function FlappyBirdGame() {
         const dustX = ((Date.now() * 0.02 + i * 50) % (GAME_CONFIG.canvas.width + 100)) - 50;
         const dustY = ((Date.now() * 0.015 + i * 30) % GAME_CONFIG.world.groundLevel);
         ctx.fillRect(dustX, dustY, 1, 1);
+      }
+      
+      // Steam vents and atmospheric effects
+      ctx.fillStyle = "rgba(200, 200, 200, 0.1)";
+      for (let i = 0; i < 8; i++) {
+        const steamX = ((Date.now() * 0.03 + i * 80) % (GAME_CONFIG.canvas.width + 200)) - 100;
+        const steamY = GAME_CONFIG.world.groundLevel - 30 - Math.sin(Date.now() * 0.002 + i) * 20;
+        // Steam puff effect
+        ctx.beginPath();
+        ctx.arc(steamX, steamY, 5 + Math.sin(Date.now() * 0.003 + i) * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      // Sparks from electrical equipment
+      if (Math.random() < 0.1) {
+        ctx.fillStyle = "rgba(255, 255, 100, 0.8)";
+        const sparkX = Math.random() * GAME_CONFIG.canvas.width;
+        const sparkY = 60 + Math.random() * 100;
+        ctx.fillRect(sparkX, sparkY, 2, 2);
       }
     }
 
@@ -2601,33 +2863,158 @@ export default function FlappyBirdGame() {
         }
       });
 
-      // Draw prisoners
+      // Draw farm animals (captured prisoners)
       state.prisoners.forEach((prisoner) => {
         const screenX = prisoner.x - state.camera.x;
-        if (!prisoner.isRescued && screenX > -48 && screenX < GAME_CONFIG.canvas.width) {
-          // Draw prisoner - orange jumpsuit
-          const prisonerGradient = ctx.createLinearGradient(screenX, prisoner.y, screenX, prisoner.y + 48);
-          prisonerGradient.addColorStop(0, "#ff8800");
-          prisonerGradient.addColorStop(1, "#cc6600");
-          ctx.fillStyle = prisonerGradient;
-          ctx.fillRect(screenX + 4, prisoner.y + 8, 24, 20);
+        if (!prisoner.isRescued && screenX > -prisoner.size && screenX < GAME_CONFIG.canvas.width) {
+          // Draw cage first
+          ctx.strokeStyle = "#8B4513";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          for (let i = 0; i < prisoner.size; i += 8) {
+            ctx.moveTo(screenX + i, prisoner.y - 5);
+            ctx.lineTo(screenX + i, prisoner.y + prisoner.size + 5);
+          }
+          ctx.stroke();
           
-          // Head
-          ctx.fillStyle = "#ffdbac";
-          ctx.fillRect(screenX + 8, prisoner.y + 2, 16, 12);
-          
-          // Shackles
-          ctx.fillStyle = "#666666";
-          ctx.fillRect(screenX + 6, prisoner.y + 24, 4, 4);
-          ctx.fillRect(screenX + 22, prisoner.y + 24, 4, 4);
+          // Draw different farm animals
+          switch (prisoner.animalType) {
+            case 'pig':
+              // Body - pink
+              ctx.fillStyle = "#FFB6C1";
+              ctx.fillRect(screenX + 8, prisoner.y + prisoner.size - 32, 32, 20);
+              // Head
+              ctx.fillStyle = "#FFC0CB";
+              ctx.fillRect(screenX + 12, prisoner.y + prisoner.size - 44, 24, 16);
+              // Snout
+              ctx.fillStyle = "#FF69B4";
+              ctx.fillRect(screenX + 16, prisoner.y + prisoner.size - 36, 16, 8);
+              // Ears
+              ctx.fillStyle = "#FFB6C1";
+              ctx.fillRect(screenX + 14, prisoner.y + prisoner.size - 48, 6, 8);
+              ctx.fillRect(screenX + 28, prisoner.y + prisoner.size - 48, 6, 8);
+              // Legs
+              ctx.fillStyle = "#FFB6C1";
+              ctx.fillRect(screenX + 10, prisoner.y + prisoner.size - 12, 6, 12);
+              ctx.fillRect(screenX + 32, prisoner.y + prisoner.size - 12, 6, 12);
+              break;
+              
+            case 'cow':
+              // Body - white with black spots
+              ctx.fillStyle = "#FFFFFF";
+              ctx.fillRect(screenX + 8, prisoner.y + prisoner.size - 40, 48, 28);
+              // Black spots
+              ctx.fillStyle = "#000000";
+              ctx.fillRect(screenX + 15, prisoner.y + prisoner.size - 35, 8, 6);
+              ctx.fillRect(screenX + 35, prisoner.y + prisoner.size - 30, 6, 8);
+              ctx.fillRect(screenX + 25, prisoner.y + prisoner.size - 25, 10, 5);
+              // Head
+              ctx.fillStyle = "#FFFFFF";
+              ctx.fillRect(screenX + 16, prisoner.y + prisoner.size - 56, 32, 20);
+              // Black spot on head
+              ctx.fillStyle = "#000000";
+              ctx.fillRect(screenX + 20, prisoner.y + prisoner.size - 52, 12, 8);
+              // Horns
+              ctx.fillStyle = "#D2691E";
+              ctx.fillRect(screenX + 18, prisoner.y + prisoner.size - 60, 4, 8);
+              ctx.fillRect(screenX + 42, prisoner.y + prisoner.size - 60, 4, 8);
+              // Legs
+              ctx.fillStyle = "#FFFFFF";
+              ctx.fillRect(screenX + 12, prisoner.y + prisoner.size - 12, 8, 12);
+              ctx.fillRect(screenX + 44, prisoner.y + prisoner.size - 12, 8, 12);
+              break;
+              
+            case 'sheep':
+              // Woolly body - white
+              ctx.fillStyle = "#F5F5F5";
+              ctx.fillRect(screenX + 6, prisoner.y + prisoner.size - 36, 40, 24);
+              // Wool texture
+              ctx.fillStyle = "#FFFFFF";
+              for (let i = 0; i < 6; i++) {
+                for (let j = 0; j < 4; j++) {
+                  ctx.fillRect(screenX + 8 + i * 6, prisoner.y + prisoner.size - 34 + j * 6, 4, 4);
+                }
+              }
+              // Head - black
+              ctx.fillStyle = "#2F2F2F";
+              ctx.fillRect(screenX + 16, prisoner.y + prisoner.size - 48, 20, 16);
+              // Legs
+              ctx.fillStyle = "#2F2F2F";
+              ctx.fillRect(screenX + 10, prisoner.y + prisoner.size - 12, 6, 12);
+              ctx.fillRect(screenX + 36, prisoner.y + prisoner.size - 12, 6, 12);
+              break;
+              
+            case 'duck':
+              // Body - yellow
+              ctx.fillStyle = "#FFD700";
+              ctx.fillRect(screenX + 8, prisoner.y + prisoner.size - 24, 20, 16);
+              // Head
+              ctx.fillStyle = "#FFD700";
+              ctx.fillRect(screenX + 12, prisoner.y + prisoner.size - 32, 16, 12);
+              // Beak - orange
+              ctx.fillStyle = "#FF8C00";
+              ctx.fillRect(screenX + 8, prisoner.y + prisoner.size - 28, 8, 4);
+              // Eye
+              ctx.fillStyle = "#000000";
+              ctx.fillRect(screenX + 16, prisoner.y + prisoner.size - 30, 2, 2);
+              // Feet
+              ctx.fillStyle = "#FF8C00";
+              ctx.fillRect(screenX + 10, prisoner.y + prisoner.size - 8, 6, 8);
+              ctx.fillRect(screenX + 20, prisoner.y + prisoner.size - 8, 6, 8);
+              break;
+              
+            case 'goat':
+              // Body - tan
+              ctx.fillStyle = "#DEB887";
+              ctx.fillRect(screenX + 8, prisoner.y + prisoner.size - 32, 32, 20);
+              // Head
+              ctx.fillStyle = "#D2B48C";
+              ctx.fillRect(screenX + 12, prisoner.y + prisoner.size - 44, 24, 16);
+              // Horns
+              ctx.fillStyle = "#8B4513";
+              ctx.fillRect(screenX + 14, prisoner.y + prisoner.size - 48, 3, 8);
+              ctx.fillRect(screenX + 31, prisoner.y + prisoner.size - 48, 3, 8);
+              // Beard
+              ctx.fillStyle = "#FFFFFF";
+              ctx.fillRect(screenX + 22, prisoner.y + prisoner.size - 32, 4, 8);
+              // Legs
+              ctx.fillStyle = "#DEB887";
+              ctx.fillRect(screenX + 10, prisoner.y + prisoner.size - 12, 6, 12);
+              ctx.fillRect(screenX + 32, prisoner.y + prisoner.size - 12, 6, 12);
+              break;
+              
+            case 'horse':
+              // Body - brown
+              ctx.fillStyle = "#8B4513";
+              ctx.fillRect(screenX + 8, prisoner.y + prisoner.size - 40, 48, 28);
+              // Head
+              ctx.fillStyle = "#A0522D";
+              ctx.fillRect(screenX + 16, prisoner.y + prisoner.size - 56, 32, 20);
+              // Mane
+              ctx.fillStyle = "#654321";
+              ctx.fillRect(screenX + 20, prisoner.y + prisoner.size - 64, 24, 12);
+              // Ears
+              ctx.fillStyle = "#8B4513";
+              ctx.fillRect(screenX + 18, prisoner.y + prisoner.size - 60, 4, 8);
+              ctx.fillRect(screenX + 42, prisoner.y + prisoner.size - 60, 4, 8);
+              // Legs
+              ctx.fillStyle = "#8B4513";
+              ctx.fillRect(screenX + 12, prisoner.y + prisoner.size - 12, 8, 12);
+              ctx.fillRect(screenX + 44, prisoner.y + prisoner.size - 12, 8, 12);
+              // Hooves
+              ctx.fillStyle = "#2F2F2F";
+              ctx.fillRect(screenX + 12, prisoner.y + prisoner.size - 4, 8, 4);
+              ctx.fillRect(screenX + 44, prisoner.y + prisoner.size - 4, 8, 4);
+              break;
+          }
           
           // Rescue indicator
           ctx.fillStyle = "rgba(0, 255, 0, 0.7)";
-          ctx.fillRect(screenX, prisoner.y - 8, 48, 4);
+          ctx.fillRect(screenX, prisoner.y - 12, prisoner.size, 4);
           ctx.fillStyle = "#ffffff";
           ctx.font = "10px Arial";
           ctx.textAlign = "center";
-          ctx.fillText("RESCUE", screenX + 16, prisoner.y - 10);
+          ctx.fillText("RESCUE", screenX + prisoner.size / 2, prisoner.y - 14);
         }
       });
 
@@ -2993,49 +3380,6 @@ export default function FlappyBirdGame() {
     }
   }, [createParticles]);
 
-  // Combo System
-  const registerKill = useCallback(() => {
-    const now = Date.now();
-    const state = gameStateRef.current;
-    const combo = state.player.combo;
-    
-    // Check if this kill is within the combo time window
-    if (now - combo.lastKillTime <= combo.timeWindow) {
-      combo.kills++;
-      combo.multiplier = Math.min(
-        1 + (combo.kills * GAME_CONFIG.combo.multiplierIncrement),
-        GAME_CONFIG.combo.maxMultiplier
-      );
-    } else {
-      // Reset combo if too much time has passed
-      combo.kills = 1;
-      combo.multiplier = 1 + GAME_CONFIG.combo.multiplierIncrement;
-    }
-    
-    combo.lastKillTime = now;
-    
-    // Visual feedback for combo
-    if (combo.kills > 1) {
-      createParticles(state.player.x, state.player.y - 30, "spark", "#ffff00", 10);
-    }
-  }, [createParticles]);
-
-  // Enhanced damage calculation considering abilities and combo
-  const calculateDamage = useCallback((baseDamage: number) => {
-    const state = gameStateRef.current;
-    let damage = baseDamage;
-    
-    // Apply rage mode multiplier
-    if (state.player.abilities.rageMode.active) {
-      damage *= GAME_CONFIG.abilities.rageMode.damageMultiplier;
-    }
-    
-    // Apply combo multiplier
-    damage *= state.player.combo.multiplier;
-    
-    return Math.round(damage);
-  }, []);
-
   useEffect(() => {
     gameLoop();
     return () => {
@@ -3133,21 +3477,10 @@ export default function FlappyBirdGame() {
             backgroundColor: '#000000'
           }}
         >
-          {/* Start Buttons */}
-          <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 flex flex-col space-y-4">
+          {/* Start Button */}
+          <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2">
             <button
               onClick={startStory}
-              className="text-2xl font-bold px-8 py-4 border-4 text-cyan-300 border-cyan-300 bg-black bg-opacity-50 hover:bg-cyan-300 hover:text-black transition-colors"
-              style={{
-                fontFamily: 'monospace',
-                letterSpacing: '2px',
-                textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)'
-              }}
-            >
-              WATCH THE STORY
-            </button>
-            <button
-              onClick={startGame}
               className="arcade-start-button text-4xl font-bold px-12 py-6 border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-50 hover:bg-yellow-300 hover:text-black transition-colors"
               style={{
                 fontFamily: 'monospace',
@@ -3202,35 +3535,77 @@ export default function FlappyBirdGame() {
                     </h3>
                   </div>
                   
-                  {/* Comic Panel */}
+                  {/* Illustration Panel */}
                   <div 
-                    className={`${slide.panelBg} p-8 rounded-lg border-8 border-black transform rotate-1 shadow-2xl`}
+                    className="relative bg-white p-4 rounded-lg border-8 border-black transform rotate-1 shadow-2xl"
                     style={{
                       boxShadow: '8px 8px 0px #000000, 12px 12px 0px rgba(0,0,0,0.5)'
                     }}
                   >
-                    <pre 
-                      className="text-xl leading-relaxed font-mono whitespace-pre font-bold"
+                    {/* Comic book dotted pattern overlay */}
+                    <div 
+                      className="absolute inset-0 opacity-10 rounded-lg pointer-events-none"
                       style={{
-                        fontFamily: 'Courier New, monospace',
-                        textShadow: '1px 1px 0px rgba(255,255,255,0.5)'
+                        backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)',
+                        backgroundSize: '8px 8px'
                       }}
-                    >
-                      {slide.panel}
-                    </pre>
+                    />
+                    
+                    {/* Main illustration */}
+                    <div className="relative overflow-hidden rounded-lg border-4 border-gray-800">
+                      <img 
+                        src={slide.image}
+                        alt={`${slide.title} - ${slide.subtitle}`}
+                        className="w-full h-auto max-h-96 object-contain bg-gradient-to-br from-gray-100 to-gray-200"
+                        style={{
+                          filter: 'contrast(1.1) saturate(1.2)',
+                          imageRendering: 'crisp-edges'
+                        }}
+                        onError={(e) => {
+                          console.log(`Failed to load image: ${slide.image}`);
+                          e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNPTUlORyBTT09OPC90ZXh0Pjwvc3ZnPg==';
+                        }}
+                      />
+                      
+                      {/* Comic book style action text overlay */}
+                      <div className="absolute bottom-2 right-2 bg-yellow-400 text-black px-3 py-1 rounded-full border-2 border-black text-sm font-bold transform rotate-12 shadow-lg">
+                        CHAPTER {storySlide + 1}
+                      </div>
+                    </div>
+                    
+                    {/* Vintage comic book corner marks */}
+                    <div className="absolute top-1 left-1 w-4 h-4 border-l-4 border-t-4 border-red-600 opacity-60"></div>
+                    <div className="absolute top-1 right-1 w-4 h-4 border-r-4 border-t-4 border-red-600 opacity-60"></div>
+                    <div className="absolute bottom-1 left-1 w-4 h-4 border-l-4 border-b-4 border-red-600 opacity-60"></div>
+                    <div className="absolute bottom-1 right-1 w-4 h-4 border-r-4 border-b-4 border-red-600 opacity-60"></div>
                   </div>
                   
-                  {/* Story text with comic styling */}
-                  <div className="bg-white bg-opacity-90 text-black p-6 rounded-lg border-4 border-black transform -rotate-1">
-                    <p 
-                      className="text-xl font-bold leading-relaxed"
-                      style={{
-                        fontFamily: 'Georgia, serif',
-                        textShadow: '1px 1px 0px rgba(0,0,0,0.1)'
-                      }}
-                    >
-                      {slide.text}
-                    </p>
+                  {/* Enhanced narrative text with dramatic styling */}
+                  <div className="relative bg-gradient-to-br from-gray-900 to-black p-8 rounded-lg border-4 border-yellow-600 transform -rotate-1 shadow-2xl">
+                    {/* Decorative corner flourishes */}
+                    <div className="absolute top-2 left-2 text-yellow-500 text-2xl opacity-50">📖</div>
+                    <div className="absolute top-2 right-2 text-yellow-500 text-2xl opacity-50">✨</div>
+                    
+                    {/* Main story text */}
+                    <div className="relative">
+                      <p 
+                        className="text-xl text-white leading-relaxed font-semibold italic"
+                        style={{
+                          fontFamily: 'Georgia, "Times New Roman", serif',
+                          textShadow: '2px 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(255,255,255,0.1)',
+                          lineHeight: '1.8'
+                        }}
+                      >
+                        {slide.text}
+                      </p>
+                      
+                      {/* Dramatic accent line */}
+                      <div className="mt-4 w-full h-1 bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-600 rounded-full"></div>
+                      
+                      {/* Atmospheric quote marks */}
+                      <div className="absolute -top-3 -left-3 text-yellow-400 text-4xl opacity-60 font-serif">"</div>
+                      <div className="absolute -bottom-1 -right-3 text-yellow-400 text-4xl opacity-60 font-serif transform rotate-180">"</div>
+                    </div>
                   </div>
                   
                   {/* Navigation with comic styling */}
@@ -3271,7 +3646,7 @@ export default function FlappyBirdGame() {
         <div 
           className="absolute inset-0 flex flex-col items-center justify-center"
           style={{
-            backgroundImage: 'url(/newendscreen.png)',
+            backgroundImage: 'url(/Endscreenfinal.png)',
             backgroundSize: 'contain',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
@@ -3332,29 +3707,135 @@ export default function FlappyBirdGame() {
         </div>
       )}
 
-      {gameState === "missionComplete" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 rounded-lg">
-          <div className="text-center text-white">
-            <h2 className="text-4xl font-bold mb-4 text-green-500">🎉 PRISON BREAK COMPLETE! 🎉</h2>
-            <p className="text-2xl mb-4 text-yellow-400">⭐ ALL 4 LEVELS CLEARED ⭐</p>
-            <p className="text-lg mb-2">Final Score: {displayScore}</p>
-            <p className="text-lg mb-4">Distance Escaped: {distance}m</p>
-            <div className="mb-6">
-              <p className="text-green-400 mb-2">✓ Prison Yard - The Corrupt Warden Defeated</p>
-              <p className="text-green-400 mb-2">✓ Cell Block Alpha - Riot Captain Defeated</p>
-              <p className="text-green-400 mb-2">✓ Security Center - Cyber Security Chief Defeated</p>
-              <p className="text-green-400 mb-2">✓ Escape Route - Attack Helicopter Destroyed</p>
-              <p className="text-xl text-yellow-400 mt-4">🐓 ULTIMATE FREEDOM ACHIEVED! 🐓</p>
-              <p className="text-sm opacity-80 mt-2">The legendary badass rooster has escaped the maximum security prison!</p>
-            </div>
+      {gameState === "victoryIllustration" && (
+        <div 
+          className="absolute inset-0 flex items-center justify-center"
+          style={{
+            backgroundImage: 'url(/endscreenvictory.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            backgroundColor: '#000000'
+          }}
+        >
+          {/* Continue button to proceed to scores */}
+          <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2">
             <button
-              onClick={resetGame}
-              className="btn btn-primary btn-lg not-prose"
+              onClick={() => {
+                const state = gameStateRef.current;
+                state.gameState = "missionComplete";
+                setGameState("missionComplete");
+              }}
+              className="text-3xl font-bold px-12 py-6 border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-80 hover:bg-yellow-300 hover:text-black transition-colors transform hover:scale-105"
+              style={{
+                fontFamily: 'Impact, Arial Black, sans-serif',
+                letterSpacing: '2px',
+                textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
+                animation: 'blink 2s infinite'
+              }}
             >
-              <Play className="w-6 h-6 mr-2" />
-              New Prison Break
+              🏆 CONTINUE 🏆
             </button>
           </div>
+        </div>
+      )}
+
+      {gameState === "missionComplete" && (
+        <div 
+          className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-90"
+        >
+          {/* Epic Victory Title */}
+          <div className="text-center mb-8">
+            <h1 
+              className="text-8xl font-black text-yellow-400 mb-4 animate-pulse"
+              style={{
+                fontFamily: 'Impact, Arial Black, sans-serif',
+                textShadow: '6px 6px 0px #000000, 12px 12px 0px rgba(255,215,0,0.5)',
+                letterSpacing: '4px',
+                transform: 'rotate(-2deg)'
+              }}
+            >
+              FREEDOM!
+            </h1>
+            <h2 
+              className="text-4xl font-bold text-white mb-2"
+              style={{
+                fontFamily: 'Impact, Arial Black, sans-serif',
+                textShadow: '3px 3px 0px #000000, 6px 6px 0px rgba(0,0,0,0.7)',
+                letterSpacing: '2px'
+              }}
+            >
+              THE LEGEND OF RED COMPLETE
+            </h2>
+          </div>
+
+          {/* Epic Achievement Stats */}
+          <div className="bg-black bg-opacity-80 p-8 rounded-lg border-4 border-yellow-400 mb-8 max-w-4xl">
+            <div className="text-center text-white space-y-4">
+              <p className="text-2xl font-bold text-yellow-400">
+                🏆 BLACKWATER MAXIMUM SECURITY PRISON - CONQUERED 🏆
+              </p>
+              
+              <div className="grid grid-cols-2 gap-6 my-6">
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-green-400">{displayScore}</p>
+                  <p className="text-lg text-gray-300">LEGENDARY SCORE</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-blue-400">{distance}m</p>
+                  <p className="text-lg text-gray-300">DISTANCE OF GLORY</p>
+                </div>
+              </div>
+
+              <div className="space-y-2 text-lg">
+                <p className="text-green-400 font-bold">⚔️ The Corrupt Warden - DEFEATED</p>
+                <p className="text-green-400 font-bold">🛡️ Riot Captain - CRUSHED</p>
+                <p className="text-green-400 font-bold">🤖 Cyber Security Chief - DEMOLISHED</p>
+                <p className="text-green-400 font-bold">🚁 Attack Helicopter - DESTROYED</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Epic Story Conclusion */}
+          <div className="bg-gradient-to-br from-gray-900 to-black p-8 rounded-lg border-4 border-red-600 mb-8 max-w-5xl">
+            <div className="text-center">
+              <p 
+                className="text-2xl text-white leading-relaxed font-semibold italic mb-4"
+                style={{
+                  fontFamily: 'Georgia, "Times New Roman", serif',
+                  textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+                  lineHeight: '1.6'
+                }}
+              >
+                Against impossible odds, through blood and thunder, Red the Magnificent has shattered every chain, 
+                defeated every enemy, and torn down the walls of corruption. 
+              </p>
+              <p 
+                className="text-xl text-yellow-300 font-bold"
+                style={{
+                  fontFamily: 'Georgia, "Times New Roman", serif',
+                  textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
+                }}
+              >
+                The farm animals are FREE. Wilbur's sacrifice is HONORED. Justice is SERVED.
+              </p>
+              <div className="mt-4 w-full h-1 bg-gradient-to-r from-red-600 via-yellow-400 to-red-600 rounded-full"></div>
+            </div>
+          </div>
+
+          {/* Action Button */}
+          <button
+            onClick={resetGame}
+            className="text-3xl font-bold px-12 py-6 border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-80 hover:bg-yellow-300 hover:text-black transition-colors transform hover:scale-105"
+            style={{
+              fontFamily: 'Impact, Arial Black, sans-serif',
+              letterSpacing: '2px',
+              textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
+              animation: 'blink 2s infinite'
+            }}
+          >
+            🐓 ANOTHER LEGEND AWAITS 🐓
+          </button>
         </div>
       )}
 
