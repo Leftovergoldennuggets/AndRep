@@ -1124,43 +1124,68 @@ export default function FlappyBirdGame() {
     ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
     ctx.fillRect(x, y + size + 2, size + 4, 6);
     
-    // Draw BLACK LEATHER JACKET - main body
-    const jacketGradient = ctx.createLinearGradient(x, y, x, y + size);
-    jacketGradient.addColorStop(0, "#1a1a1a");
-    jacketGradient.addColorStop(0.3, "#000000");
-    jacketGradient.addColorStop(1, "#333333");
-    ctx.fillStyle = jacketGradient;
-    ctx.fillRect(x + 2, y + 8 + bobOffset, size - 4, size - 10);
+    // Draw rooster body (slimmer, more natural rooster shape)
+    const bodyGradient = ctx.createLinearGradient(x, y, x, y + size);
+    bodyGradient.addColorStop(0, "#ff8c42");
+    bodyGradient.addColorStop(0.5, "#ff6b35");
+    bodyGradient.addColorStop(1, "#e55100");
+    ctx.fillStyle = bodyGradient;
+    // Oval body shape - wider at top, narrower at bottom
+    ctx.fillRect(x + 6, y + 10 + bobOffset, size - 12, size - 16);
+    ctx.fillRect(x + 8, y + 8 + bobOffset, size - 16, size - 12);
+    ctx.fillRect(x + 10, y + 12 + bobOffset, size - 20, size - 20);
     
-    // Jacket details - zipper and seams
+    // Draw BLACK LEATHER VEST over body (smaller, more fitted)
+    const vestGradient = ctx.createLinearGradient(x, y, x, y + size);
+    vestGradient.addColorStop(0, "#1a1a1a");
+    vestGradient.addColorStop(0.5, "#000000");
+    vestGradient.addColorStop(1, "#333333");
+    ctx.fillStyle = vestGradient;
+    ctx.fillRect(x + 8, y + 12 + bobOffset, size - 16, size - 20);
+    
+    // Vest details - zipper and seams (smaller)
     ctx.fillStyle = "#555555";
-    ctx.fillRect(x + size/2, y + 10 + bobOffset, 2, size - 12);
+    ctx.fillRect(x + size/2 - 1, y + 13 + bobOffset, 2, size - 22);
     ctx.fillStyle = "#666666";
-    ctx.fillRect(x + 4, y + 12 + bobOffset, size - 8, 1);
-    ctx.fillRect(x + 4, y + 20 + bobOffset, size - 8, 1);
+    ctx.fillRect(x + 10, y + 15 + bobOffset, size - 20, 1);
     
-    // Jacket collar
-    ctx.fillStyle = "#000000";
-    ctx.fillRect(x + 6, y + 6 + bobOffset, size - 12, 4);
+    // Rooster chest feathers showing above vest
+    ctx.fillStyle = "#ffb74d";
+    ctx.fillRect(x + 10, y + 11 + bobOffset, size - 20, 3);
     
-    // Draw rooster head/neck above jacket
+    // Draw rooster head/neck (properly proportioned)
     const headGradient = ctx.createLinearGradient(x, y, x, y + 12);
     headGradient.addColorStop(0, "#ff8c42");
     headGradient.addColorStop(1, "#ff6b35");
     ctx.fillStyle = headGradient;
-    ctx.fillRect(x + 6, y + 2, size - 12, 8);
+    // Head - more rounded rooster head shape
+    ctx.fillRect(x + 8, y + 2, size - 16, 10);
+    ctx.fillRect(x + 10, y, size - 20, 6);
     
-    // Draw comb (rebel rooster style)
+    // Neck
+    ctx.fillRect(x + 12, y + 8, size - 24, 6);
+    
+    // Draw prominent rooster comb (rebel style)
     ctx.fillStyle = "#d32f2f";
-    ctx.fillRect(x + 8, y - 2, 3, 6);
-    ctx.fillRect(x + 11, y - 4, 3, 8);
-    ctx.fillRect(x + 14, y - 2, 3, 6);
+    ctx.fillRect(x + 10, y - 3, 2, 7);
+    ctx.fillRect(x + 12, y - 5, 3, 9);
+    ctx.fillRect(x + 15, y - 4, 2, 8);
+    ctx.fillRect(x + 17, y - 2, 2, 6);
     
-    // Draw beak
+    // Draw sharp beak (more prominent)
     ctx.fillStyle = "#ff9800";
-    ctx.fillRect(x + size - 2, y + 6, 6, 3);
+    ctx.fillRect(x + size - 6, y + 5, 8, 4);
     ctx.fillStyle = "#ff8f00";
-    ctx.fillRect(x + size - 2, y + 7, 4, 1);
+    ctx.fillRect(x + size - 6, y + 6, 6, 2);
+    
+    // Draw rooster tail feathers (badass plumage)
+    ctx.fillStyle = "#2e7d32";
+    ctx.fillRect(x - 8, y + 8, 6, size - 12);
+    ctx.fillRect(x - 6, y + 6, 4, size - 8);
+    ctx.fillStyle = "#1b5e20";
+    ctx.fillRect(x - 10, y + 12, 4, size - 16);
+    ctx.fillStyle = "#4caf50";
+    ctx.fillRect(x - 4, y + 10, 2, size - 14);
     
     // Draw SUNGLASSES - total badass
     ctx.fillStyle = "#000000";
@@ -1185,16 +1210,24 @@ export default function FlappyBirdGame() {
       ctx.fillRect(smokeX, smokeY, 1, 1);
     }
     
-    // Draw legs in LEATHER BOOTS
-    ctx.fillStyle = "#1a1a1a";
+    // Draw rooster legs (thinner, more natural)
+    ctx.fillStyle = "#ff8800";
     const legOffset = isMoving ? Math.sin(state.player.animationFrame * 0.6) * 1 : 0;
-    ctx.fillRect(x + 8, y + size - 4, 3, 8 + legOffset);
-    ctx.fillRect(x + 16, y + size - 4, 3, 8 - legOffset);
+    // Thinner rooster legs
+    ctx.fillRect(x + 12, y + size - 6, 2, 10 + legOffset);
+    ctx.fillRect(x + 18, y + size - 6, 2, 10 - legOffset);
     
-    // Boot details
+    // Rooster feet with talons (still badass with boot style)
+    ctx.fillStyle = "#1a1a1a";
+    ctx.fillRect(x + 10, y + size + 2, 6, 2);
+    ctx.fillRect(x + 16, y + size + 2, 6, 2);
+    // Talon details
     ctx.fillStyle = "#333333";
-    ctx.fillRect(x + 6, y + size + 2, 8, 3);
-    ctx.fillRect(x + 14, y + size + 2, 8, 3);
+    ctx.fillRect(x + 9, y + size + 3, 2, 1);
+    ctx.fillRect(x + 12, y + size + 3, 2, 1);
+    ctx.fillRect(x + 15, y + size + 3, 2, 1);
+    ctx.fillRect(x + 18, y + size + 3, 2, 1);
+    ctx.fillRect(x + 21, y + size + 3, 2, 1);
     
     // Draw BADASS WEAPON
     const weapon = gameStateRef.current.player.weapon;
