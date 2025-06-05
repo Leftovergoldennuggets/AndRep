@@ -2565,30 +2565,19 @@ export default function FlappyBirdGame() {
       
       {gameState === "start" && (
         <div 
-          className="absolute inset-0 flex flex-col items-center justify-center"
+          className="absolute inset-0 flex items-center justify-center"
           style={{
             backgroundImage: 'url(/background.png)',
-            backgroundSize: 'cover',
+            backgroundSize: 'contain',
             backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
+            backgroundRepeat: 'no-repeat',
+            backgroundColor: '#000000'
           }}
         >
-          {/* Game Title */}
-          <h1 
-            className="text-6xl font-bold mb-16 text-white text-center"
-            style={{
-              textShadow: '4px 4px 8px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 255, 255, 0.3)',
-              fontFamily: 'monospace',
-              letterSpacing: '4px'
-            }}
-          >
-            PRISON BREAK<br />ROOSTER
-          </h1>
-          
           {/* Blinking Start Button */}
           <button
             onClick={startGame}
-            className="arcade-start-button text-4xl font-bold px-12 py-6 border-4 text-yellow-300 border-yellow-300 bg-transparent hover:bg-yellow-300 hover:text-black transition-colors"
+            className="arcade-start-button text-4xl font-bold px-12 py-6 border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-50 hover:bg-yellow-300 hover:text-black transition-colors"
             style={{
               fontFamily: 'monospace',
               letterSpacing: '3px',
