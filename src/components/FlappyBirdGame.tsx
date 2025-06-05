@@ -11,6 +11,7 @@ interface GameState {
     onGround: boolean;
     animationFrame: number;
     direction: 'left' | 'right';
+    spawnImmunity: number;
   };
   level: {
     current: number;
@@ -233,6 +234,7 @@ export default function FlappyBirdGame() {
       onGround: true,
       animationFrame: 0,
       direction: 'right',
+      spawnImmunity: 2000, // 2 seconds of spawn immunity
     },
     level: {
       current: 1,
@@ -283,6 +285,7 @@ export default function FlappyBirdGame() {
         onGround: true,
         animationFrame: 0,
         direction: 'right',
+        spawnImmunity: 2000, // 2 seconds of spawn immunity
       },
       level: {
         current: 1,
@@ -412,14 +415,27 @@ export default function FlappyBirdGame() {
   const generateEnemies = useCallback((startX: number, endX: number) => {
     const enemies: GameState['enemies'] = [];
     
+    // Create safe spawn zone around player (400 +/- 300 = 100-700)
+    const playerSpawnX = 400;
+    const safeZoneRadius = 300;
+    const safeZoneStart = playerSpawnX - safeZoneRadius;
+    const safeZoneEnd = playerSpawnX + safeZoneRadius;
+    
     for (let x = startX; x < endX; x += 200 + Math.random() * 200) {
       const enemyType = Math.random() < 0.7 ? 'guard' : Math.random() < 0.9 ? 'dog' : 'camera';
       const enemyY = enemyType === 'camera' ? 
         GAME_CONFIG.world.groundLevel - 100 - Math.random() * 200 : 
         GAME_CONFIG.world.groundLevel - GAME_CONFIG.enemy.size;
       
+      const enemyX = x + Math.random() * 200;
+      
+      // Skip enemies that would spawn in the safe zone around player
+      if (enemyX >= safeZoneStart && enemyX <= safeZoneEnd) {
+        continue;
+      }
+      
       enemies.push({
-        x: x + Math.random() * 200,
+        x: enemyX,
         y: enemyY,
         velocityY: 0,
         health: GAME_CONFIG.enemy.health,
@@ -535,6 +551,7 @@ export default function FlappyBirdGame() {
     state.player.onGround = true;
     state.player.animationFrame = 0;
     state.player.direction = 'right';
+    state.player.spawnImmunity = 2000; // 2 seconds of spawn immunity
     
     // Reset level progress but keep current level
     state.level.bossSpawned = false;
@@ -1657,6 +1674,11 @@ export default function FlappyBirdGame() {
     const state = gameStateRef.current;
 
     if (state.gameState === "playing") {
+      // Reduce spawn immunity over time
+      if (state.player.spawnImmunity > 0) {
+        state.player.spawnImmunity -= 16; // Reduce by ~16ms per frame
+      }
+      
       // Handle player horizontal movement and animation
       let currentMoveSpeed = GAME_CONFIG.player.moveSpeed;
         
@@ -1918,24 +1940,27 @@ export default function FlappyBirdGame() {
             const enemyRect = { x: enemy.x, y: enemy.y, width: enemySize, height: enemySize };
             
             if (checkCollision(playerRect, enemyRect)) {
-              // Take contact damage (1 heart for guards/dogs, 2 hearts for boss)
-              const contactDamage = enemy.type === 'boss' ? 2 : 1;
-              state.player.health -= contactDamage;
-              
-              // Knockback effect - push player away from enemy
-              const dx = state.player.x - enemy.x;
-              const knockbackForce = 30;
-              state.player.x += dx > 0 ? knockbackForce : -knockbackForce;
-              
-              // Add camera shake for impact
-              state.camera.shake = Math.max(state.camera.shake, 8);
-              
-              // Create blood particles at collision point
-              createParticles(state.player.x, state.player.y, 'blood', 3);
-              
-              if (state.player.health <= 0) {
-                state.gameState = "gameOver";
-                setGameState("gameOver");
+              // Only take contact damage if not immune from spawn
+              if (state.player.spawnImmunity <= 0) {
+                // Take contact damage (1 heart for guards/dogs, 2 hearts for boss)
+                const contactDamage = enemy.type === 'boss' ? 2 : 1;
+                state.player.health -= contactDamage;
+                
+                // Knockback effect - push player away from enemy
+                const dx = state.player.x - enemy.x;
+                const knockbackForce = 30;
+                state.player.x += dx > 0 ? knockbackForce : -knockbackForce;
+                
+                // Add camera shake for impact
+                state.camera.shake = Math.max(state.camera.shake, 8);
+                
+                // Create blood particles at collision point
+                createParticles(state.player.x, state.player.y, 'blood', 3);
+                
+                if (state.player.health <= 0) {
+                  state.gameState = "gameOver";
+                  setGameState("gameOver");
+                }
               }
               break; // Only take damage from one enemy per frame
             }
@@ -2598,7 +2623,16 @@ export default function FlappyBirdGame() {
 
       // Draw player
       const playerScreenX = state.player.x - state.camera.x;
+      
+      // Add visual effect for spawn immunity
+      if (state.player.spawnImmunity > 0) {
+        ctx.globalAlpha = 0.5 + 0.5 * Math.sin(Date.now() / 100); // Flashing effect
+      }
+      
       drawPlayer(ctx, playerScreenX, state.player.y);
+      
+      // Reset alpha after drawing player
+      ctx.globalAlpha = 1.0;
 
       // Draw enemies
       state.enemies.forEach((enemy) => {
