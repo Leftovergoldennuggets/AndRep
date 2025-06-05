@@ -122,10 +122,10 @@ const GAME_CONFIG = {
   player: {
     size: 48,
     maxHealth: 3,
-    gravity: 0.6,
-    jumpForce: -16,
-    moveSpeed: 6,
-    scrollSpeed: 3, // How fast the world moves left
+    gravity: 0.8,
+    jumpForce: -20,
+    moveSpeed: 10,
+    scrollSpeed: 5, // How fast the world moves left
   },
   weapons: {
     pistol: { damage: 20, fireRate: 300, ammo: 50, spread: 0 },
@@ -137,10 +137,10 @@ const GAME_CONFIG = {
     size: 42,
     health: 60,
     fireRate: 1500,
-    gravity: 0.6,
+    gravity: 0.8,
   },
   bullet: {
-    speed: 12,
+    speed: 18,
     size: 9,
   },
   world: {
@@ -392,10 +392,10 @@ export default function FlappyBirdGame() {
     }
     
     // Generate prison walls and obstacles
-    for (let x = startX; x < endX; x += 150 + Math.random() * 150) {
+    for (let x = startX; x < endX; x += 100 + Math.random() * 100) {
       const obstacleType = Math.random();
       
-      if (obstacleType < 0.15) {
+      if (obstacleType < 0.1) {
         // Wall obstacle
         const height = 80 + Math.random() * 120;
         obstacles.push({
@@ -407,7 +407,7 @@ export default function FlappyBirdGame() {
           isDestructible: false,
           isInteractive: false,
         });
-      } else if (obstacleType < 0.55) {
+      } else if (obstacleType < 0.6) {
         // Multiple platform levels for complex jumping
         const platformCount = 1 + Math.floor(Math.random() * 3);
         for (let level = 0; level < platformCount; level++) {
@@ -423,7 +423,7 @@ export default function FlappyBirdGame() {
             isInteractive: false,
           });
         }
-      } else if (obstacleType < 0.7) {
+      } else if (obstacleType < 0.75) {
         // EXPLOSIVE BARREL - destructible!
         obstacles.push({
           x: x + Math.random() * 100,
@@ -437,7 +437,7 @@ export default function FlappyBirdGame() {
           isInteractive: false,
           explosionRadius: 80,
         });
-      } else if (obstacleType < 0.8) {
+      } else if (obstacleType < 0.85) {
         // SECURITY DOOR - interactive!
         obstacles.push({
           x: x + Math.random() * 100,
@@ -471,7 +471,7 @@ export default function FlappyBirdGame() {
   const generateEnemies = useCallback((startX: number, endX: number) => {
     const enemies: GameState['enemies'] = [];
     
-    for (let x = startX; x < endX; x += 300 + Math.random() * 400) {
+    for (let x = startX; x < endX; x += 200 + Math.random() * 200) {
       const enemyType = Math.random() < 0.7 ? 'guard' : Math.random() < 0.9 ? 'dog' : 'camera';
       const enemyY = enemyType === 'camera' ? 
         GAME_CONFIG.world.groundLevel - 100 - Math.random() * 200 : 
@@ -498,7 +498,7 @@ export default function FlappyBirdGame() {
   const generatePowerups = useCallback((startX: number, endX: number) => {
     const powerups: GameState['powerups'] = [];
     
-    for (let x = startX; x < endX; x += 400 + Math.random() * 600) {
+    for (let x = startX; x < endX; x += 250 + Math.random() * 250) {
       const powerupType = Math.random() < 0.4 ? 'health' : Math.random() < 0.7 ? 'ammo' : 'weapon';
       powerups.push({
         x: x + Math.random() * 200,
@@ -568,10 +568,10 @@ export default function FlappyBirdGame() {
   const generatePrisoners = useCallback((startX: number, endX: number) => {
     const prisoners = [];
     
-    for (let x = startX; x < endX; x += 400 + Math.random() * 600) {
+    for (let x = startX; x < endX; x += 300 + Math.random() * 300) {
       prisoners.push({
         x: x + Math.random() * 200,
-        y: GAME_CONFIG.world.groundLevel - 32,
+        y: GAME_CONFIG.world.groundLevel - 48,
         isRescued: false,
       });
     }
