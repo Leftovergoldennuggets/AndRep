@@ -120,7 +120,7 @@ const GAME_CONFIG = {
     height: window.innerHeight,
   },
   player: {
-    size: 32,
+    size: 48,
     maxHealth: 3,
     gravity: 0.6,
     jumpForce: -16,
@@ -134,14 +134,14 @@ const GAME_CONFIG = {
     grenade: { damage: 80, fireRate: 2000, ammo: 5, spread: 0 },
   },
   enemy: {
-    size: 28,
+    size: 42,
     health: 60,
     fireRate: 1500,
     gravity: 0.6,
   },
   bullet: {
     speed: 12,
-    size: 6,
+    size: 9,
   },
   world: {
     groundLevel: window.innerHeight - 50, // Y position of the ground
@@ -230,7 +230,7 @@ const LEVELS = {
       type: 'warden' as const,
       name: "Prison Warden",
       health: 120,
-      size: 60,
+      size: 90,
       attackPattern: "charge_and_shoot",
       description: "The corrupt warden blocks your escape!",
     },
@@ -243,7 +243,7 @@ const LEVELS = {
       type: 'captain' as const,
       name: "Riot Captain",
       health: 180,
-      size: 55,
+      size: 82,
       attackPattern: "shield_slam",
       description: "The riot captain won't let you pass!",
     },
@@ -256,7 +256,7 @@ const LEVELS = {
       type: 'chief' as const,
       name: "Security Chief",
       health: 240,
-      size: 50,
+      size: 75,
       attackPattern: "tech_assault",
       description: "The security chief activates all defenses!",
     },
@@ -269,7 +269,7 @@ const LEVELS = {
       type: 'helicopter' as const,
       name: "Pursuit Helicopter",
       health: 300,
-      size: 80,
+      size: 120,
       attackPattern: "aerial_barrage",
       description: "A helicopter blocks your final escape!",
     },
@@ -1942,7 +1942,7 @@ export default function FlappyBirdGame() {
         const powerup = state.powerups[i];
         if (checkCollision(
           { x: state.player.x, y: state.player.y, width: GAME_CONFIG.player.size, height: GAME_CONFIG.player.size },
-          { x: powerup.x, y: powerup.y, width: 24, height: 24 }
+          { x: powerup.x, y: powerup.y, width: 36, height: 36 }
         )) {
           if (powerup.type === 'health') {
             state.player.health = Math.min(GAME_CONFIG.player.maxHealth, state.player.health + 1);
@@ -1961,7 +1961,7 @@ export default function FlappyBirdGame() {
         const prisoner = state.prisoners[i];
         if (!prisoner.isRescued && checkCollision(
           { x: state.player.x, y: state.player.y, width: GAME_CONFIG.player.size, height: GAME_CONFIG.player.size },
-          { x: prisoner.x, y: prisoner.y, width: 32, height: 32 }
+          { x: prisoner.x, y: prisoner.y, width: 48, height: 48 }
         )) {
           prisoner.isRescued = true;
           createParticles(prisoner.x + 16, prisoner.y + 16, 'spark', 8);
@@ -2255,7 +2255,7 @@ export default function FlappyBirdGame() {
           } else {
             ctx.fillStyle = "#00ff00";
           }
-          ctx.fillRect(screenX, powerup.y, 24, 24);
+          ctx.fillRect(screenX, powerup.y, 36, 36);
           
           // Add icon
           ctx.fillStyle = "#ffffff";
@@ -2269,9 +2269,9 @@ export default function FlappyBirdGame() {
       // Draw prisoners
       state.prisoners.forEach((prisoner) => {
         const screenX = prisoner.x - state.camera.x;
-        if (!prisoner.isRescued && screenX > -32 && screenX < GAME_CONFIG.canvas.width) {
+        if (!prisoner.isRescued && screenX > -48 && screenX < GAME_CONFIG.canvas.width) {
           // Draw prisoner - orange jumpsuit
-          const prisonerGradient = ctx.createLinearGradient(screenX, prisoner.y, screenX, prisoner.y + 32);
+          const prisonerGradient = ctx.createLinearGradient(screenX, prisoner.y, screenX, prisoner.y + 48);
           prisonerGradient.addColorStop(0, "#ff8800");
           prisonerGradient.addColorStop(1, "#cc6600");
           ctx.fillStyle = prisonerGradient;
@@ -2288,7 +2288,7 @@ export default function FlappyBirdGame() {
           
           // Rescue indicator
           ctx.fillStyle = "rgba(0, 255, 0, 0.7)";
-          ctx.fillRect(screenX, prisoner.y - 8, 32, 4);
+          ctx.fillRect(screenX, prisoner.y - 8, 48, 4);
           ctx.fillStyle = "#ffffff";
           ctx.font = "10px Arial";
           ctx.textAlign = "center";
