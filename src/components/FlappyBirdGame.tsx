@@ -157,67 +157,95 @@ const WEAPONS_INFO = {
 
 const STORY_SLIDES = [
   {
-    title: "Meet Red",
-    subtitle: "The Prize Rooster",
-    text: "Once the star of Blackwater Prison's farm program...",
-    ascii: `
-      🏆
-     🐓
-    ╭───╮
-    │🌽🥕│  Prize Rooster
-    ╰───╯   of the Year
+    title: "INTRODUCING RED!",
+    subtitle: "THE CHAMPION ROOSTER",
+    text: "Once the beloved prize-winning rooster of Blackwater Maximum Security Prison's agricultural program, Red was the pride of the farm!",
+    panel: `
+    ══════ DAILY PLANET ══════
+    🏆 PRIZE ROOSTER WINNER! 🏆
+    
+    ⭐ RED THE MAGNIFICENT ⭐
+    🐓 CHAMPION OF THE COOP 🐓
+    
+    "Best in Show Three Years Running!"
+    ════════════════════════
     `,
-    color: "text-yellow-400"
+    color: "text-yellow-400",
+    bgColor: "from-yellow-900 to-yellow-700",
+    panelBg: "bg-yellow-100 text-black"
   },
   {
-    title: "Years of Suffering", 
-    subtitle: "Witnessing Injustice",
-    text: "Red watched helplessly as guards abused innocent animals.",
-    ascii: `
-    ⚡💥  😡👮‍♂️
-      🐷   ←─── Guards
-      🐮        hurting
-      🐰        animals
+    title: "CORRUPTION EXPOSED!",
+    subtitle: "GUARDS TURN EVIL", 
+    text: "But Red discovered the dark truth - corrupt guards were abusing the innocent farm animals for their twisted entertainment!",
+    panel: `
+    ⚡ SHOCKING REVELATION! ⚡
+    
+    💀 EVIL GUARDS ATTACK! 💀
+    👮‍♂️💥 BEATING HELPLESS 🐷
+    👮‍♂️⚡ ANIMALS FOR FUN! 🐄
+    
+    😡 RED WITNESSES HORROR!
+    "This injustice must end!"
     `,
-    color: "text-red-400"
+    color: "text-red-400",
+    bgColor: "from-red-900 to-red-700", 
+    panelBg: "bg-red-100 text-black"
   },
   {
-    title: "The Breaking Point",
-    subtitle: "Wilbur's Sacrifice", 
-    text: "When they executed his best friend Wilbur for protecting others...",
-    ascii: `
-       💔
-      🐷💫  "Wilbur..."
-     ╱   ╲
-    🐓     ⚰️
-   Red    Goodbye
+    title: "TRAGIC SACRIFICE!",
+    subtitle: "WILBUR'S HEROIC END",
+    text: "When Red's best friend Wilbur the pig tried to protect the younger animals, the guards... Red's world changed forever that night.",
+    panel: `
+    💔 HEARTBREAKING MOMENT! 💔
+    
+    🐷💭 "Stay strong, Red...
+          Fight for justice!"
+    
+    ⚰️ WILBUR'S FINAL WORDS ⚰️
+    😭🐓 RED SWEARS VENGEANCE
+    
+    "I'LL NEVER FORGET YOU!"
     `,
-    color: "text-purple-400"
+    color: "text-purple-400",
+    bgColor: "from-purple-900 to-purple-700",
+    panelBg: "bg-purple-100 text-black"
   },
   {
-    title: "The Rebellion",
-    subtitle: "Red Fights Back",
-    text: "That night, Red armed himself and took down three corrupt guards!",
-    ascii: `
-    💥🔫 🐓🥾  ⚡
-       ╲  |  ╱
-        ╲ | ╱    Red's
-    😵👮‍♂️  ⚔️  👮‍♂️😵  Revenge!
+    title: "EXPLOSIVE REVENGE!",
+    subtitle: "RED STRIKES BACK",
+    text: "Armed with righteous fury, Red launched his one-rooster rebellion - taking down three corrupt guards in an epic barnyard battle!",
+    panel: `
+    💥 POW! KAPOW! WHAM! 💥
+    
+    🐓🔫 RED THE AVENGER!
+    😵👮‍♂️ GUARDS DEFEATED!
+    💥⚡ JUSTICE SERVED! ⚡💥
+    
+    "FOR WILBUR! FOR FREEDOM!"
     `,
-    color: "text-orange-400"
+    color: "text-orange-400",
+    bgColor: "from-orange-900 to-orange-700",
+    panelBg: "bg-orange-100 text-black"
   },
   {
-    title: "Maximum Security",
-    subtitle: "The Escape Begins",
-    text: "Now imprisoned, Red has one goal: ESCAPE AND EXPOSE THE TRUTH!",
-    ascii: `
-    🔒🏢🔒
-      ╭───╮
-      │🐓⚡│  "For Wilbur!"
-      ╰───╯
-     💪🔓💪
+    title: "MAXIMUM SECURITY!",
+    subtitle: "THE GREAT ESCAPE BEGINS",
+    text: "Now locked in the most dangerous cell block, Red must escape to expose the corruption and honor Wilbur's memory!",
+    panel: `
+    🔒 MAXIMUM SECURITY! 🔒
+    
+    ┌─ CELL BLOCK D ─┐
+    │ 🐓⛓️ RED      │
+    │ PLANNING...   │
+    └───────────────┘
+    
+    💭 "Time to fly the coop!"
+    🏃‍♂️💨 THE ESCAPE BEGINS!
     `,
-    color: "text-green-400"
+    color: "text-green-400", 
+    bgColor: "from-green-900 to-green-700",
+    panelBg: "bg-green-100 text-black"
   }
 ];
 
@@ -2574,8 +2602,19 @@ export default function FlappyBirdGame() {
             backgroundColor: '#000000'
           }}
         >
-          {/* Blinking Start Button */}
-          <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2">
+          {/* Start Buttons */}
+          <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 flex flex-col space-y-4">
+            <button
+              onClick={startStory}
+              className="text-2xl font-bold px-8 py-4 border-4 text-cyan-300 border-cyan-300 bg-black bg-opacity-50 hover:bg-cyan-300 hover:text-black transition-colors"
+              style={{
+                fontFamily: 'monospace',
+                letterSpacing: '2px',
+                textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)'
+              }}
+            >
+              WATCH THE STORY
+            </button>
             <button
               onClick={startGame}
               className="arcade-start-button text-4xl font-bold px-12 py-6 border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-50 hover:bg-yellow-300 hover:text-black transition-colors"
@@ -2593,49 +2632,101 @@ export default function FlappyBirdGame() {
       )}
 
       {gameState === "story" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-95 rounded-lg">
-          <div className="text-center text-white max-w-2xl mx-4">
+        <div 
+          className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br ${STORY_SLIDES[storySlide].bgColor}`}
+          style={{
+            backgroundImage: 'radial-gradient(circle at 20% 80%, rgba(120, 120, 120, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(120, 120, 120, 0.15) 0%, transparent 50%)',
+          }}
+        >
+          <div className="text-center text-white max-w-4xl mx-4">
             {(() => {
               const slide = STORY_SLIDES[storySlide];
               return (
-                <div className="space-y-6">
-                  {/* Chapter indicator */}
-                  <div className="text-sm text-gray-400">
-                    Chapter {storySlide + 1} of {STORY_SLIDES.length}
+                <div className="space-y-8">
+                  {/* Chapter indicator with comic styling */}
+                  <div className="text-lg font-bold text-white bg-black bg-opacity-50 px-4 py-2 rounded-full border-2 border-white">
+                    CHAPTER {storySlide + 1} OF {STORY_SLIDES.length}
                   </div>
                   
-                  {/* Title */}
-                  <div>
-                    <h2 className={`text-3xl font-bold mb-2 ${slide.color}`}>{slide.title}</h2>
-                    <h3 className="text-xl text-gray-300 mb-4">{slide.subtitle}</h3>
+                  {/* Comic Title */}
+                  <div className="space-y-4">
+                    <h2 
+                      className={`text-6xl font-black ${slide.color} transform -rotate-1`}
+                      style={{
+                        fontFamily: 'Impact, Arial Black, sans-serif',
+                        textShadow: '4px 4px 0px #000000, 8px 8px 0px rgba(0,0,0,0.3)',
+                        letterSpacing: '2px'
+                      }}
+                    >
+                      {slide.title}
+                    </h2>
+                    <h3 
+                      className="text-2xl font-bold text-white transform rotate-1"
+                      style={{
+                        fontFamily: 'Impact, Arial Black, sans-serif',
+                        textShadow: '2px 2px 0px #000000'
+                      }}
+                    >
+                      {slide.subtitle}
+                    </h3>
                   </div>
                   
-                  {/* ASCII Art */}
-                  <div className="bg-gray-900 bg-opacity-80 p-6 rounded-lg border border-gray-600">
-                    <pre className="text-2xl leading-relaxed font-mono whitespace-pre">
-                      {slide.ascii}
+                  {/* Comic Panel */}
+                  <div 
+                    className={`${slide.panelBg} p-8 rounded-lg border-8 border-black transform rotate-1 shadow-2xl`}
+                    style={{
+                      boxShadow: '8px 8px 0px #000000, 12px 12px 0px rgba(0,0,0,0.5)'
+                    }}
+                  >
+                    <pre 
+                      className="text-xl leading-relaxed font-mono whitespace-pre font-bold"
+                      style={{
+                        fontFamily: 'Courier New, monospace',
+                        textShadow: '1px 1px 0px rgba(255,255,255,0.5)'
+                      }}
+                    >
+                      {slide.panel}
                     </pre>
                   </div>
                   
-                  {/* Story text */}
-                  <p className="text-lg text-gray-200 leading-relaxed">
-                    {slide.text}
-                  </p>
+                  {/* Story text with comic styling */}
+                  <div className="bg-white bg-opacity-90 text-black p-6 rounded-lg border-4 border-black transform -rotate-1">
+                    <p 
+                      className="text-xl font-bold leading-relaxed"
+                      style={{
+                        fontFamily: 'Georgia, serif',
+                        textShadow: '1px 1px 0px rgba(0,0,0,0.1)'
+                      }}
+                    >
+                      {slide.text}
+                    </p>
+                  </div>
                   
-                  {/* Navigation buttons */}
-                  <div className="flex justify-center space-x-4 pt-4">
+                  {/* Navigation with comic styling */}
+                  <div className="flex justify-between pt-6">
                     <button
                       onClick={skipStory}
-                      className="btn btn-ghost btn-sm not-prose"
+                      className="text-xl font-bold px-6 py-3 border-4 text-gray-300 border-gray-300 bg-black bg-opacity-70 hover:bg-gray-300 hover:text-black transition-colors"
+                      style={{
+                        fontFamily: 'Impact, Arial Black, sans-serif',
+                        letterSpacing: '1px',
+                        textShadow: '2px 2px 0px #000000'
+                      }}
                     >
-                      Skip Story
+                      SKIP STORY
                     </button>
                     <button
                       onClick={nextStorySlide}
-                      className="btn btn-primary btn-lg not-prose"
+                      className="text-2xl font-bold px-8 py-4 border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-70 hover:bg-yellow-300 hover:text-black transition-colors"
+                      style={{
+                        fontFamily: 'Impact, Arial Black, sans-serif',
+                        letterSpacing: '2px',
+                        textShadow: '2px 2px 0px #000000',
+                        animation: 'blink 2s infinite'
+                      }}
                     >
                       {storySlide < STORY_SLIDES.length - 1 ? 
-                        "Continue" : "BEGIN THE ESCAPE"}
+                        "CONTINUE!" : "BEGIN THE ESCAPE!"}
                     </button>
                   </div>
                 </div>

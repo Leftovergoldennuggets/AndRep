@@ -30,3 +30,25 @@ html {
     opacity: 0.3;
   }
 }
+
+/* Comic book style effects */
+@keyframes comic-zoom {
+  0% {
+    transform: scale(1) rotate(-1deg);
+  }
+  50% {
+    transform: scale(1.05) rotate(1deg);
+  }
+  100% {
+    transform: scale(1) rotate(-1deg);
+  }
+}
+
+@keyframes comic-pulse {
+  0%, 100% {
+    text-shadow: 4px 4px 0px #000000, 8px 8px 0px rgba(0,0,0,0.3);
+  }
+  50% {
+    text-shadow: 6px 6px 0px #000000, 12px 12px 0px rgba(0,0,0,0.5);
+  }
+}
