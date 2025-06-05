@@ -37,7 +37,7 @@ interface GameState {
     health: number;
     maxHealth: number;
     type: 'guard' | 'dog' | 'camera' | 'boss';
-    bossType?: 'billy';
+    bossType?: 'warden' | 'captain' | 'chief' | 'helicopter';
     attackPattern?: string;
     phase?: number;
     lastShotTime: number;
@@ -255,12 +255,12 @@ const LEVELS = {
     theme: 'yard' as const,
     width: 2000,
     boss: {
-      type: 'billy' as const,
-      name: "Billy the Evil Farmer",
+      type: 'warden' as const,
+      name: "The Corrupt Warden",
       health: 120,
       size: 90,
       attackPattern: "charge_and_shoot",
-      description: "Billy the Evil Farmer blocks your escape!",
+      description: "The corrupt warden blocks your escape with his massive shotgun!",
     },
   },
   2: {
@@ -268,12 +268,12 @@ const LEVELS = {
     theme: 'cellblock' as const,
     width: 2500,
     boss: {
-      type: 'billy' as const,
-      name: "Billy the Evil Farmer",
+      type: 'captain' as const,
+      name: "Riot Captain",
       health: 180,
       size: 82,
       attackPattern: "shield_slam",
-      description: "Billy the Evil Farmer won't let you pass!",
+      description: "The armored riot captain charges with shield and baton!",
     },
   },
   3: {
@@ -281,12 +281,12 @@ const LEVELS = {
     theme: 'security' as const,
     width: 3000,
     boss: {
-      type: 'billy' as const,
-      name: "Billy the Evil Farmer",
+      type: 'chief' as const,
+      name: "Cyber Security Chief",
       health: 240,
       size: 75,
       attackPattern: "tech_assault",
-      description: "Billy the Evil Farmer activates all defenses!",
+      description: "The high-tech security chief activates all cyber defenses!",
     },
   },
   4: {
@@ -294,12 +294,12 @@ const LEVELS = {
     theme: 'escape' as const,
     width: 3500,
     boss: {
-      type: 'billy' as const,
-      name: "Billy the Evil Farmer",
+      type: 'helicopter' as const,
+      name: "Attack Helicopter",
       health: 300,
       size: 120,
       attackPattern: "aerial_barrage",
-      description: "Billy the Evil Farmer blocks your final escape!",
+      description: "Military helicopter blocks your final escape with aerial bombardment!",
     },
   },
 };
@@ -401,6 +401,52 @@ export default function FlappyBirdGame() {
     setStorySlide(0);
     keysRef.current.clear();
   }, []);
+
+  const restartCurrentLevel = useCallback(() => {
+    const state = gameStateRef.current;
+    const currentLevel = state.level.current;
+    const levelConfig = LEVELS[currentLevel as keyof typeof LEVELS];
+    
+    // Reset player to start of current level
+    state.player.x = 400;
+    state.player.y = GAME_CONFIG.world.groundLevel - GAME_CONFIG.player.size;
+    state.player.velocityY = 0;
+    state.player.health = GAME_CONFIG.player.maxHealth;
+    state.player.weapon = 'pistol';
+    state.player.ammo = GAME_CONFIG.weapons.pistol.ammo;
+    state.player.onGround = true;
+    state.player.animationFrame = 0;
+    state.player.direction = 'right';
+    
+    // Reset level progress but keep current level
+    state.level.bossSpawned = false;
+    state.level.bossDefeated = false;
+    
+    // Clear all entities
+    state.bullets = [];
+    state.enemies = [];
+    state.enemyBullets = [];
+    state.particles = [];
+    state.alertLevel = 0;
+    state.camera = { x: 0, shake: 0 };
+    
+    // Generate new level content
+    const newObstacles = generateObstacles(state.level.startX, state.level.endX);
+    const newEnemies = generateEnemies(state.level.startX + 400, state.level.endX - 400);
+    const newPowerups = generatePowerups(state.level.startX + 200, state.level.endX - 200);
+    const newObjectives = generateObjectives();
+    const newPrisoners = generatePrisoners(state.level.startX + 300, state.level.endX - 300);
+    
+    state.obstacles = newObstacles;
+    state.enemies = newEnemies;
+    state.powerups = newPowerups;
+    state.objectives = newObjectives;
+    state.prisoners = newPrisoners;
+    
+    // Start playing the current level again
+    state.gameState = "playing";
+    setGameState("playing");
+  }, [generateObstacles, generateEnemies, generatePowerups, generateObjectives, generatePrisoners]);
 
   const generateObstacles = useCallback((startX: number, endX: number) => {
     const state = gameStateRef.current;
@@ -717,41 +763,87 @@ export default function FlappyBirdGame() {
     
     // Boss movement and attack patterns
     switch (boss.bossType) {
-      case 'billy': // Evil farmer behavior - varies by level
+      case 'warden': // Level 1 - Corrupt Warden with shotgun
         if (playerInRange) {
           const direction = player.x > boss.x ? 1 : -1;
-          const currentLevel = state.level.current;
+          boss.x += direction * 2; // Aggressive charging
           
-          if (currentLevel <= 2) {
-            // Early levels: Pitchfork throwing farmer
-            boss.x += direction * 2;
-            
-            if (Date.now() - boss.lastShotTime > 1000) {
-              // Throw pitchfork
-              state.enemyBullets.push({
-                x: boss.x,
-                y: boss.y + 20,
-                velocityX: direction * 8,
-                velocityY: -2 + Math.random() * 4,
-              });
-              boss.lastShotTime = Date.now();
-            }
-          } else {
-            // Later levels: More aggressive farmer with shotgun
-            boss.x += direction * 1.5;
-            
-            if (Date.now() - boss.lastShotTime > 1500) {
-              // Shotgun blast - multiple pellets
-              for (let i = 0; i < 3; i++) {
+          if (Date.now() - boss.lastShotTime > 800) {
+            // Rapid shotgun fire
+            state.enemyBullets.push({
+              x: boss.x,
+              y: boss.y + 20,
+              velocityX: direction * 10,
+              velocityY: -1 + Math.random() * 2,
+            });
+            boss.lastShotTime = Date.now();
+          }
+        }
+        break;
+        
+      case 'captain': // Level 2 - Riot Captain with shield slam
+        if (playerInRange) {
+          const direction = player.x > boss.x ? 1 : -1;
+          boss.x += direction * 1.5; // Moderate movement with shield
+          
+          if (Date.now() - boss.lastShotTime > 3000) {
+            // Multi-shot burst after shield charge
+            for (let i = 0; i < 3; i++) {
+              setTimeout(() => {
                 state.enemyBullets.push({
                   x: boss.x,
                   y: boss.y + 25,
-                  velocityX: direction * (6 + Math.random() * 3),
-                  velocityY: -2 + Math.random() * 4,
+                  velocityX: direction * (8 + i),
+                  velocityY: -1 + Math.random() * 2,
                 });
-              }
-              boss.lastShotTime = Date.now();
+              }, i * 200);
             }
+            boss.lastShotTime = Date.now();
+          }
+        }
+        break;
+        
+      case 'chief': // Level 3 - Cyber Security Chief with tech assault
+        if (playerInRange) {
+          const direction = player.x > boss.x ? 1 : -1;
+          // Chief maintains distance, tech-based attacks
+          if (Math.abs(player.x - boss.x) < 200) {
+            boss.x += direction * -1; // Retreat to maintain distance
+          }
+          
+          if (Date.now() - boss.lastShotTime > 2500) {
+            // Homing cyber bullets
+            for (let i = 0; i < 3; i++) {
+              state.enemyBullets.push({
+                x: boss.x,
+                y: boss.y + 15,
+                velocityX: direction * (6 + Math.random() * 2),
+                velocityY: -2 + Math.random() * 4,
+              });
+            }
+            boss.lastShotTime = Date.now();
+          }
+        }
+        break;
+        
+      case 'helicopter': // Level 4 - Attack Helicopter with aerial barrage
+        if (playerInRange) {
+          // Helicopter hovers and moves horizontally
+          boss.y += Math.sin(Date.now() * 0.003) * 0.5; // Hovering motion
+          const direction = player.x > boss.x ? 1 : -1;
+          boss.x += direction * 0.8; // Slow aerial movement
+          
+          if (Date.now() - boss.lastShotTime > 1800) {
+            // Carpet bombing - multiple bombs
+            for (let i = 0; i < 2; i++) {
+              state.enemyBullets.push({
+                x: boss.x + (i * 30),
+                y: boss.y + 40,
+                velocityX: Math.random() * 2 - 1,
+                velocityY: 3 + Math.random() * 2, // Bombs fall down
+              });
+            }
+            boss.lastShotTime = Date.now();
           }
         }
         break;
@@ -1547,91 +1639,130 @@ export default function FlappyBirdGame() {
       ctx.fillText(levelConfig?.boss.name || "BOSS", screenX + bossSize / 2, enemy.y - 25);
       
       switch (enemy.bossType) {
-        case 'billy':
-          // BILLY THE EVIL FARMER - 8-bit pixel art style
-          const pixelSize = Math.max(1, Math.floor(bossSize / 32)); // Scale pixels for boss size
+        case 'warden':
+          // CORRUPT PRISON WARDEN - 8-bit pixel art style
+          const pixelSize = Math.max(1, Math.floor(bossSize / 32));
           
-          // EVIL FARMER HEAD - Weathered skin
-          ctx.fillStyle = "#d4a574"; // Farmer skin tone
+          // LARGE HUMAN HEAD - Menacing features
+          ctx.fillStyle = "#d4a574"; // Skin tone
           ctx.fillRect(screenX + 8*pixelSize, enemy.y + 2*pixelSize, 16*pixelSize, 12*pixelSize);
           
-          // SINISTER EYES - Cold and calculating
+          // COLD, CRUEL EYES
           ctx.fillStyle = "#ffffff";
-          ctx.fillRect(screenX + 10*pixelSize, enemy.y + 5*pixelSize, 3*pixelSize, 2*pixelSize);
-          ctx.fillRect(screenX + 17*pixelSize, enemy.y + 5*pixelSize, 3*pixelSize, 2*pixelSize);
-          ctx.fillStyle = "#000000"; // Evil pupils
-          ctx.fillRect(screenX + 11*pixelSize, enemy.y + 6*pixelSize, pixelSize, pixelSize);
-          ctx.fillRect(screenX + 18*pixelSize, enemy.y + 6*pixelSize, pixelSize, pixelSize);
+          ctx.fillRect(screenX + 10*pixelSize, enemy.y + 6*pixelSize, 3*pixelSize, 2*pixelSize);
+          ctx.fillRect(screenX + 17*pixelSize, enemy.y + 6*pixelSize, 3*pixelSize, 2*pixelSize);
+          ctx.fillStyle = "#000000"; // Dark pupils
+          ctx.fillRect(screenX + 11*pixelSize, enemy.y + 7*pixelSize, pixelSize, pixelSize);
+          ctx.fillRect(screenX + 18*pixelSize, enemy.y + 7*pixelSize, pixelSize, pixelSize);
           
-          // ANGRY EVIL EYEBROWS - Menacing scowl
-          ctx.fillStyle = "#8b4513";
-          ctx.fillRect(screenX + 9*pixelSize, enemy.y + 4*pixelSize, 4*pixelSize, pixelSize);
-          ctx.fillRect(screenX + 18*pixelSize, enemy.y + 4*pixelSize, 4*pixelSize, pixelSize);
+          // WARDEN CAP
+          ctx.fillStyle = "#1a1a1a";
+          ctx.fillRect(screenX + 6*pixelSize, enemy.y, 20*pixelSize, 3*pixelSize);
+          ctx.fillRect(screenX + 8*pixelSize, enemy.y - 2*pixelSize, 16*pixelSize, 2*pixelSize);
           
-          // CROOKED NOSE - Broken from farm fights
-          ctx.fillStyle = "#c19660";
-          ctx.fillRect(screenX + 14*pixelSize, enemy.y + 8*pixelSize, 2*pixelSize, 3*pixelSize);
+          // Cap badge
+          ctx.fillStyle = "#ffd700";
+          ctx.fillRect(screenX + 14*pixelSize, enemy.y + pixelSize, 4*pixelSize, 2*pixelSize);
           
-          // EVIL GRIN - Showing missing teeth
-          ctx.fillStyle = "#8b0000";
-          ctx.fillRect(screenX + 12*pixelSize, enemy.y + 11*pixelSize, 6*pixelSize, 2*pixelSize);
-          ctx.fillStyle = "#ffffff"; // Few remaining teeth
-          ctx.fillRect(screenX + 13*pixelSize, enemy.y + 12*pixelSize, pixelSize, pixelSize);
-          ctx.fillRect(screenX + 16*pixelSize, enemy.y + 12*pixelSize, pixelSize, pixelSize);
-          
-          // FARMER STRAW HAT - Classic evil farmer look
-          ctx.fillStyle = "#daa520"; // Straw color
-          ctx.fillRect(screenX + 4*pixelSize, enemy.y, 24*pixelSize, 3*pixelSize);
-          ctx.fillRect(screenX + 8*pixelSize, enemy.y - 2*pixelSize, 16*pixelSize, 3*pixelSize);
-          
-          // Hat band - dark leather
-          ctx.fillStyle = "#654321";
-          ctx.fillRect(screenX + 8*pixelSize, enemy.y + pixelSize, 16*pixelSize, pixelSize);
-          
-          // DIRTY OVERALLS - Working farmer clothes
-          ctx.fillStyle = "#4169e1"; // Blue denim
+          // MASSIVE BODY - Uniform
+          ctx.fillStyle = "#1a1a1a";
           ctx.fillRect(screenX + 6*pixelSize, enemy.y + 14*pixelSize, 20*pixelSize, bossSize - 20*pixelSize);
           
-          // Overall straps - crossing chest
-          ctx.fillStyle = "#2e4bc7";
-          ctx.fillRect(screenX + 10*pixelSize, enemy.y + 14*pixelSize, 2*pixelSize, 12*pixelSize);
-          ctx.fillRect(screenX + 20*pixelSize, enemy.y + 14*pixelSize, 2*pixelSize, 12*pixelSize);
+          // SHOTGUN - Warden's weapon
+          ctx.fillStyle = "#333333";
+          ctx.fillRect(screenX - 6*pixelSize, enemy.y + 18*pixelSize, 12*pixelSize, 3*pixelSize);
+          ctx.fillStyle = "#666666";
+          ctx.fillRect(screenX - 8*pixelSize, enemy.y + 19*pixelSize, 2*pixelSize, pixelSize);
+          break;
           
-          // Overall buckles - metal fasteners
-          ctx.fillStyle = "#c0c0c0";
-          ctx.fillRect(screenX + 9*pixelSize, enemy.y + 16*pixelSize, 2*pixelSize, 2*pixelSize);
-          ctx.fillRect(screenX + 21*pixelSize, enemy.y + 16*pixelSize, 2*pixelSize, 2*pixelSize);
+        case 'captain':
+          // RIOT CAPTAIN - 8-bit armored design
+          const pixelSize2 = Math.max(1, Math.floor(bossSize / 32));
           
-          // DIRT AND STAINS - Weathered work clothes
-          ctx.fillStyle = "#8b4513";
-          ctx.fillRect(screenX + 8*pixelSize, enemy.y + 20*pixelSize, 2*pixelSize, 2*pixelSize);
-          ctx.fillRect(screenX + 14*pixelSize, enemy.y + 25*pixelSize, 3*pixelSize, pixelSize);
-          ctx.fillRect(screenX + 22*pixelSize, enemy.y + 22*pixelSize, 2*pixelSize, 3*pixelSize);
+          // Armored helmet
+          ctx.fillStyle = "#333333";
+          ctx.fillRect(screenX + 6*pixelSize2, enemy.y, 20*pixelSize2, 8*pixelSize2);
           
-          // MUSCULAR FARMER ARMS - Hardened by labor
-          ctx.fillStyle = "#d4a574";
-          ctx.fillRect(screenX + 2*pixelSize, enemy.y + 16*pixelSize, 5*pixelSize, 10*pixelSize);
-          ctx.fillRect(screenX + bossSize - 7*pixelSize, enemy.y + 16*pixelSize, 5*pixelSize, 10*pixelSize);
+          // Visor
+          ctx.fillStyle = "#000000";
+          ctx.fillRect(screenX + 8*pixelSize2, enemy.y + 3*pixelSize2, 16*pixelSize2, 3*pixelSize2);
           
-          // EVIL PITCHFORK - Farmer's weapon of choice
-          ctx.fillStyle = "#654321"; // Wooden handle
-          ctx.fillRect(screenX - 8*pixelSize, enemy.y + 18*pixelSize, 2*pixelSize, 15*pixelSize);
+          // Heavy armor body
+          ctx.fillStyle = "#666666";
+          ctx.fillRect(screenX + 4*pixelSize2, enemy.y + 8*pixelSize2, 24*pixelSize2, bossSize - 12*pixelSize2);
           
-          // Pitchfork prongs - sharp and menacing
-          ctx.fillStyle = "#c0c0c0";
-          ctx.fillRect(screenX - 10*pixelSize, enemy.y + 15*pixelSize, pixelSize, 8*pixelSize);
-          ctx.fillRect(screenX - 8*pixelSize, enemy.y + 15*pixelSize, pixelSize, 8*pixelSize);
-          ctx.fillRect(screenX - 6*pixelSize, enemy.y + 15*pixelSize, pixelSize, 8*pixelSize);
+          // Shield
+          ctx.fillStyle = "#888888";
+          ctx.fillRect(screenX - 4*pixelSize2, enemy.y + 10*pixelSize2, 6*pixelSize2, 16*pixelSize2);
           
-          // HEAVY WORK BOOTS - Mud-caked and sturdy
-          ctx.fillStyle = "#654321";
-          ctx.fillRect(screenX + 8*pixelSize, enemy.y + bossSize - 6*pixelSize, 6*pixelSize, 6*pixelSize);
-          ctx.fillRect(screenX + 18*pixelSize, enemy.y + bossSize - 6*pixelSize, 6*pixelSize, 6*pixelSize);
+          // Shield emblem
+          ctx.fillStyle = "#ff0000";
+          ctx.fillRect(screenX - 2*pixelSize2, enemy.y + 16*pixelSize2, 2*pixelSize2, 4*pixelSize2);
           
-          // Boot mud and wear
-          ctx.fillStyle = "#8b4513";
-          ctx.fillRect(screenX + 8*pixelSize, enemy.y + bossSize - 2*pixelSize, 6*pixelSize, 2*pixelSize);
-          ctx.fillRect(screenX + 18*pixelSize, enemy.y + bossSize - 2*pixelSize, 6*pixelSize, 2*pixelSize);
+          // Baton/weapon
+          ctx.fillStyle = "#444444";
+          ctx.fillRect(screenX + bossSize + 2*pixelSize2, enemy.y + 15*pixelSize2, 2*pixelSize2, 10*pixelSize2);
+          break;
+          
+        case 'chief':
+          // CYBER SECURITY CHIEF - 8-bit high-tech design
+          const pixelSize3 = Math.max(1, Math.floor(bossSize / 32));
+          
+          // High-tech helmet
+          ctx.fillStyle = "#001133";
+          ctx.fillRect(screenX + 6*pixelSize3, enemy.y, 20*pixelSize3, 8*pixelSize3);
+          
+          // Glowing visor
+          ctx.fillStyle = "#00ff00";
+          ctx.fillRect(screenX + 8*pixelSize3, enemy.y + 2*pixelSize3, 16*pixelSize3, 3*pixelSize3);
+          
+          // Tech suit body
+          ctx.fillStyle = "#003366";
+          ctx.fillRect(screenX + 6*pixelSize3, enemy.y + 8*pixelSize3, 20*pixelSize3, bossSize - 12*pixelSize3);
+          
+          // Cyber details
+          ctx.fillStyle = "#00ffff";
+          ctx.fillRect(screenX + 8*pixelSize3, enemy.y + 12*pixelSize3, 2*pixelSize3, 2*pixelSize3);
+          ctx.fillRect(screenX + 12*pixelSize3, enemy.y + 16*pixelSize3, 2*pixelSize3, 2*pixelSize3);
+          ctx.fillRect(screenX + 18*pixelSize3, enemy.y + 14*pixelSize3, 2*pixelSize3, 2*pixelSize3);
+          ctx.fillRect(screenX + 22*pixelSize3, enemy.y + 18*pixelSize3, 2*pixelSize3, 2*pixelSize3);
+          
+          // Energy weapon
+          ctx.fillStyle = "#0066cc";
+          ctx.fillRect(screenX + bossSize + 2*pixelSize3, enemy.y + 12*pixelSize3, 8*pixelSize3, 3*pixelSize3);
+          ctx.fillStyle = "#00ffff";
+          ctx.fillRect(screenX + bossSize + 8*pixelSize3, enemy.y + 13*pixelSize3, 3*pixelSize3, pixelSize3);
+          break;
+          
+        case 'helicopter':
+          // ATTACK HELICOPTER - 8-bit aerial design
+          const pixelSize4 = Math.max(1, Math.floor(bossSize / 32));
+          
+          // Main body
+          ctx.fillStyle = "#444444";
+          ctx.fillRect(screenX + 4*pixelSize4, enemy.y + 12*pixelSize4, 24*pixelSize4, 12*pixelSize4);
+          
+          // Cockpit
+          ctx.fillStyle = "#111111";
+          ctx.fillRect(screenX + 8*pixelSize4, enemy.y + 14*pixelSize4, 16*pixelSize4, 8*pixelSize4);
+          
+          // Rotor blur effect (animated)
+          ctx.fillStyle = "rgba(200, 200, 200, 0.3)";
+          ctx.fillRect(screenX - 8*pixelSize4, enemy.y + 4*pixelSize4, bossSize + 16*pixelSize4, 3*pixelSize4);
+          
+          // Landing skids
+          ctx.fillStyle = "#666666";
+          ctx.fillRect(screenX + 2*pixelSize4, enemy.y + bossSize - 4*pixelSize4, bossSize - 4*pixelSize4, 2*pixelSize4);
+          
+          // Weapons/missiles
+          ctx.fillStyle = "#333333";
+          ctx.fillRect(screenX, enemy.y + 18*pixelSize4, 4*pixelSize4, 2*pixelSize4);
+          ctx.fillRect(screenX + bossSize - 4*pixelSize4, enemy.y + 18*pixelSize4, 4*pixelSize4, 2*pixelSize4);
+          
+          // Warning lights
+          ctx.fillStyle = "#ff0000";
+          ctx.fillRect(screenX + 8*pixelSize4, enemy.y + 8*pixelSize4, 2*pixelSize4, 2*pixelSize4);
+          ctx.fillRect(screenX + 22*pixelSize4, enemy.y + 8*pixelSize4, 2*pixelSize4, 2*pixelSize4);
           break;
       }
     }
@@ -2669,7 +2800,7 @@ export default function FlappyBirdGame() {
           {/* Restart button positioned at the bottom */}
           <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
             <button
-              onClick={resetGame}
+              onClick={restartCurrentLevel}
               className="text-2xl font-bold px-8 py-4 border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-80 hover:bg-yellow-300 hover:text-black transition-colors not-prose"
               style={{
                 fontFamily: 'monospace',
@@ -2722,10 +2853,10 @@ export default function FlappyBirdGame() {
             <p className="text-lg mb-2">Final Score: {displayScore}</p>
             <p className="text-lg mb-4">Distance Escaped: {distance}m</p>
             <div className="mb-6">
-              <p className="text-green-400 mb-2">✓ Prison Yard - Billy the Evil Farmer Defeated</p>
-              <p className="text-green-400 mb-2">✓ Cell Block Alpha - Billy the Evil Farmer Defeated</p>
-              <p className="text-green-400 mb-2">✓ Security Center - Billy the Evil Farmer Defeated</p>
-              <p className="text-green-400 mb-2">✓ Escape Route - Billy the Evil Farmer Defeated</p>
+              <p className="text-green-400 mb-2">✓ Prison Yard - The Corrupt Warden Defeated</p>
+              <p className="text-green-400 mb-2">✓ Cell Block Alpha - Riot Captain Defeated</p>
+              <p className="text-green-400 mb-2">✓ Security Center - Cyber Security Chief Defeated</p>
+              <p className="text-green-400 mb-2">✓ Escape Route - Attack Helicopter Destroyed</p>
               <p className="text-xl text-yellow-400 mt-4">🐓 ULTIMATE FREEDOM ACHIEVED! 🐓</p>
               <p className="text-sm opacity-80 mt-2">The legendary badass rooster has escaped the maximum security prison!</p>
             </div>

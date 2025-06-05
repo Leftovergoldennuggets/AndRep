@@ -260,12 +260,21 @@ Transformed overwhelming text wall into engaging cinematic experience that playe
   - Features evil grin, missing teeth, weathered appearance, and farm tools
   - Updated all boss names and victory screen text to reflect the transformation
   - Replaced warden, captain, chief, and helicopter with single memorable villain
-- [x] **CUSTOM ENDSCREEN IMAGE**: Next commit
+- [x] **CUSTOM ENDSCREEN IMAGE**: 3395cb4
   - Added custom pixel art endscreen image (Endscreen.png) for game over
   - Shows "GAME OVER" with Red in prison uniform behind bars
   - Positioned restart button at bottom with proper arcade styling
   - Game stats (score, distance) displayed as overlay at top
   - Full image visibility with proper contain sizing and black background
+- [x] **UNIQUE BOSSES & LEVEL PROGRESSION FIX**: Next commit
+  - Fixed level progression - players now restart current level instead of going to start menu
+  - Created 4 unique bosses with distinct behaviors and 8-bit pixel art designs:
+    * Level 1: The Corrupt Warden (rapid shotgun attacks, aggressive charging)
+    * Level 2: Riot Captain (shield slam, multi-shot bursts, heavy armor)
+    * Level 3: Cyber Security Chief (high-tech, homing bullets, distance tactics)
+    * Level 4: Attack Helicopter (aerial barrage, carpet bombing, hovering motion)
+  - Updated boss names and victory screen to reflect unique boss encounters
+  - Added restartCurrentLevel function to maintain progression while allowing retries
 
 ## Remaining Enhancement Ideas
 - Sound effects and music for boss encounters
