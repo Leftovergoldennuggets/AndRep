@@ -127,8 +127,8 @@ type WeaponType = 'pistol' | 'shotgun' | 'rifle' | 'grenade';
 
 const GAME_CONFIG = {
   canvas: {
-    width: window.innerWidth,
-    height: window.innerHeight,
+    width: 1200,
+    height: 800,
   },
   player: {
     size: 48,
@@ -155,7 +155,7 @@ const GAME_CONFIG = {
     size: 9,
   },
   world: {
-    groundLevel: window.innerHeight - 50, // Y position of the ground
+    groundLevel: 750, // Y position of the ground (800 - 50)
   },
 };
 
@@ -3294,38 +3294,25 @@ export default function FlappyBirdGame() {
       }
     };
 
-    const handleResize = () => {
-      const canvas = canvasRef.current;
-      if (canvas) {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        // Update ground level
-        GAME_CONFIG.world.groundLevel = window.innerHeight - 50;
-      }
-    };
-
     document.addEventListener("keydown", handleKeyDown);
     document.addEventListener("keyup", handleKeyUp);
-    window.addEventListener("resize", handleResize);
     const canvas = canvasRef.current;
     canvas?.addEventListener("click", handleClick);
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("keyup", handleKeyUp);
-      window.removeEventListener("resize", handleResize);
       canvas?.removeEventListener("click", handleClick);
     };
   }, [jump, shoot, startGame]);
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-screen overflow-hidden bg-black">
       <canvas
         ref={canvasRef}
         width={GAME_CONFIG.canvas.width}
         height={GAME_CONFIG.canvas.height}
-        className="block cursor-crosshair"
-        style={{ width: '100vw', height: '100vh' }}
+        className="block cursor-crosshair w-full h-full object-contain"
       />
       
       {gameState === "start" && (
@@ -3340,13 +3327,13 @@ export default function FlappyBirdGame() {
           }}
         >
           {/* Start Button */}
-          <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2">
+          <div className="absolute bottom-8 sm:bottom-16 left-1/2 transform -translate-x-1/2">
             <button
               onClick={startStory}
-              className="arcade-start-button text-4xl font-bold px-12 py-6 border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-50 hover:bg-yellow-300 hover:text-black transition-colors"
+              className="arcade-start-button text-2xl sm:text-3xl md:text-4xl font-bold px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-6 border-2 sm:border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-50 hover:bg-yellow-300 hover:text-black transition-colors"
               style={{
                 fontFamily: 'monospace',
-                letterSpacing: '3px',
+                letterSpacing: '2px',
                 textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
                 animation: 'blink 1.5s infinite'
               }}
@@ -3364,33 +3351,33 @@ export default function FlappyBirdGame() {
             backgroundImage: 'radial-gradient(circle at 20% 80%, rgba(120, 120, 120, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(120, 120, 120, 0.15) 0%, transparent 50%)',
           }}
         >
-          <div className="text-center text-white max-w-4xl mx-4">
+          <div className="text-center text-white max-w-4xl mx-4 px-4">
             {(() => {
               const slide = STORY_SLIDES[storySlide];
               return (
-                <div className="space-y-8">
+                <div className="space-y-4 sm:space-y-6 md:space-y-8">
                   {/* Chapter indicator with comic styling */}
-                  <div className="text-lg font-bold text-white bg-black bg-opacity-50 px-4 py-2 rounded-full border-2 border-white">
+                  <div className="text-sm sm:text-base md:text-lg font-bold text-white bg-black bg-opacity-50 px-3 sm:px-4 py-1 sm:py-2 rounded-full border-2 border-white">
                     CHAPTER {storySlide + 1} OF {STORY_SLIDES.length}
                   </div>
                   
                   {/* Comic Title */}
-                  <div className="space-y-4">
+                  <div className="space-y-2 sm:space-y-3 md:space-y-4">
                     <h2 
-                      className={`text-6xl font-black ${slide.color} transform -rotate-1`}
+                      className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black ${slide.color} transform -rotate-1`}
                       style={{
                         fontFamily: 'Impact, Arial Black, sans-serif',
-                        textShadow: '4px 4px 0px #000000, 8px 8px 0px rgba(0,0,0,0.3)',
-                        letterSpacing: '2px'
+                        textShadow: '2px 2px 0px #000000, 4px 4px 0px rgba(0,0,0,0.3)',
+                        letterSpacing: '1px'
                       }}
                     >
                       {slide.title}
                     </h2>
                     <h3 
-                      className="text-2xl font-bold text-white transform rotate-1"
+                      className="text-lg sm:text-xl md:text-2xl font-bold text-white transform rotate-1"
                       style={{
                         fontFamily: 'Impact, Arial Black, sans-serif',
-                        textShadow: '2px 2px 0px #000000'
+                        textShadow: '1px 1px 0px #000000'
                       }}
                     >
                       {slide.subtitle}
@@ -3443,19 +3430,19 @@ export default function FlappyBirdGame() {
                   </div>
                   
                   {/* Enhanced narrative text with dramatic styling */}
-                  <div className="relative bg-gradient-to-br from-gray-900 to-black p-8 rounded-lg border-4 border-yellow-600 transform -rotate-1 shadow-2xl">
+                  <div className="relative bg-gradient-to-br from-gray-900 to-black p-4 sm:p-6 md:p-8 rounded-lg border-2 sm:border-4 border-yellow-600 transform -rotate-1 shadow-2xl">
                     {/* Decorative corner flourishes */}
-                    <div className="absolute top-2 left-2 text-yellow-500 text-2xl opacity-50">📖</div>
-                    <div className="absolute top-2 right-2 text-yellow-500 text-2xl opacity-50">✨</div>
+                    <div className="absolute top-1 sm:top-2 left-1 sm:left-2 text-yellow-500 text-lg sm:text-xl md:text-2xl opacity-50">📖</div>
+                    <div className="absolute top-1 sm:top-2 right-1 sm:right-2 text-yellow-500 text-lg sm:text-xl md:text-2xl opacity-50">✨</div>
                     
                     {/* Main story text */}
                     <div className="relative">
                       <p 
-                        className="text-xl text-white leading-relaxed font-semibold italic"
+                        className="text-sm sm:text-base md:text-lg lg:text-xl text-white leading-relaxed font-semibold italic"
                         style={{
                           fontFamily: 'Georgia, "Times New Roman", serif',
-                          textShadow: '2px 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(255,255,255,0.1)',
-                          lineHeight: '1.8'
+                          textShadow: '1px 1px 2px rgba(0,0,0,0.8), 0 0 5px rgba(255,255,255,0.1)',
+                          lineHeight: '1.6'
                         }}
                       >
                         {slide.text}
@@ -3471,25 +3458,25 @@ export default function FlappyBirdGame() {
                   </div>
                   
                   {/* Navigation with comic styling */}
-                  <div className="flex justify-between pt-6">
+                  <div className="flex flex-col sm:flex-row justify-between gap-4 pt-4 sm:pt-6">
                     <button
                       onClick={skipStory}
-                      className="text-xl font-bold px-6 py-3 border-4 text-gray-300 border-gray-300 bg-black bg-opacity-70 hover:bg-gray-300 hover:text-black transition-colors"
+                      className="text-base sm:text-lg md:text-xl font-bold px-4 sm:px-6 py-2 sm:py-3 border-2 sm:border-4 text-gray-300 border-gray-300 bg-black bg-opacity-70 hover:bg-gray-300 hover:text-black transition-colors"
                       style={{
                         fontFamily: 'Impact, Arial Black, sans-serif',
                         letterSpacing: '1px',
-                        textShadow: '2px 2px 0px #000000'
+                        textShadow: '1px 1px 0px #000000'
                       }}
                     >
                       SKIP STORY
                     </button>
                     <button
                       onClick={nextStorySlide}
-                      className="text-2xl font-bold px-8 py-4 border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-70 hover:bg-yellow-300 hover:text-black transition-colors"
+                      className="text-lg sm:text-xl md:text-2xl font-bold px-6 sm:px-8 py-3 sm:py-4 border-2 sm:border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-70 hover:bg-yellow-300 hover:text-black transition-colors"
                       style={{
                         fontFamily: 'Impact, Arial Black, sans-serif',
-                        letterSpacing: '2px',
-                        textShadow: '2px 2px 0px #000000',
+                        letterSpacing: '1px',
+                        textShadow: '1px 1px 0px #000000',
                         animation: 'blink 2s infinite'
                       }}
                     >
@@ -3516,20 +3503,20 @@ export default function FlappyBirdGame() {
           }}
         >
           {/* Game stats overlay positioned above the restart button */}
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-center text-white bg-black bg-opacity-70 px-4 py-2 rounded-lg">
-            <p className="text-lg font-bold">Score: {displayScore}</p>
-            <p className="text-md">Distance: {distance}m</p>
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-center text-white bg-black bg-opacity-70 px-3 sm:px-4 py-2 rounded-lg">
+            <p className="text-base sm:text-lg font-bold">Score: {displayScore}</p>
+            <p className="text-sm sm:text-base">Distance: {distance}m</p>
           </div>
           
           {/* Restart button positioned at the bottom */}
           <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
             <button
               onClick={restartCurrentLevel}
-              className="text-2xl font-bold px-8 py-4 border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-80 hover:bg-yellow-300 hover:text-black transition-colors not-prose"
+              className="text-lg sm:text-xl md:text-2xl font-bold px-6 sm:px-8 py-3 sm:py-4 border-2 sm:border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-80 hover:bg-yellow-300 hover:text-black transition-colors not-prose"
               style={{
                 fontFamily: 'monospace',
-                letterSpacing: '2px',
-                textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)'
+                letterSpacing: '1px',
+                textShadow: '1px 1px 2px rgba(0, 0, 0, 0.8)'
               }}
             >
               TRY AGAIN
@@ -3539,10 +3526,10 @@ export default function FlappyBirdGame() {
       )}
 
       {gameState === "bossIntro" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-85 rounded-lg">
-          <div className="text-center text-white">
-            <h2 className="text-4xl font-bold mb-4 text-red-500 animate-pulse">⚠️ BOSS ENCOUNTER ⚠️</h2>
-            <h3 className="text-2xl font-bold mb-2 text-yellow-400">
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-85 rounded-lg px-4">
+          <div className="text-center text-white max-w-md">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-red-500 animate-pulse">⚠️ BOSS ENCOUNTER ⚠️</h2>
+            <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-2 text-yellow-400">
               {gameStateRef.current.level && LEVELS[gameStateRef.current.level.current as keyof typeof LEVELS]?.boss.name}
             </h3>
             <p className="text-lg mb-6 text-gray-300">
