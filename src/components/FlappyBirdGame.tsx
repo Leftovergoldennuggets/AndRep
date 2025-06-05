@@ -114,8 +114,8 @@ type WeaponType = 'pistol' | 'shotgun' | 'rifle' | 'grenade';
 
 const GAME_CONFIG = {
   canvas: {
-    width: 800,
-    height: 400,
+    width: window.innerWidth,
+    height: window.innerHeight,
   },
   player: {
     size: 32,
@@ -142,7 +142,7 @@ const GAME_CONFIG = {
     size: 6,
   },
   world: {
-    groundLevel: 350, // Y position of the ground
+    groundLevel: window.innerHeight - 50, // Y position of the ground
   },
 };
 
@@ -2498,25 +2498,38 @@ export default function FlappyBirdGame() {
       }
     };
 
+    const handleResize = () => {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        // Update ground level
+        GAME_CONFIG.world.groundLevel = window.innerHeight - 50;
+      }
+    };
+
     document.addEventListener("keydown", handleKeyDown);
     document.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("resize", handleResize);
     const canvas = canvasRef.current;
     canvas?.addEventListener("click", handleClick);
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("resize", handleResize);
       canvas?.removeEventListener("click", handleClick);
     };
   }, [jump, shoot, startGame]);
 
   return (
-    <div className="relative">
+    <div className="relative w-full h-full">
       <canvas
         ref={canvasRef}
         width={GAME_CONFIG.canvas.width}
         height={GAME_CONFIG.canvas.height}
-        className="border-4 border-white rounded-lg shadow-2xl cursor-crosshair"
+        className="block cursor-crosshair"
+        style={{ width: '100vw', height: '100vh' }}
       />
       
       {gameState === "start" && (
