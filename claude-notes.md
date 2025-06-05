@@ -249,6 +249,8 @@ The rooster is no longer just a character - he's Red, a rebel with a cause and t
 Transformed overwhelming text wall into engaging cinematic experience that players actually want to watch!
 
 ## Latest Updates - Session Commits
+- [x] **TEMPORARY SIMPLIFICATION ATTEMPT**: Attempted gameplay simplification but reverted due to user preference
+- [x] **RESTORED COMPLEX VERSION**: git reset --hard 28506a5 - Back to full-featured game
 - [x] **HEALTH & GUARD MOVEMENT UPDATE**: 273b5ef
   - Reduced player health from 100 to 3 hearts for more challenging gameplay
   - Added patrol movement to guards - they now walk back and forth when patrolling
