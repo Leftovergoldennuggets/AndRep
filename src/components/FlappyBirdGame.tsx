@@ -3408,13 +3408,31 @@ export default function FlappyBirdGame() {
               {/* Story Text */}
               <div className="space-y-6">
                 <p 
-                  className="text-sm sm:text-base md:text-lg leading-relaxed"
+                  className="text-sm sm:text-base md:text-lg leading-relaxed text-gray-300"
                   style={{
                     fontFamily: 'monospace',
                     letterSpacing: '1px'
                   }}
                 >
-                  Red's journey has come to an end. The corruption proved too strong, and the legend fades into darkness.
+                  The steel bars close once more around Red's broken spirit. In the darkness of his cell, he whispers Wilbur's name—a prayer that echoes unanswered through the cold concrete walls.
+                </p>
+                <p 
+                  className="text-xs sm:text-sm md:text-base leading-relaxed text-red-400 italic"
+                  style={{
+                    fontFamily: 'monospace',
+                    letterSpacing: '1px'
+                  }}
+                >
+                  "I tried, old friend... I tried to honor your memory. But maybe some legends are meant to die in the shadows."
+                </p>
+                <p 
+                  className="text-xs sm:text-sm md:text-base leading-relaxed text-gray-500"
+                  style={{
+                    fontFamily: 'monospace',
+                    letterSpacing: '1px'
+                  }}
+                >
+                  The corrupt guards laugh in the distance. Justice remains buried. But perhaps... perhaps another rooster will rise from these ashes.
                 </p>
               </div>
               
