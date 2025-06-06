@@ -872,6 +872,7 @@ export default function FlappyBirdGame() {
   }, [generateObstacles, generateEnemies, generatePowerups, generateObjectives, generatePrisoners]);
 
   const startStory = useCallback(() => {
+    console.log('startStory called');
     const state = gameStateRef.current;
     state.gameState = "story";
     state.storySlide = 0;
@@ -880,6 +881,7 @@ export default function FlappyBirdGame() {
   }, []);
 
   const nextStorySlide = useCallback(() => {
+    console.log('nextStorySlide called, current slide:', storySlide);
     const state = gameStateRef.current;
     if (state.storySlide < STORY_SLIDES.length - 1) {
       state.storySlide++;
@@ -888,9 +890,10 @@ export default function FlappyBirdGame() {
       // Story finished, start game
       startGame();
     }
-  }, [startGame]);
+  }, [startGame, storySlide]);
 
   const skipStory = useCallback(() => {
+    console.log('skipStory called');
     startGame();
   }, [startGame]);
 
@@ -3232,143 +3235,98 @@ export default function FlappyBirdGame() {
       )}
 
       {gameState === "story" && (
-        <div 
-          className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br ${STORY_SLIDES[storySlide].bgColor}`}
-          style={{
-            backgroundImage: 'radial-gradient(circle at 20% 80%, rgba(120, 120, 120, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(120, 120, 120, 0.15) 0%, transparent 50%)',
-          }}
-        >
+        <div className="absolute inset-0 flex items-center justify-center bg-black">
           <div className="text-center text-white max-w-4xl mx-4 px-4">
             {(() => {
               const slide = STORY_SLIDES[storySlide];
               return (
-                <div className="space-y-4 sm:space-y-6 md:space-y-8">
-                  {/* Chapter indicator with comic styling */}
-                  <div className="text-sm sm:text-base md:text-lg font-bold text-white bg-black bg-opacity-50 px-3 sm:px-4 py-1 sm:py-2 rounded-full border-2 border-white">
-                    CHAPTER {storySlide + 1} OF {STORY_SLIDES.length}
+                <div className="space-y-8">
+                  {/* Chapter Indicator */}
+                  <div 
+                    className="text-lg sm:text-xl font-bold text-white"
+                    style={{
+                      fontFamily: 'monospace',
+                      letterSpacing: '3px'
+                    }}
+                  >
+                    CHAPTER {storySlide + 1} / {STORY_SLIDES.length}
                   </div>
                   
-                  {/* Comic Title */}
-                  <div className="space-y-2 sm:space-y-3 md:space-y-4">
+                  {/* Title */}
+                  <div className="space-y-4">
                     <h2 
-                      className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black ${slide.color} transform -rotate-1`}
+                      className="text-3xl sm:text-4xl md:text-5xl font-bold text-yellow-300"
                       style={{
-                        fontFamily: 'Impact, Arial Black, sans-serif',
-                        textShadow: '2px 2px 0px #000000, 4px 4px 0px rgba(0,0,0,0.3)',
-                        letterSpacing: '1px'
+                        fontFamily: 'monospace',
+                        letterSpacing: '4px'
                       }}
                     >
                       {slide.title}
                     </h2>
                     <h3 
-                      className="text-lg sm:text-xl md:text-2xl font-bold text-white transform rotate-1"
+                      className="text-xl sm:text-2xl md:text-3xl font-bold text-white"
                       style={{
-                        fontFamily: 'Impact, Arial Black, sans-serif',
-                        textShadow: '1px 1px 0px #000000'
+                        fontFamily: 'monospace',
+                        letterSpacing: '2px'
                       }}
                     >
                       {slide.subtitle}
                     </h3>
                   </div>
                   
-                  {/* Illustration Panel */}
-                  <div 
-                    className="relative bg-white p-4 rounded-lg border-8 border-black transform rotate-1 shadow-2xl"
-                    style={{
-                      boxShadow: '8px 8px 0px #000000, 12px 12px 0px rgba(0,0,0,0.5)'
-                    }}
-                  >
-                    {/* Comic book dotted pattern overlay */}
-                    <div 
-                      className="absolute inset-0 opacity-10 rounded-lg pointer-events-none"
+                  {/* Illustration */}
+                  <div className="py-4">
+                    <img 
+                      src={slide.image}
+                      alt={`${slide.title} - ${slide.subtitle}`}
+                      className="w-full h-auto max-h-96 object-contain"
                       style={{
-                        backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)',
-                        backgroundSize: '8px 8px'
+                        filter: 'contrast(1.1) saturate(1.2)',
+                        imageRendering: 'crisp-edges'
+                      }}
+                      onError={(e) => {
+                        console.log(`Failed to load image: ${slide.image}`);
+                        e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNPTUlORyBTT09OPC90ZXh0Pjwvc3ZnPg==';
                       }}
                     />
-                    
-                    {/* Main illustration */}
-                    <div className="relative overflow-hidden rounded-lg border-4 border-gray-800">
-                      <img 
-                        src={slide.image}
-                        alt={`${slide.title} - ${slide.subtitle}`}
-                        className="w-full h-auto max-h-96 object-contain bg-gradient-to-br from-gray-100 to-gray-200"
-                        style={{
-                          filter: 'contrast(1.1) saturate(1.2)',
-                          imageRendering: 'crisp-edges'
-                        }}
-                        onError={(e) => {
-                          console.log(`Failed to load image: ${slide.image}`);
-                          e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNPTUlORyBTT09OPC90ZXh0Pjwvc3ZnPg==';
-                        }}
-                      />
-                      
-                      {/* Comic book style action text overlay */}
-                      <div className="absolute bottom-2 right-2 bg-yellow-400 text-black px-3 py-1 rounded-full border-2 border-black text-sm font-bold transform rotate-12 shadow-lg">
-                        CHAPTER {storySlide + 1}
-                      </div>
-                    </div>
-                    
-                    {/* Vintage comic book corner marks */}
-                    <div className="absolute top-1 left-1 w-4 h-4 border-l-4 border-t-4 border-red-600 opacity-60"></div>
-                    <div className="absolute top-1 right-1 w-4 h-4 border-r-4 border-t-4 border-red-600 opacity-60"></div>
-                    <div className="absolute bottom-1 left-1 w-4 h-4 border-l-4 border-b-4 border-red-600 opacity-60"></div>
-                    <div className="absolute bottom-1 right-1 w-4 h-4 border-r-4 border-b-4 border-red-600 opacity-60"></div>
                   </div>
                   
-                  {/* Enhanced narrative text with dramatic styling */}
-                  <div className="relative bg-gradient-to-br from-gray-900 to-black p-4 sm:p-6 md:p-8 rounded-lg border-2 sm:border-4 border-yellow-600 transform -rotate-1 shadow-2xl">
-                    {/* Decorative corner flourishes */}
-                    <div className="absolute top-1 sm:top-2 left-1 sm:left-2 text-yellow-500 text-lg sm:text-xl md:text-2xl opacity-50">📖</div>
-                    <div className="absolute top-1 sm:top-2 right-1 sm:right-2 text-yellow-500 text-lg sm:text-xl md:text-2xl opacity-50">✨</div>
-                    
-                    {/* Main story text */}
-                    <div className="relative">
-                      <p 
-                        className="text-sm sm:text-base md:text-lg lg:text-xl text-white leading-relaxed font-semibold italic"
-                        style={{
-                          fontFamily: 'Georgia, "Times New Roman", serif',
-                          textShadow: '1px 1px 2px rgba(0,0,0,0.8), 0 0 5px rgba(255,255,255,0.1)',
-                          lineHeight: '1.6'
-                        }}
-                      >
-                        {slide.text}
-                      </p>
-                      
-                      {/* Dramatic accent line */}
-                      <div className="mt-4 w-full h-1 bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-600 rounded-full"></div>
-                      
-                      {/* Atmospheric quote marks */}
-                      <div className="absolute -top-3 -left-3 text-yellow-400 text-4xl opacity-60 font-serif">"</div>
-                      <div className="absolute -bottom-1 -right-3 text-yellow-400 text-4xl opacity-60 font-serif transform rotate-180">"</div>
-                    </div>
+                  {/* Story Text */}
+                  <div className="py-4">
+                    <p 
+                      className="text-lg sm:text-xl md:text-2xl text-white leading-relaxed"
+                      style={{
+                        fontFamily: 'monospace',
+                        letterSpacing: '1px',
+                        lineHeight: '1.8'
+                      }}
+                    >
+                      {slide.text}
+                    </p>
                   </div>
                   
-                  {/* Navigation with comic styling */}
-                  <div className="flex flex-col sm:flex-row justify-between gap-4 pt-4 sm:pt-6">
+                  {/* Navigation Buttons */}
+                  <div className="flex flex-col sm:flex-row justify-between gap-4 pt-6">
                     <button
                       onClick={skipStory}
-                      className="text-base sm:text-lg md:text-xl font-bold px-4 sm:px-6 py-2 sm:py-3 border-2 sm:border-4 text-gray-300 border-gray-300 bg-black bg-opacity-70 hover:bg-gray-300 hover:text-black transition-colors"
+                      className="text-lg sm:text-xl font-bold px-6 py-3 border-2 text-gray-300 border-gray-300 bg-black hover:bg-gray-300 hover:text-black transition-colors"
                       style={{
-                        fontFamily: 'Impact, Arial Black, sans-serif',
-                        letterSpacing: '1px',
-                        textShadow: '1px 1px 0px #000000'
+                        fontFamily: 'monospace',
+                        letterSpacing: '2px'
                       }}
                     >
                       SKIP STORY
                     </button>
                     <button
                       onClick={nextStorySlide}
-                      className="text-lg sm:text-xl md:text-2xl font-bold px-6 sm:px-8 py-3 sm:py-4 border-2 sm:border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-70 hover:bg-yellow-300 hover:text-black transition-colors"
+                      className="text-xl sm:text-2xl font-bold px-8 py-4 border-2 text-yellow-300 border-yellow-300 bg-black hover:bg-yellow-300 hover:text-black transition-colors"
                       style={{
-                        fontFamily: 'Impact, Arial Black, sans-serif',
-                        letterSpacing: '1px',
-                        textShadow: '1px 1px 0px #000000',
-                        animation: 'blink 2s infinite'
+                        fontFamily: 'monospace',
+                        letterSpacing: '3px'
                       }}
                     >
                       {storySlide < STORY_SLIDES.length - 1 ? 
-                        "CONTINUE!" : "BEGIN THE ESCAPE!"}
+                        "CONTINUE" : "START GAME"}
                     </button>
                   </div>
                 </div>
@@ -3397,7 +3355,7 @@ export default function FlappyBirdGame() {
         <div 
           className="absolute inset-0 flex flex-col items-center justify-center"
           style={{
-            backgroundImage: 'url(/Endscreenfinal.png)',
+            backgroundImage: 'url(/newendscreenvictory.png)',
             backgroundSize: 'contain',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
@@ -3447,14 +3405,14 @@ export default function FlappyBirdGame() {
         <div 
           className="absolute inset-0 flex items-center justify-center"
           style={{
-            backgroundImage: 'url(/endscreenvictory.png)',
-            backgroundSize: 'cover',
+            backgroundImage: 'url(/newendscreenvictory.png)',
+            backgroundSize: 'contain',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
             backgroundColor: '#000000'
           }}
         >
-          {/* Continue button to proceed to scores */}
+          {/* Arcade-style continue button */}
           <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2">
             <button
               onClick={() => {
@@ -3462,15 +3420,16 @@ export default function FlappyBirdGame() {
                 state.gameState = "missionComplete";
                 setGameState("missionComplete");
               }}
-              className="text-3xl font-bold px-12 py-6 border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-80 hover:bg-yellow-300 hover:text-black transition-colors transform hover:scale-105"
+              className="text-4xl sm:text-5xl font-bold px-8 sm:px-12 py-4 sm:py-6 border-4 text-cyan-300 border-cyan-300 bg-black hover:bg-cyan-300 hover:text-black transition-colors"
               style={{
-                fontFamily: 'Impact, Arial Black, sans-serif',
-                letterSpacing: '2px',
-                textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
-                animation: 'blink 2s infinite'
+                fontFamily: 'monospace',
+                letterSpacing: '4px',
+                textShadow: '0 0 10px currentColor, 2px 2px 4px rgba(0, 0, 0, 0.8)',
+                animation: 'blink 1s infinite',
+                boxShadow: '0 0 20px rgba(0, 255, 255, 0.5), inset 0 0 20px rgba(0, 255, 255, 0.1)'
               }}
             >
-              🏆 CONTINUE 🏆
+              PRESS START
             </button>
           </div>
         </div>
@@ -3478,99 +3437,84 @@ export default function FlappyBirdGame() {
 
       {gameState === "missionComplete" && (
         <div 
-          className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-90"
+          className="absolute inset-0 flex flex-col items-center justify-center bg-black"
         >
-          {/* Epic Victory Title */}
-          <div className="text-center mb-8">
+          {/* Arcade Victory Title */}
+          <div className="text-center mb-12">
             <h1 
-              className="text-8xl font-black text-yellow-400 mb-4 animate-pulse"
+              className="text-6xl sm:text-8xl font-bold text-cyan-300 mb-6"
               style={{
-                fontFamily: 'Impact, Arial Black, sans-serif',
-                textShadow: '6px 6px 0px #000000, 12px 12px 0px rgba(255,215,0,0.5)',
-                letterSpacing: '4px',
-                transform: 'rotate(-2deg)'
+                fontFamily: 'monospace',
+                textShadow: '0 0 20px currentColor, 4px 4px 8px rgba(0, 0, 0, 0.8)',
+                letterSpacing: '8px',
+                animation: 'blink 2s infinite'
               }}
             >
-              FREEDOM!
+              GAME CLEAR
             </h1>
             <h2 
-              className="text-4xl font-bold text-white mb-2"
+              className="text-2xl sm:text-4xl font-bold text-yellow-300"
               style={{
-                fontFamily: 'Impact, Arial Black, sans-serif',
-                textShadow: '3px 3px 0px #000000, 6px 6px 0px rgba(0,0,0,0.7)',
-                letterSpacing: '2px'
+                fontFamily: 'monospace',
+                textShadow: '0 0 10px currentColor, 2px 2px 4px rgba(0, 0, 0, 0.8)',
+                letterSpacing: '4px'
               }}
             >
-              THE LEGEND OF RED COMPLETE
+              CONGRATULATIONS
             </h2>
           </div>
 
-          {/* Epic Achievement Stats */}
-          <div className="bg-black bg-opacity-80 p-8 rounded-lg border-4 border-yellow-400 mb-8 max-w-4xl">
-            <div className="text-center text-white space-y-4">
-              <p className="text-2xl font-bold text-yellow-400">
-                🏆 BLACKWATER MAXIMUM SECURITY PRISON - CONQUERED 🏆
-              </p>
-              
-              <div className="grid grid-cols-2 gap-6 my-6">
+          {/* Arcade Stats Display */}
+          <div className="bg-black border-4 border-cyan-300 p-8 mb-12" style={{
+            boxShadow: '0 0 30px rgba(0, 255, 255, 0.5), inset 0 0 30px rgba(0, 255, 255, 0.1)'
+          }}>
+            <div className="text-center text-white space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-green-400">{displayScore}</p>
-                  <p className="text-lg text-gray-300">LEGENDARY SCORE</p>
+                  <p className="text-4xl sm:text-5xl font-bold text-yellow-300" style={{
+                    fontFamily: 'monospace',
+                    textShadow: '0 0 10px currentColor'
+                  }}>
+                    {displayScore.toLocaleString()}
+                  </p>
+                  <p className="text-lg text-cyan-300" style={{
+                    fontFamily: 'monospace',
+                    letterSpacing: '2px'
+                  }}>
+                    HIGH SCORE
+                  </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-blue-400">{distance}m</p>
-                  <p className="text-lg text-gray-300">DISTANCE OF GLORY</p>
+                  <p className="text-4xl sm:text-5xl font-bold text-yellow-300" style={{
+                    fontFamily: 'monospace',
+                    textShadow: '0 0 10px currentColor'
+                  }}>
+                    {distance}M
+                  </p>
+                  <p className="text-lg text-cyan-300" style={{
+                    fontFamily: 'monospace',
+                    letterSpacing: '2px'
+                  }}>
+                    DISTANCE
+                  </p>
                 </div>
-              </div>
-
-              <div className="space-y-2 text-lg">
-                <p className="text-green-400 font-bold">⚔️ The Corrupt Warden - DEFEATED</p>
-                <p className="text-green-400 font-bold">🛡️ Riot Captain - CRUSHED</p>
-                <p className="text-green-400 font-bold">🤖 Cyber Security Chief - DEMOLISHED</p>
-                <p className="text-green-400 font-bold">🚁 Attack Helicopter - DESTROYED</p>
               </div>
             </div>
           </div>
 
-          {/* Epic Story Conclusion */}
-          <div className="bg-gradient-to-br from-gray-900 to-black p-8 rounded-lg border-4 border-red-600 mb-8 max-w-5xl">
-            <div className="text-center">
-              <p 
-                className="text-2xl text-white leading-relaxed font-semibold italic mb-4"
-                style={{
-                  fontFamily: 'Georgia, "Times New Roman", serif',
-                  textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
-                  lineHeight: '1.6'
-                }}
-              >
-                Against impossible odds, through blood and thunder, Red the Magnificent has shattered every chain, 
-                defeated every enemy, and torn down the walls of corruption. 
-              </p>
-              <p 
-                className="text-xl text-yellow-300 font-bold"
-                style={{
-                  fontFamily: 'Georgia, "Times New Roman", serif',
-                  textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
-                }}
-              >
-                The farm animals are FREE. Wilbur's sacrifice is HONORED. Justice is SERVED.
-              </p>
-              <div className="mt-4 w-full h-1 bg-gradient-to-r from-red-600 via-yellow-400 to-red-600 rounded-full"></div>
-            </div>
-          </div>
-
-          {/* Action Button */}
+          {/* Play Again Button */}
           <button
             onClick={resetGame}
-            className="text-3xl font-bold px-12 py-6 border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-80 hover:bg-yellow-300 hover:text-black transition-colors transform hover:scale-105"
+            className="text-3xl sm:text-4xl font-bold px-8 sm:px-12 py-4 sm:py-6 border-4 text-yellow-300 border-yellow-300 bg-black hover:bg-yellow-300 hover:text-black transition-colors"
             style={{
-              fontFamily: 'Impact, Arial Black, sans-serif',
-              letterSpacing: '2px',
-              textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
-              animation: 'blink 2s infinite'
+              fontFamily: 'monospace',
+              letterSpacing: '4px',
+              textShadow: '0 0 10px currentColor, 2px 2px 4px rgba(0, 0, 0, 0.8)',
+              animation: 'blink 1.5s infinite',
+              boxShadow: '0 0 20px rgba(255, 255, 0, 0.5), inset 0 0 20px rgba(255, 255, 0, 0.1)'
             }}
           >
-            🐓 ANOTHER LEGEND AWAITS 🐓
+            PLAY AGAIN
           </button>
         </div>
       )}
