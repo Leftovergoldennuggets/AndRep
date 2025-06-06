@@ -3352,35 +3352,100 @@ export default function FlappyBirdGame() {
       )}
 
       {gameState === "gameOver" && (
-        <div 
-          className="absolute inset-0 flex flex-col items-center justify-center"
-          style={{
-            backgroundImage: 'url(/endscreengameover.png)',
-            backgroundSize: 'contain',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            backgroundColor: '#000000'
-          }}
-        >
-          {/* Game stats overlay positioned above the restart button */}
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-center text-white bg-black bg-opacity-70 px-3 sm:px-4 py-2 rounded-lg">
-            <p className="text-base sm:text-lg font-bold">Score: {displayScore}</p>
-            <p className="text-sm sm:text-base">Distance: {distance}m</p>
-          </div>
-          
-          {/* Restart button positioned at the bottom */}
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-            <button
-              onClick={restartCurrentLevel}
-              className="text-lg sm:text-xl md:text-2xl font-bold px-6 sm:px-8 py-3 sm:py-4 border-2 sm:border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-80 hover:bg-yellow-300 hover:text-black transition-colors not-prose"
-              style={{
-                fontFamily: 'monospace',
-                letterSpacing: '1px',
-                textShadow: '1px 1px 2px rgba(0, 0, 0, 0.8)'
-              }}
-            >
-              TRY AGAIN
-            </button>
+        <div className="absolute inset-0 flex items-center justify-center bg-black">
+          <div className="text-center text-white max-w-4xl mx-4 px-4">
+            <div className="space-y-8">
+              {/* Chapter Indicator */}
+              <div 
+                className="text-lg sm:text-xl font-bold text-red-500"
+                style={{
+                  fontFamily: 'monospace',
+                  letterSpacing: '3px'
+                }}
+              >
+                MISSION FAILED
+              </div>
+              
+              {/* Title */}
+              <div className="space-y-4">
+                <h2 
+                  className="text-3xl sm:text-4xl md:text-5xl font-bold text-red-400"
+                  style={{
+                    fontFamily: 'monospace',
+                    letterSpacing: '4px'
+                  }}
+                >
+                  GAME OVER
+                </h2>
+                <h3 
+                  className="text-xl sm:text-2xl md:text-3xl font-bold text-white"
+                  style={{
+                    fontFamily: 'monospace',
+                    letterSpacing: '2px'
+                  }}
+                >
+                  THE LEGEND ENDS
+                </h3>
+              </div>
+              
+              {/* Illustration */}
+              <div className="py-4">
+                <img 
+                  src="/Endscreen.png"
+                  alt="Game Over - The Legend Ends"
+                  className="w-full h-auto max-h-96 object-contain"
+                  style={{
+                    filter: 'contrast(1.1) saturate(1.2)',
+                    imageRendering: 'crisp-edges'
+                  }}
+                  onError={(e) => {
+                    console.log('Failed to load image: /Endscreen.png');
+                    e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkdBTUUgT1ZFUjwvdGV4dD48L3N2Zz4=';
+                  }}
+                />
+              </div>
+              
+              {/* Story Text */}
+              <div className="space-y-6">
+                <p 
+                  className="text-sm sm:text-base md:text-lg leading-relaxed"
+                  style={{
+                    fontFamily: 'monospace',
+                    letterSpacing: '1px'
+                  }}
+                >
+                  Red's journey has come to an end. The corruption proved too strong, and the legend fades into darkness.
+                </p>
+                
+                {/* Game Stats */}
+                <div 
+                  className="text-center text-white bg-gray-900 bg-opacity-70 px-4 py-3 rounded-lg border border-red-500"
+                  style={{
+                    fontFamily: 'monospace',
+                    letterSpacing: '1px'
+                  }}
+                >
+                  <p className="text-base sm:text-lg font-bold">Final Score: {displayScore}</p>
+                  <p className="text-sm sm:text-base">Distance Traveled: {distance}m</p>
+                </div>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                <button
+                  onClick={restartCurrentLevel}
+                  className="text-lg sm:text-xl md:text-2xl font-bold px-6 sm:px-8 py-3 sm:py-4 border-2 sm:border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-80 hover:bg-yellow-300 hover:text-black transition-colors"
+                  style={{
+                    fontFamily: 'monospace',
+                    letterSpacing: '2px',
+                    textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
+                    animation: 'blink 1.5s infinite'
+                  }}
+                >
+                  TRY AGAIN
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -3402,35 +3467,93 @@ export default function FlappyBirdGame() {
       )}
 
       {gameState === "victoryIllustration" && (
-        <div 
-          className="absolute inset-0 flex items-center justify-center"
-          style={{
-            backgroundImage: 'url(/newendscreenvictory.png)',
-            backgroundSize: 'contain',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            backgroundColor: '#000000'
-          }}
-        >
-          {/* Arcade-style continue button */}
-          <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2">
-            <button
-              onClick={() => {
-                const state = gameStateRef.current;
-                state.gameState = "missionComplete";
-                setGameState("missionComplete");
-              }}
-              className="text-4xl sm:text-5xl font-bold px-8 sm:px-12 py-4 sm:py-6 border-4 text-cyan-300 border-cyan-300 bg-black hover:bg-cyan-300 hover:text-black transition-colors"
-              style={{
-                fontFamily: 'monospace',
-                letterSpacing: '4px',
-                textShadow: '0 0 10px currentColor, 2px 2px 4px rgba(0, 0, 0, 0.8)',
-                animation: 'blink 1s infinite',
-                boxShadow: '0 0 20px rgba(0, 255, 255, 0.5), inset 0 0 20px rgba(0, 255, 255, 0.1)'
-              }}
-            >
-              PRESS START
-            </button>
+        <div className="absolute inset-0 flex items-center justify-center bg-black">
+          <div className="text-center text-white max-w-4xl mx-4 px-4">
+            <div className="space-y-8">
+              {/* Chapter Indicator */}
+              <div 
+                className="text-lg sm:text-xl font-bold text-green-500"
+                style={{
+                  fontFamily: 'monospace',
+                  letterSpacing: '3px'
+                }}
+              >
+                MISSION ACCOMPLISHED
+              </div>
+              
+              {/* Title */}
+              <div className="space-y-4">
+                <h2 
+                  className="text-3xl sm:text-4xl md:text-5xl font-bold text-yellow-300"
+                  style={{
+                    fontFamily: 'monospace',
+                    letterSpacing: '4px'
+                  }}
+                >
+                  VICTORY
+                </h2>
+                <h3 
+                  className="text-xl sm:text-2xl md:text-3xl font-bold text-white"
+                  style={{
+                    fontFamily: 'monospace',
+                    letterSpacing: '2px'
+                  }}
+                >
+                  THE LEGEND LIVES ON
+                </h3>
+              </div>
+              
+              {/* Illustration */}
+              <div className="py-4">
+                <img 
+                  src="/endscreenvictory.png"
+                  alt="Victory - The Legend Lives On"
+                  className="w-full h-auto max-h-96 object-contain"
+                  style={{
+                    filter: 'contrast(1.1) saturate(1.2)',
+                    imageRendering: 'crisp-edges'
+                  }}
+                  onError={(e) => {
+                    console.log('Failed to load image: /endscreenvictory.png');
+                    e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNPTklORyBTT09OPC90ZXh0Pjwvc3ZnPg==';
+                  }}
+                />
+              </div>
+              
+              {/* Story Text */}
+              <div className="space-y-6">
+                <p 
+                  className="text-sm sm:text-base md:text-lg leading-relaxed"
+                  style={{
+                    fontFamily: 'monospace',
+                    letterSpacing: '1px'
+                  }}
+                >
+                  Against all odds, Red has triumphed over the forces of darkness. The legend is complete, but the story continues...
+                </p>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                <button
+                  onClick={() => {
+                    const state = gameStateRef.current;
+                    state.gameState = "missionComplete";
+                    setGameState("missionComplete");
+                  }}
+                  className="text-2xl sm:text-3xl md:text-4xl font-bold px-8 sm:px-12 py-4 sm:py-6 border-4 text-cyan-300 border-cyan-300 bg-black hover:bg-cyan-300 hover:text-black transition-colors"
+                  style={{
+                    fontFamily: 'monospace',
+                    letterSpacing: '4px',
+                    textShadow: '0 0 10px currentColor, 2px 2px 4px rgba(0, 0, 0, 0.8)',
+                    animation: 'blink 1s infinite',
+                    boxShadow: '0 0 20px rgba(0, 255, 255, 0.5), inset 0 0 20px rgba(0, 255, 255, 0.1)'
+                  }}
+                >
+                  CONTINUE
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
