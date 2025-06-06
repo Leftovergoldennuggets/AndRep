@@ -3416,18 +3416,6 @@ export default function FlappyBirdGame() {
                 >
                   Red's journey has come to an end. The corruption proved too strong, and the legend fades into darkness.
                 </p>
-                
-                {/* Game Stats */}
-                <div 
-                  className="text-center text-white bg-gray-900 bg-opacity-70 px-4 py-3 rounded-lg border border-red-500"
-                  style={{
-                    fontFamily: 'monospace',
-                    letterSpacing: '1px'
-                  }}
-                >
-                  <p className="text-base sm:text-lg font-bold">Final Score: {displayScore}</p>
-                  <p className="text-sm sm:text-base">Distance Traveled: {distance}m</p>
-                </div>
               </div>
               
               {/* Action Buttons */}
