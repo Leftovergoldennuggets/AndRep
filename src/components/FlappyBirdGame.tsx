@@ -110,6 +110,9 @@ interface GameState {
   alertLevel: number;
   score: number;
   distance: number;
+  combo: number;
+  comboMultiplier: number;
+  lastKillTime: number;
   gameState: "start" | "story" | "playing" | "gameOver" | "missionComplete" | "victoryIllustration" | "bossIntro" | "levelComplete";
   storySlide: number;
 }
@@ -260,6 +263,9 @@ export default function FlappyBirdGame() {
     alertLevel: 0,
     score: 0,
     distance: 0,
+    combo: 0,
+    comboMultiplier: 1.0,
+    lastKillTime: 0,
     gameState: "start",
     storySlide: 0,
   });
@@ -449,7 +455,7 @@ export default function FlappyBirdGame() {
   const generateObjectives = useCallback(() => {
     const objectives = [];
     
-    // Fixed win condition: Save 3 animals and kill the corrupt warden
+    // Primary objectives
     objectives.push({
       id: 'rescue',
       type: 'rescue' as const,
@@ -465,6 +471,25 @@ export default function FlappyBirdGame() {
       description: 'Eliminate the corrupt warden - Justice for Wilbur',
       targetCount: 1,
       currentCount: 0,
+      completed: false,
+    });
+    
+    // DYNAMIC TIME PRESSURE EVENTS!
+    objectives.push({
+      id: 'reinforcements_warning',
+      type: 'survive' as const,
+      description: '⚠️ REINFORCEMENTS ARRIVING - ESCAPE NOW',
+      timeLimit: 45000, // 45 seconds
+      timeRemaining: 45000,
+      completed: false,
+    });
+    
+    objectives.push({
+      id: 'lockdown_imminent', 
+      type: 'survive' as const,
+      description: '🚨 FACILITY LOCKDOWN IN PROGRESS',
+      timeLimit: 30000, // 30 seconds
+      timeRemaining: 30000,
       completed: false,
     });
     
@@ -1744,6 +1769,13 @@ export default function FlappyBirdGame() {
         state.player.spawnImmunity -= 16; // Reduce by ~16ms per frame
       }
       
+      // COMBO DECAY SYSTEM - combos expire after 3 seconds
+      const currentTime = Date.now();
+      if (state.combo > 0 && currentTime - state.lastKillTime > 3000) {
+        state.combo = 0;
+        state.comboMultiplier = 1.0;
+      }
+      
       // Handle player horizontal movement and animation
       let currentMoveSpeed = GAME_CONFIG.player.moveSpeed;
         
@@ -1950,10 +1982,36 @@ export default function FlappyBirdGame() {
               
               state.enemies.splice(j, 1);
               
-              // Basic score
-              const scoreGain = enemy.type === 'boss' ? 500 : 100;
-              state.score += scoreGain;
+              // EPIC COMBO SYSTEM!
+              const currentTime = Date.now();
+              const timeSinceLastKill = currentTime - state.lastKillTime;
+              
+              // Combo window: 3 seconds to chain kills
+              if (timeSinceLastKill < 3000 && state.combo > 0) {
+                // Continue combo!
+                state.combo++;
+                state.comboMultiplier = Math.min(5.0, 1.0 + (state.combo * 0.3)); // Max 5x multiplier
+              } else {
+                // Start new combo
+                state.combo = 1;
+                state.comboMultiplier = 1.0;
+              }
+              
+              state.lastKillTime = currentTime;
+              
+              // Score with combo multiplier
+              const baseScore = enemy.type === 'boss' ? 500 : 100;
+              const comboScore = Math.round(baseScore * state.comboMultiplier);
+              state.score += comboScore;
               setDisplayScore(state.score);
+              
+              // Epic visual feedback for high combos
+              if (state.combo >= 5) {
+                state.camera.shake = Math.max(state.camera.shake, 15);
+                // Create extra particles for high combo
+                createParticles(enemy.x + GAME_CONFIG.enemy.size / 2, enemy.y + GAME_CONFIG.enemy.size / 2, 'explosion', 15);
+                createParticles(enemy.x + GAME_CONFIG.enemy.size / 2, enemy.y + GAME_CONFIG.enemy.size / 2, 'spark', 10);
+              }
             }
             break;
           }
@@ -2054,11 +2112,80 @@ export default function FlappyBirdGame() {
         }
       }
 
-      // Update objectives
+      // Update objectives with DYNAMIC EVENTS
       state.objectives.forEach(objective => {
         if (objective.type === 'survive' && objective.timeRemaining !== undefined) {
           objective.timeRemaining -= 16; // Assuming 60fps
+          
+          // DYNAMIC EVENT TRIGGERS!
+          if (objective.id === 'reinforcements_warning') {
+            // Spawn reinforcements at specific time intervals
+            if (objective.timeRemaining === 30000) { // 30 seconds left
+              // Spawn 3 additional guards
+              for (let i = 0; i < 3; i++) {
+                const spawnX = state.player.x + 300 + (i * 100); // Spawn ahead of player
+                state.enemies.push({
+                  x: spawnX,
+                  y: GAME_CONFIG.world.groundLevel - GAME_CONFIG.enemy.size,
+                  velocityY: 0,
+                  health: GAME_CONFIG.enemy.health,
+                  maxHealth: GAME_CONFIG.enemy.health,
+                  type: 'guard',
+                  lastShotTime: 0,
+                  onGround: true,
+                  aiState: 'chase', // Start aggressive!
+                  alertLevel: 100, // Fully alert!
+                  lastPlayerSeen: Date.now(),
+                });
+              }
+              // Visual effect for reinforcement arrival
+              state.camera.shake = Math.max(state.camera.shake, 20);
+              createParticles(spawnX, GAME_CONFIG.world.groundLevel - 20, 'explosion', 10);
+            }
+            
+            if (objective.timeRemaining === 15000) { // 15 seconds left
+              // Spawn attack dogs!
+              for (let i = 0; i < 2; i++) {
+                const spawnX = state.player.x + 200 + (i * 80);
+                state.enemies.push({
+                  x: spawnX,
+                  y: GAME_CONFIG.world.groundLevel - GAME_CONFIG.enemy.size,
+                  velocityY: 0,
+                  health: GAME_CONFIG.enemy.health * 0.7, // Less health but faster
+                  maxHealth: GAME_CONFIG.enemy.health * 0.7,
+                  type: 'dog',
+                  lastShotTime: 0,
+                  onGround: true,
+                  aiState: 'chase',
+                  alertLevel: 100,
+                  lastPlayerSeen: Date.now(),
+                });
+              }
+              state.camera.shake = Math.max(state.camera.shake, 15);
+            }
+          }
+          
+          if (objective.id === 'lockdown_imminent') {
+            // Increase global alert level as lockdown approaches
+            const timePercent = objective.timeRemaining / (objective.timeLimit || 30000);
+            state.alertLevel = Math.min(100, state.alertLevel + (1 - timePercent) * 2);
+            
+            // Make all enemies more aggressive as time runs out
+            if (objective.timeRemaining < 10000) { // Last 10 seconds
+              state.enemies.forEach(enemy => {
+                enemy.alertLevel = 100;
+                enemy.aiState = 'chase';
+              });
+            }
+          }
+          
           if (objective.timeRemaining <= 0) {
+            if (objective.id === 'reinforcements_warning' || objective.id === 'lockdown_imminent') {
+              // Time's up! GAME OVER
+              state.gameState = "gameOver";
+              setGameState("gameOver");
+              return;
+            }
             objective.completed = true;
           }
         }
@@ -2863,6 +2990,14 @@ export default function FlappyBirdGame() {
       ctx.fillStyle = "#aaaaaa";
       ctx.fillText(`SCORE: ${state.score.toString().padStart(6, '0')}`, hudX + 70, intelY);
       ctx.fillText(`DISTANCE: ${state.distance}M`, hudX + 200, intelY);
+      
+      // EPIC COMBO DISPLAY (only show if combo > 0)
+      if (state.combo > 0) {
+        const comboColor = state.combo >= 10 ? "#ff0000" : state.combo >= 5 ? "#ff8800" : "#ffaa00";
+        ctx.fillStyle = comboColor;
+        ctx.font = "bold 12px 'Courier New', monospace";
+        ctx.fillText(`COMBO: ${state.combo}x (${state.comboMultiplier.toFixed(1)}x)`, hudX + 70, intelY + 15);
+      }
       
       // === ALERT LEVEL ===
       const alertY = intelY + 25;
