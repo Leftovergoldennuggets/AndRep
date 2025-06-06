@@ -126,7 +126,7 @@ const GAME_CONFIG = {
   },
   player: {
     size: 48,
-    maxHealth: 3,
+    maxHealth: 10,
     gravity: 0.8,
     jumpForce: -20,
     moveSpeed: 10,
@@ -412,9 +412,9 @@ export default function FlappyBirdGame() {
   const generateEnemies = useCallback((startX: number, endX: number) => {
     const enemies: GameState['enemies'] = [];
     
-    // Create safe spawn zone around player (400 +/- 300 = 100-700)
+    // Create safe spawn zone around player (400 +/- 500 = -100 to 900)
     const playerSpawnX = 400;
-    const safeZoneRadius = 300;
+    const safeZoneRadius = 500;
     const safeZoneStart = playerSpawnX - safeZoneRadius;
     const safeZoneEnd = playerSpawnX + safeZoneRadius;
     
@@ -1076,6 +1076,20 @@ export default function FlappyBirdGame() {
     const direction = state.player.direction;
     
     ctx.save();
+    
+    // Add invincibility visual effect (flashing)
+    if (state.player.spawnImmunity > 0) {
+      const flashRate = 200; // Flash every 200ms
+      const isVisible = Math.floor(Date.now() / flashRate) % 2 === 0;
+      if (!isVisible) {
+        ctx.globalAlpha = 0.3; // Semi-transparent when flashing
+      } else {
+        ctx.globalAlpha = 1.0;
+      }
+      // Add blue tint to indicate invincibility
+      ctx.globalCompositeOperation = 'source-atop';
+      ctx.fillStyle = 'rgba(100, 150, 255, 0.3)';
+    }
     
     // Flip horizontally if moving left
     if (direction === 'left') {
@@ -1874,12 +1888,9 @@ export default function FlappyBirdGame() {
       }
 
       // Update enemies with enhanced AI
-      const currentTime = Date.now();
       state.enemies.forEach((enemy) => {
         // Apply gravity to enemies
-        if (enemy.type !== 'camera') {
-          applyGravity(enemy);
-        }
+        applyGravity(enemy);
         
         // Handle boss-specific updates
         if (enemy.type === 'boss') {
@@ -2051,7 +2062,7 @@ export default function FlappyBirdGame() {
 
       // Check player-enemy collisions for contact damage
       for (const enemy of state.enemies) {
-        if (enemy.type !== 'camera') { // Cameras don't cause contact damage
+        if (true) { // All enemies cause contact damage
           const screenX = enemy.x - state.camera.x;
           if (screenX > -100 && screenX < GAME_CONFIG.canvas.width + 100) {
             const playerRect = { x: state.player.x, y: state.player.y, width: GAME_CONFIG.player.size, height: GAME_CONFIG.player.size };
@@ -2061,9 +2072,12 @@ export default function FlappyBirdGame() {
             if (checkCollision(playerRect, enemyRect)) {
               // Only take contact damage if not immune from spawn
               if (state.player.spawnImmunity <= 0) {
-                // Take contact damage (1 heart for guards/dogs, 2 hearts for boss)
-                const contactDamage = enemy.type === 'boss' ? 2 : 1;
+                // Take contact damage (0.5 heart for guards/dogs, 1 heart for boss)
+                const contactDamage = enemy.type === 'boss' ? 1 : 0.5;
                 state.player.health -= contactDamage;
+                
+                // Add invincibility frames after contact damage (1.5 seconds)
+                state.player.spawnImmunity = 1500;
                 
                 // Knockback effect - push player away from enemy
                 const dx = state.player.x - enemy.x;
@@ -2140,7 +2154,8 @@ export default function FlappyBirdGame() {
               }
               // Visual effect for reinforcement arrival
               state.camera.shake = Math.max(state.camera.shake, 20);
-              createParticles(spawnX, GAME_CONFIG.world.groundLevel - 20, 'explosion', 10);
+              const lastSpawnX = state.player.x + 300 + (2 * 100); // Use last spawn position
+              createParticles(lastSpawnX, GAME_CONFIG.world.groundLevel - 20, 'explosion', 10);
             }
             
             if (objective.timeRemaining === 15000) { // 15 seconds left
