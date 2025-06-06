@@ -558,8 +558,8 @@ export default function FlappyBirdGame() {
     objectives.push({
       id: 'reach_boss',
       type: 'escape' as const,
-      description: 'Reach 2000m to face the Warden',
-      targetCount: 2000,
+      description: 'Reach 300m to face the Warden',
+      targetCount: 300,
       currentCount: 0,
       completed: false,
     });
@@ -1920,7 +1920,7 @@ export default function FlappyBirdGame() {
       const reachObjective = state.objectives.find(obj => obj.id === 'reach_boss');
       if (reachObjective && !reachObjective.completed) {
         reachObjective.currentCount = state.distance;
-        if (state.distance >= 2000) {
+        if (state.distance >= 300) {
           reachObjective.completed = true;
         }
       }
@@ -1994,8 +1994,8 @@ export default function FlappyBirdGame() {
         return true;
       });
 
-      // Check for boss spawning at 2000m
-      if (!state.level.bossSpawned && state.distance >= 2000) {
+      // Check for boss spawning at 300m
+      if (!state.level.bossSpawned && state.distance >= 300) {
         spawnBoss();
       }
 
@@ -2582,10 +2582,10 @@ export default function FlappyBirdGame() {
       }
     }
     
-    // Draw distance markers every 250m
+    // Draw distance markers every 50m
     if (state.gameState !== "start") {
       ctx.save();
-      for (let distanceMarker = 0; distanceMarker <= 4000; distanceMarker += 250) {
+      for (let distanceMarker = 0; distanceMarker <= 500; distanceMarker += 50) {
         const markerX = 400 + distanceMarker * 10; // Convert distance to world position
         const screenX = markerX - state.camera.x;
         
@@ -2609,8 +2609,8 @@ export default function FlappyBirdGame() {
           ctx.textAlign = "center";
           ctx.fillText(`${distanceMarker}m`, screenX, GAME_CONFIG.world.groundLevel - 58);
           
-          // Special marker at 2000m (boss location)
-          if (distanceMarker === 2000) {
+          // Special marker at 300m (boss location)
+          if (distanceMarker === 300) {
             ctx.fillStyle = "#ff0000";
             ctx.font = "bold 12px Arial";
             ctx.fillText("DANGER!", screenX, GAME_CONFIG.world.groundLevel - 40);
@@ -3144,7 +3144,7 @@ export default function FlappyBirdGame() {
       const progressBarHeight = 25;
       const progressBarX = (GAME_CONFIG.canvas.width - progressBarWidth) / 2;
       const progressBarY = 15;
-      const progress = Math.min(1, state.distance / 2000);
+      const progress = Math.min(1, state.distance / 300);
       
       // Progress bar background
       ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
@@ -3167,10 +3167,10 @@ export default function FlappyBirdGame() {
       ctx.fillStyle = "#ffffff";
       ctx.font = "bold 14px Arial";
       ctx.textAlign = "center";
-      ctx.fillText(`Distance: ${state.distance}m / 2000m`, GAME_CONFIG.canvas.width / 2, progressBarY + 18);
+      ctx.fillText(`Distance: ${state.distance}m / 300m`, GAME_CONFIG.canvas.width / 2, progressBarY + 18);
       
       // Boss warning when close
-      if (state.distance > 1800 && !state.level.bossSpawned) {
+      if (state.distance > 250 && !state.level.bossSpawned) {
         ctx.fillStyle = "#ff0000";
         ctx.font = "bold 16px Arial";
         ctx.fillText(`⚠️ BOSS APPROACHING! ⚠️`, GAME_CONFIG.canvas.width / 2, progressBarY + 40);
