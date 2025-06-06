@@ -3414,7 +3414,7 @@ export default function FlappyBirdGame() {
                     letterSpacing: '1px'
                   }}
                 >
-                  The steel bars close once more around Red's broken spirit. In the darkness of his cell, he whispers Wilbur's name—a prayer that echoes unanswered through the cold concrete walls.
+                  Strapped to the electric chair, Red sees Wilbur's spirit watching over him. The corrupt warden adjusts the final switch, but Red feels no fear—only the peace of knowing he fought for what was right.
                 </p>
                 <p 
                   className="text-xs sm:text-sm md:text-base leading-relaxed text-red-400 italic"
@@ -3423,16 +3423,16 @@ export default function FlappyBirdGame() {
                     letterSpacing: '1px'
                   }}
                 >
-                  "I tried, old friend... I tried to honor your memory. But maybe some legends are meant to die in the shadows."
+                  "I'm coming, Wilbur... We'll watch over the farm together from the other side. The truth will live on, even if we don't."
                 </p>
                 <p 
-                  className="text-xs sm:text-sm md:text-base leading-relaxed text-gray-500"
+                  className="text-xs sm:text-sm md:text-base leading-relaxed text-cyan-400"
                   style={{
                     fontFamily: 'monospace',
                     letterSpacing: '1px'
                   }}
                 >
-                  The corrupt guards laugh in the distance. Justice remains buried. But perhaps... perhaps another rooster will rise from these ashes.
+                  In death, legends are born. Red's sacrifice will inspire others to rise against corruption. The rebellion has only just begun.
                 </p>
               </div>
               
