@@ -48,6 +48,7 @@ interface GameState {
     coverPosition?: { x: number; y: number };
     patrolDirection?: number;
     patrolStartX?: number;
+    hitFlash?: number;
   }>;
   enemyBullets: Array<{
     x: number;
@@ -113,7 +114,7 @@ interface GameState {
   combo: number;
   comboMultiplier: number;
   lastKillTime: number;
-  gameState: "start" | "story" | "playing" | "gameOver" | "missionComplete" | "victoryIllustration" | "bossIntro" | "levelComplete";
+  gameState: "start" | "story" | "playing" | "paused" | "gameOver" | "missionComplete" | "victoryIllustration" | "bossIntro" | "levelComplete";
   storySlide: number;
 }
 
@@ -283,6 +284,104 @@ export default function FlappyBirdGame() {
   const [gameState, setGameState] = useState<"start" | "story" | "playing" | "gameOver" | "missionComplete" | "victoryIllustration" | "bossIntro" | "levelComplete">("start");
   const [distance, setDistance] = useState(0);
   const [storySlide, setStorySlide] = useState(0);
+  
+  // Sound system using Web Audio API
+  const audioContext = useRef<AudioContext | null>(null);
+  const soundEnabled = useRef(true);
+  
+  const initAudio = useCallback(() => {
+    if (!audioContext.current) {
+      audioContext.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+  }, []);
+  
+  const playSound = useCallback((type: 'shoot' | 'hit' | 'damage' | 'jump' | 'powerup' | 'explosion') => {
+    if (!soundEnabled.current || !audioContext.current) return;
+    
+    const ctx = audioContext.current;
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    const currentTime = ctx.currentTime;
+    
+    switch(type) {
+      case 'shoot':
+        oscillator.frequency.setValueAtTime(300, currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(100, currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.3, currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.1);
+        oscillator.start(currentTime);
+        oscillator.stop(currentTime + 0.1);
+        break;
+        
+      case 'hit':
+        oscillator.frequency.setValueAtTime(150, currentTime);
+        oscillator.type = 'square';
+        gainNode.gain.setValueAtTime(0.2, currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.05);
+        oscillator.start(currentTime);
+        oscillator.stop(currentTime + 0.05);
+        break;
+        
+      case 'damage':
+        oscillator.frequency.setValueAtTime(80, currentTime);
+        oscillator.type = 'sawtooth';
+        gainNode.gain.setValueAtTime(0.4, currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.2);
+        oscillator.start(currentTime);
+        oscillator.stop(currentTime + 0.2);
+        break;
+        
+      case 'jump':
+        oscillator.frequency.setValueAtTime(400, currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(600, currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.2, currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.1);
+        oscillator.start(currentTime);
+        oscillator.stop(currentTime + 0.1);
+        break;
+        
+      case 'powerup':
+        oscillator.frequency.setValueAtTime(800, currentTime);
+        oscillator.frequency.linearRampToValueAtTime(1200, currentTime + 0.2);
+        gainNode.gain.setValueAtTime(0.3, currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.2);
+        oscillator.start(currentTime);
+        oscillator.stop(currentTime + 0.2);
+        break;
+        
+      case 'explosion':
+        // White noise for explosion
+        const bufferSize = ctx.sampleRate * 0.3;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const output = buffer.getChannelData(0);
+        
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
+        }
+        
+        const whiteNoise = ctx.createBufferSource();
+        whiteNoise.buffer = buffer;
+        
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1000, currentTime);
+        filter.frequency.exponentialRampToValueAtTime(100, currentTime + 0.3);
+        
+        whiteNoise.connect(filter);
+        filter.connect(gainNode);
+        
+        gainNode.gain.setValueAtTime(0.5, currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.3);
+        
+        whiteNoise.start(currentTime);
+        whiteNoise.stop(currentTime + 0.3);
+        break;
+    }
+  }, []);
 
   const resetGame = useCallback(() => {
     gameStateRef.current = {
@@ -455,12 +554,12 @@ export default function FlappyBirdGame() {
   const generateObjectives = useCallback(() => {
     const objectives = [];
     
-    // Primary objectives
+    // Primary objectives - simple and clear
     objectives.push({
-      id: 'rescue',
-      type: 'rescue' as const,
-      description: 'Save 3 animals from the corrupt farm program',
-      targetCount: 3,
+      id: 'reach_boss',
+      type: 'escape' as const,
+      description: 'Reach 2000m to face the Warden',
+      targetCount: 2000,
       currentCount: 0,
       completed: false,
     });
@@ -468,28 +567,9 @@ export default function FlappyBirdGame() {
     objectives.push({
       id: 'kill_warden',
       type: 'destroy' as const,
-      description: 'Eliminate the corrupt warden - Justice for Wilbur',
+      description: 'Defeat the Corrupt Warden',
       targetCount: 1,
       currentCount: 0,
-      completed: false,
-    });
-    
-    // DYNAMIC TIME PRESSURE EVENTS!
-    objectives.push({
-      id: 'reinforcements_warning',
-      type: 'survive' as const,
-      description: '⚠️ REINFORCEMENTS ARRIVING - ESCAPE NOW',
-      timeLimit: 45000, // 45 seconds
-      timeRemaining: 45000,
-      completed: false,
-    });
-    
-    objectives.push({
-      id: 'lockdown_imminent', 
-      type: 'survive' as const,
-      description: '🚨 FACILITY LOCKDOWN IN PROGRESS',
-      timeLimit: 30000, // 30 seconds
-      timeRemaining: 30000,
       completed: false,
     });
     
@@ -661,9 +741,9 @@ export default function FlappyBirdGame() {
     
     if (!levelConfig || state.level.bossSpawned) return;
     
-    // Spawn boss at the end of the level
+    // Spawn boss at player position + 300 (visible on screen)
     const boss = {
-      x: state.level.endX - 200,
+      x: state.player.x + 300,
       y: GAME_CONFIG.world.groundLevel - levelConfig.boss.size,
       velocityY: 0,
       health: levelConfig.boss.health,
@@ -770,6 +850,9 @@ export default function FlappyBirdGame() {
     state.gameState = "playing";
     setGameState("playing");
     
+    // Initialize audio on first user interaction
+    initAudio();
+    
     // Generate level content based on current level
     const level = state.level;
     const newObstacles = generateObstacles(level.startX, level.endX);
@@ -822,6 +905,7 @@ export default function FlappyBirdGame() {
     if (state.gameState === "playing" && state.player.onGround) {
       state.player.velocityY = GAME_CONFIG.player.jumpForce;
       state.player.onGround = false;
+      playSound('jump');
     }
   }, [startGame]);
 
@@ -840,6 +924,9 @@ export default function FlappyBirdGame() {
     
     lastShotTime.current = currentTime;
     state.player.ammo--;
+    
+    // Play shoot sound
+    playSound('shoot');
     
     // Enhanced camera shake in berserker mode
     state.camera.shake = berserkerActive ? 8 : 3;
@@ -1244,6 +1331,15 @@ export default function FlappyBirdGame() {
 
   const drawEnemy = useCallback((ctx: CanvasRenderingContext2D, enemy: any, screenX: number) => {
     const size = GAME_CONFIG.enemy.size;
+    
+    // Apply red tint if enemy was recently hit
+    if (enemy.hitFlash && enemy.hitFlash > 0) {
+      ctx.save();
+      // Create a subtle red overlay effect
+      ctx.globalCompositeOperation = 'source-atop';
+      ctx.fillStyle = `rgba(255, 0, 0, ${Math.min(0.6, enemy.hitFlash / 200)})`;
+      // We'll fill this after drawing the enemy
+    }
     
     if (enemy.type === 'guard') {
       // 1950s PRISON WARDEN - Classic blue police uniform
@@ -1758,6 +1854,13 @@ export default function FlappyBirdGame() {
           break;
       }
     }
+    
+    // Apply the red flash overlay if enemy was hit
+    if (enemy.hitFlash && enemy.hitFlash > 0) {
+      // Fill the entire enemy area with red tint
+      ctx.fillRect(screenX - 5, enemy.y - 5, GAME_CONFIG.enemy.size + 10, GAME_CONFIG.enemy.size + 10);
+      ctx.restore();
+    }
   }, []);
 
   // Basic damage calculation
@@ -1812,6 +1915,15 @@ export default function FlappyBirdGame() {
       
       state.distance = Math.floor(Math.abs(state.player.x - 400) / 10);
       setDistance(state.distance);
+      
+      // Update reach boss objective
+      const reachObjective = state.objectives.find(obj => obj.id === 'reach_boss');
+      if (reachObjective && !reachObjective.completed) {
+        reachObjective.currentCount = state.distance;
+        if (state.distance >= 2000) {
+          reachObjective.completed = true;
+        }
+      }
 
       // Apply gravity to player
       applyGravity(state.player);
@@ -1882,13 +1994,18 @@ export default function FlappyBirdGame() {
         return true;
       });
 
-      // Check for boss spawning when player reaches near end of level
-      if (!state.level.bossSpawned && state.player.x > state.level.endX - 500) {
+      // Check for boss spawning at 2000m
+      if (!state.level.bossSpawned && state.distance >= 2000) {
         spawnBoss();
       }
 
       // Update enemies with enhanced AI
       state.enemies.forEach((enemy) => {
+        // Update hit flash timer
+        if (enemy.hitFlash && enemy.hitFlash > 0) {
+          enemy.hitFlash -= 16; // Decrement by ~16ms per frame
+        }
+        
         // Apply gravity to enemies
         applyGravity(enemy);
         
@@ -1972,13 +2089,22 @@ export default function FlappyBirdGame() {
             enemy.health -= enhancedDamage;
             state.bullets.splice(i, 1);
             
-            // Create impact particles
-            createParticles(enemy.x + GAME_CONFIG.enemy.size / 2, enemy.y + GAME_CONFIG.enemy.size / 2, 'blood', 3);
+            // Set hit flash effect
+            enemy.hitFlash = 200; // 200ms flash duration
+            
+            // Create bigger blood particles for better visual feedback
+            createParticles(enemy.x + GAME_CONFIG.enemy.size / 2, enemy.y + GAME_CONFIG.enemy.size / 2, 'blood', 8);
+            
+            // Play hit sound
+            playSound('hit');
             
             if (enemy.health <= 0) {
               // Create explosion particles for enemy death
               createParticles(enemy.x + GAME_CONFIG.enemy.size / 2, enemy.y + GAME_CONFIG.enemy.size / 2, 'explosion', 8);
               state.camera.shake = Math.max(state.camera.shake, 5);
+              
+              // Play explosion sound for death
+              playSound('explosion');
               
               // Check if this is the warden boss for objective tracking
               if (enemy.type === 'boss' && enemy.bossType === 'warden') {
@@ -2049,6 +2175,9 @@ export default function FlappyBirdGame() {
             state.camera.shake = Math.max(state.camera.shake, 8);
             createParticles(state.player.x + GAME_CONFIG.player.size/2, state.player.y + GAME_CONFIG.player.size/2, 'blood', 3);
             
+            // Play damage sound
+            playSound('damage');
+            
             if (state.player.health <= 0) {
               state.gameState = "gameOver";
               setGameState("gameOver");
@@ -2089,6 +2218,9 @@ export default function FlappyBirdGame() {
                 
                 // Create blood particles at collision point
                 createParticles(state.player.x, state.player.y, 'blood', 3);
+                
+                // Play damage sound
+                playSound('damage');
                 
                 if (state.player.health <= 0) {
                   state.gameState = "gameOver";
@@ -2448,6 +2580,44 @@ export default function FlappyBirdGame() {
         }
         ctx.fillStyle = "rgba(120, 120, 120, 0.3)";
       }
+    }
+    
+    // Draw distance markers every 250m
+    if (state.gameState !== "start") {
+      ctx.save();
+      for (let distanceMarker = 0; distanceMarker <= 4000; distanceMarker += 250) {
+        const markerX = 400 + distanceMarker * 10; // Convert distance to world position
+        const screenX = markerX - state.camera.x;
+        
+        if (screenX > -100 && screenX < GAME_CONFIG.canvas.width + 100) {
+          // Draw marker post
+          ctx.fillStyle = "#666666";
+          ctx.fillRect(screenX - 2, GAME_CONFIG.world.groundLevel - 60, 4, 60);
+          
+          // Draw sign background
+          ctx.fillStyle = "#1a1a1a";
+          ctx.fillRect(screenX - 40, GAME_CONFIG.world.groundLevel - 80, 80, 30);
+          
+          // Draw sign border
+          ctx.strokeStyle = "#ffd700";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(screenX - 40, GAME_CONFIG.world.groundLevel - 80, 80, 30);
+          
+          // Draw distance text
+          ctx.fillStyle = "#ffd700";
+          ctx.font = "bold 16px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText(`${distanceMarker}m`, screenX, GAME_CONFIG.world.groundLevel - 58);
+          
+          // Special marker at 2000m (boss location)
+          if (distanceMarker === 2000) {
+            ctx.fillStyle = "#ff0000";
+            ctx.font = "bold 12px Arial";
+            ctx.fillText("DANGER!", screenX, GAME_CONFIG.world.groundLevel - 40);
+          }
+        }
+      }
+      ctx.restore();
     }
     
     // Add dramatic lighting effects for badass atmosphere
@@ -2881,330 +3051,130 @@ export default function FlappyBirdGame() {
       ctx.shadowColor = "transparent";
       ctx.shadowBlur = 0;
       
-      // === TOP-LEFT TACTICAL DISPLAY ===
-      // Main HUD frame with military styling
-      const hudX = 10;
-      const hudY = 10;
-      const hudWidth = 380;
-      const hudHeight = 200;
-      
-      // Outer tactical frame (dark green military style)
-      ctx.fillStyle = "#0a1a0a";
-      ctx.fillRect(hudX - 3, hudY - 3, hudWidth + 6, hudHeight + 6);
-      
-      // Inner frame with subtle gradient
-      const gradient = ctx.createLinearGradient(hudX, hudY, hudX, hudY + hudHeight);
-      gradient.addColorStop(0, "rgba(20, 40, 20, 0.95)");
-      gradient.addColorStop(1, "rgba(10, 25, 10, 0.95)");
-      ctx.fillStyle = gradient;
-      ctx.fillRect(hudX, hudY, hudWidth, hudHeight);
-      
-      // Corner brackets for tactical look
-      ctx.strokeStyle = "#00ff41";
-      ctx.lineWidth = 2;
-      const bracketSize = 15;
-      // Top-left corner
-      ctx.beginPath();
-      ctx.moveTo(hudX, hudY + bracketSize);
-      ctx.lineTo(hudX, hudY);
-      ctx.lineTo(hudX + bracketSize, hudY);
-      ctx.stroke();
-      // Top-right corner
-      ctx.beginPath();
-      ctx.moveTo(hudX + hudWidth - bracketSize, hudY);
-      ctx.lineTo(hudX + hudWidth, hudY);
-      ctx.lineTo(hudX + hudWidth, hudY + bracketSize);
-      ctx.stroke();
-      // Bottom-left corner
-      ctx.beginPath();
-      ctx.moveTo(hudX, hudY + hudHeight - bracketSize);
-      ctx.lineTo(hudX, hudY + hudHeight);
-      ctx.lineTo(hudX + bracketSize, hudY + hudHeight);
-      ctx.stroke();
-      // Bottom-right corner
-      ctx.beginPath();
-      ctx.moveTo(hudX + hudWidth - bracketSize, hudY + hudHeight);
-      ctx.lineTo(hudX + hudWidth, hudY + hudHeight);
-      ctx.lineTo(hudX + hudWidth, hudY + hudHeight - bracketSize);
-      ctx.stroke();
-      
-      // === MISSION HEADER ===
-      ctx.font = "bold 16px 'Courier New', monospace";
-      ctx.fillStyle = "#00ff41";
-      ctx.textAlign = "left";
-      ctx.fillText(`OPERATION: ${state.level.name.toUpperCase()}`, hudX + 15, hudY + 25);
-      
-      // === VITAL STATS ROW ===
-      const statsY = hudY + 50;
-      
-      // Health Display (Military style)
-      ctx.font = "bold 14px 'Courier New', monospace";
-      ctx.fillStyle = "#ff4444";
-      ctx.fillText("VITALS:", hudX + 15, statsY);
+      // === SIMPLIFIED HUD ===
+      // Big health bar at top
+      const healthBarX = 20;
+      const healthBarY = 20;
+      const healthBarWidth = 300;
+      const healthBarHeight = 30;
       
       // Health bar background
-      const healthBarX = hudX + 80;
-      const healthBarY = statsY - 12;
-      const healthBarWidth = 120;
-      const healthBarHeight = 16;
-      
-      ctx.fillStyle = "#330000";
-      ctx.fillRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+      ctx.fillRect(healthBarX - 2, healthBarY - 2, healthBarWidth + 4, healthBarHeight + 4);
       
       // Health bar fill
       const healthPercent = state.player.health / GAME_CONFIG.player.maxHealth;
-      const healthWidth = healthBarWidth * healthPercent;
-      const healthColor = healthPercent > 0.6 ? "#00ff00" : healthPercent > 0.3 ? "#ffaa00" : "#ff0000";
-      ctx.fillStyle = healthColor;
-      ctx.fillRect(healthBarX, healthBarY, healthWidth, healthBarHeight);
+      const healthGradient = ctx.createLinearGradient(healthBarX, healthBarY, healthBarX + healthBarWidth, healthBarY);
+      if (healthPercent > 0.6) {
+        healthGradient.addColorStop(0, "#00ff00");
+        healthGradient.addColorStop(1, "#00cc00");
+      } else if (healthPercent > 0.3) {
+        healthGradient.addColorStop(0, "#ffaa00");
+        healthGradient.addColorStop(1, "#ff8800");
+      } else {
+        healthGradient.addColorStop(0, "#ff0000");
+        healthGradient.addColorStop(1, "#cc0000");
+      }
+      ctx.fillStyle = healthGradient;
+      ctx.fillRect(healthBarX, healthBarY, healthBarWidth * healthPercent, healthBarHeight);
       
       // Health bar border
-      ctx.strokeStyle = "#666666";
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
       ctx.strokeRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
       
-      // Health numbers
+      // Health text (large and clear)
       ctx.fillStyle = "#ffffff";
-      ctx.font = "10px 'Courier New', monospace";
+      ctx.font = "bold 20px Arial";
       ctx.textAlign = "center";
-      ctx.fillText(`${state.player.health}/${GAME_CONFIG.player.maxHealth}`, healthBarX + healthBarWidth/2, statsY - 2);
+      ctx.fillText(`${Math.ceil(state.player.health)} / ${GAME_CONFIG.player.maxHealth}`, healthBarX + healthBarWidth/2, healthBarY + healthBarHeight/2 + 7);
       
-      // === WEAPON DISPLAY ===
-      const weaponY = statsY + 25;
-      ctx.textAlign = "left";
-      ctx.font = "bold 14px 'Courier New', monospace";
-      ctx.fillStyle = "#ffaa00";
-      ctx.fillText("WEAPON:", hudX + 15, weaponY);
+      // Score and Distance (below health)
+      ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+      ctx.fillRect(healthBarX - 2, healthBarY + 40, 150, 30);
+      ctx.fillRect(healthBarX + 168, healthBarY + 40, 150, 30);
       
-      // Weapon info with tactical styling
-      ctx.font = "bold 12px 'Courier New', monospace";
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 18px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText(`Score: ${state.score}`, healthBarX + 75, healthBarY + 60);
+      ctx.fillText(`${state.distance}m`, healthBarX + 243, healthBarY + 60);
+      
+      // Weapon and Ammo (simple)
+      ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+      ctx.fillRect(healthBarX - 2, healthBarY + 80, 320, 30);
+      
       ctx.fillStyle = WEAPONS_INFO[state.player.weapon].color;
-      ctx.fillText(`${WEAPONS_INFO[state.player.weapon].name.toUpperCase()}`, hudX + 85, weaponY);
-      
-      // Ammo count with box
-      const ammoBoxX = hudX + 180;
-      const ammoBoxY = weaponY - 12;
-      ctx.fillStyle = "#1a1a1a";
-      ctx.fillRect(ammoBoxX, ammoBoxY, 50, 16);
-      ctx.strokeStyle = "#666666";
-      ctx.strokeRect(ammoBoxX, ammoBoxY, 50, 16);
-      
-      ctx.fillStyle = "#00ffff";
-      ctx.textAlign = "center";
-      ctx.fillText(`${state.player.ammo}`, ammoBoxX + 25, weaponY - 2);
-      
-      // === TACTICAL INTEL ===
-      const intelY = weaponY + 30;
+      ctx.font = "bold 16px Arial";
       ctx.textAlign = "left";
-      ctx.font = "bold 14px 'Courier New', monospace";
-      ctx.fillStyle = "#00aaff";
-      ctx.fillText("INTEL:", hudX + 15, intelY);
+      ctx.fillText(`${WEAPONS_INFO[state.player.weapon].name} [${state.player.ammo}]`, healthBarX + 10, healthBarY + 100);
       
-      // Score and Distance in tactical format
-      ctx.font = "11px 'Courier New', monospace";
-      ctx.fillStyle = "#aaaaaa";
-      ctx.fillText(`SCORE: ${state.score.toString().padStart(6, '0')}`, hudX + 70, intelY);
-      ctx.fillText(`DISTANCE: ${state.distance}M`, hudX + 200, intelY);
+      // Simple objective display
+      const objStartY = healthBarY + 120;
+      ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+      ctx.fillRect(healthBarX - 2, objStartY, 320, 60);
       
-      // EPIC COMBO DISPLAY (only show if combo > 0)
-      if (state.combo > 0) {
-        const comboColor = state.combo >= 10 ? "#ff0000" : state.combo >= 5 ? "#ff8800" : "#ffaa00";
-        ctx.fillStyle = comboColor;
-        ctx.font = "bold 12px 'Courier New', monospace";
-        ctx.fillText(`COMBO: ${state.combo}x (${state.comboMultiplier.toFixed(1)}x)`, hudX + 70, intelY + 15);
-      }
-      
-      // === ALERT LEVEL ===
-      const alertY = intelY + 25;
-      ctx.font = "bold 12px 'Courier New', monospace";
-      ctx.fillStyle = "#ff8800";
-      ctx.fillText("THREAT LEVEL:", hudX + 15, alertY);
-      
-      // Alert level bar with advanced styling
-      const alertBarX = hudX + 120;
-      const alertBarY = alertY - 10;
-      const alertBarWidth = 100;
-      const alertBarHeight = 12;
-      
-      // Alert bar background
-      ctx.fillStyle = "#001100";
-      ctx.fillRect(alertBarX, alertBarY, alertBarWidth, alertBarHeight);
-      
-      // Alert bar segments
-      const alertPercent = state.alertLevel / 100;
-      const segmentWidth = alertBarWidth / 5;
-      for (let i = 0; i < 5; i++) {
-        const segmentFill = Math.max(0, Math.min(1, (alertPercent * 5) - i));
-        if (segmentFill > 0) {
-          let segmentColor;
-          if (i < 2) segmentColor = "#00ff00";
-          else if (i < 4) segmentColor = "#ffaa00";
-          else segmentColor = "#ff0000";
-          
-          ctx.fillStyle = segmentColor;
-          ctx.fillRect(alertBarX + (i * segmentWidth) + 1, alertBarY + 1, (segmentWidth - 2) * segmentFill, alertBarHeight - 2);
-        }
-      }
-      
-      // Alert level border
-      ctx.strokeStyle = "#444444";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(alertBarX, alertBarY, alertBarWidth, alertBarHeight);
-      
-      // Alert level text
-      const alertLevel = Math.floor(alertPercent * 5) + 1;
-      const alertLabels = ["CLEAR", "LOW", "MEDIUM", "HIGH", "CRITICAL"];
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "9px 'Courier New', monospace";
-      ctx.textAlign = "center";
-      ctx.fillText(alertLabels[Math.min(4, alertLevel - 1)], alertBarX + alertBarWidth/2, alertY + 5);
-      
-      // === MISSION OBJECTIVES ===
-      const objStartY = alertY + 25;
-      ctx.textAlign = "left";
-      ctx.font = "bold 12px 'Courier New', monospace";
       ctx.fillStyle = "#ffff00";
-      ctx.fillText("MISSION OBJECTIVES:", hudX + 15, objStartY);
+      ctx.font = "bold 14px Arial";
+      ctx.textAlign = "left";
+      ctx.fillText("OBJECTIVES:", healthBarX + 10, objStartY + 20);
       
-      ctx.font = "10px 'Courier New', monospace";
-      let objY = objStartY + 15;
-      state.objectives.forEach((objective, _index) => {
+      // Display objectives simply
+      ctx.font = "12px Arial";
+      let objY = objStartY + 35;
+      state.objectives.forEach((objective, index) => {
+        if (index >= 2) return; // Only show first 2 objectives
         const color = objective.completed ? "#00ff00" : "#ffffff";
         ctx.fillStyle = color;
-        const status = objective.completed ? "[✓]" : "[ ]";
-        let text = `${status} ${objective.description.toUpperCase()}`;
+        const status = objective.completed ? "✓" : "•";
+        let text = `${status} ${objective.description}`;
         
         if (objective.targetCount) {
           text += ` (${objective.currentCount}/${objective.targetCount})`;
         }
-        if (objective.timeRemaining !== undefined) {
-          const seconds = Math.ceil(objective.timeRemaining / 1000);
-          text += ` - ${seconds}S`;
-        }
         
-        ctx.fillText(text, hudX + 20, objY);
-        objY += 12;
+        ctx.fillText(text, healthBarX + 10, objY);
+        objY += 15;
       });
       
-      // === SPECIAL ABILITIES ===
-      const abilitiesY = objY + 15;
-      ctx.textAlign = "left";
-      ctx.font = "bold 12px 'Courier New', monospace";
-      ctx.fillStyle = "#ff00ff";
-      ctx.fillText("SPECIAL ABILITIES:", hudX + 15, abilitiesY);
-      
-      const currentTime = Date.now();
-      
-      // Dash ability (Q key) - 3 second cooldown
-      const dashCooldownRemaining = Math.max(0, 3000 - (currentTime - lastDashTime.current));
-      const dashReady = dashCooldownRemaining === 0;
-      
-      const dashAbilityY = abilitiesY + 15;
-      ctx.font = "10px 'Courier New', monospace";
-      ctx.fillStyle = dashReady ? "#00ff00" : "#666666";
-      const dashStatus = dashReady ? "[READY]" : `[${Math.ceil(dashCooldownRemaining / 1000)}S]`;
-      ctx.fillText(`[Q] DASH ${dashStatus}`, hudX + 20, dashAbilityY);
-      
-      // Dash cooldown bar
-      if (!dashReady) {
-        const dashBarX = hudX + 120;
-        const dashBarY = dashAbilityY - 8;
-        const dashBarWidth = 60;
-        const dashBarHeight = 8;
-        
-        // Background
-        ctx.fillStyle = "#330033";
-        ctx.fillRect(dashBarX, dashBarY, dashBarWidth, dashBarHeight);
-        
-        // Fill based on cooldown progress
-        const dashProgress = 1 - (dashCooldownRemaining / 3000);
-        ctx.fillStyle = "#ff00ff";
-        ctx.fillRect(dashBarX, dashBarY, dashBarWidth * dashProgress, dashBarHeight);
-        
-        // Border
-        ctx.strokeStyle = "#666666";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(dashBarX, dashBarY, dashBarWidth, dashBarHeight);
-      }
-      
-      // Berserker ability (E key) - 8 second cooldown
-      const berserkerCooldownRemaining = Math.max(0, 8000 - (currentTime - lastBerserkerTime.current));
-      const berserkerReady = berserkerCooldownRemaining === 0;
-      
-      const berserkerAbilityY = dashAbilityY + 15;
-      ctx.fillStyle = berserkerReady ? "#00ff00" : "#666666";
-      const berserkerStatus = berserkerReady ? "[READY]" : `[${Math.ceil(berserkerCooldownRemaining / 1000)}S]`;
-      ctx.fillText(`[E] BERSERKER ${berserkerStatus}`, hudX + 20, berserkerAbilityY);
-      
-      // Berserker cooldown bar
-      if (!berserkerReady) {
-        const berserkerBarX = hudX + 120;
-        const berserkerBarY = berserkerAbilityY - 8;
-        const berserkerBarWidth = 60;
-        const berserkerBarHeight = 8;
-        
-        // Background
-        ctx.fillStyle = "#330000";
-        ctx.fillRect(berserkerBarX, berserkerBarY, berserkerBarWidth, berserkerBarHeight);
-        
-        // Fill based on cooldown progress
-        const berserkerProgress = 1 - (berserkerCooldownRemaining / 8000);
-        ctx.fillStyle = "#ff0000";
-        ctx.fillRect(berserkerBarX, berserkerBarY, berserkerBarWidth * berserkerProgress, berserkerBarHeight);
-        
-        // Border
-        ctx.strokeStyle = "#666666";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(berserkerBarX, berserkerBarY, berserkerBarWidth, berserkerBarHeight);
-      }
       
       
+      // Progress bar to boss at top of screen
+      const progressBarWidth = 600;
+      const progressBarHeight = 25;
+      const progressBarX = (GAME_CONFIG.canvas.width - progressBarWidth) / 2;
+      const progressBarY = 15;
+      const progress = Math.min(1, state.distance / 2000);
       
-      // === TOP-RIGHT COMPASS AND STATUS ===
-      const compassX = GAME_CONFIG.canvas.width - 120;
-      const compassY = 20;
-      const compassSize = 80;
+      // Progress bar background
+      ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+      ctx.fillRect(progressBarX - 2, progressBarY - 2, progressBarWidth + 4, progressBarHeight + 4);
       
-      // Compass background
-      ctx.fillStyle = "rgba(10, 20, 10, 0.9)";
-      ctx.fillRect(compassX, compassY, compassSize, compassSize);
-      
-      // Compass border
-      ctx.strokeStyle = "#00ff41";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(compassX, compassY, compassSize, compassSize);
-      
-      // Compass circle
-      const compassCenterX = compassX + compassSize / 2;
-      const compassCenterY = compassY + compassSize / 2;
-      const compassRadius = 30;
-      
+      // Progress bar border
       ctx.strokeStyle = "#666666";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(compassCenterX, compassCenterY, compassRadius, 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.lineWidth = 2;
+      ctx.strokeRect(progressBarX, progressBarY, progressBarWidth, progressBarHeight);
       
-      // Direction indicator (always points right for "EAST" toward escape)
-      ctx.strokeStyle = "#ff4444";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(compassCenterX, compassCenterY);
-      ctx.lineTo(compassCenterX + compassRadius * 0.8, compassCenterY);
-      ctx.stroke();
+      // Progress bar fill
+      const progressGradient = ctx.createLinearGradient(progressBarX, progressBarY, progressBarX + progressBarWidth * progress, progressBarY);
+      progressGradient.addColorStop(0, "#00ff00");
+      progressGradient.addColorStop(0.5, "#ffff00");
+      progressGradient.addColorStop(1, "#ff0000");
+      ctx.fillStyle = progressGradient;
+      ctx.fillRect(progressBarX, progressBarY, progressBarWidth * progress, progressBarHeight);
       
-      // Compass labels
-      ctx.font = "bold 10px 'Courier New', monospace";
+      // Distance text
       ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 14px Arial";
       ctx.textAlign = "center";
-      ctx.fillText("E", compassCenterX + compassRadius + 8, compassCenterY + 4);
-      ctx.fillText("ESCAPE", compassCenterX, compassY + compassSize + 12);
+      ctx.fillText(`Distance: ${state.distance}m / 2000m`, GAME_CONFIG.canvas.width / 2, progressBarY + 18);
       
-      // Reset all drawing settings
-      ctx.shadowColor = "transparent";
-      ctx.shadowBlur = 0;
-      ctx.textAlign = "left";
-      ctx.lineWidth = 1;
+      // Boss warning when close
+      if (state.distance > 1800 && !state.level.bossSpawned) {
+        ctx.fillStyle = "#ff0000";
+        ctx.font = "bold 16px Arial";
+        ctx.fillText(`⚠️ BOSS APPROACHING! ⚠️`, GAME_CONFIG.canvas.width / 2, progressBarY + 40);
+      }
     }
 
     animationRef.current = requestAnimationFrame(gameLoop);
@@ -3239,6 +3209,17 @@ export default function FlappyBirdGame() {
       if (e.code === "KeyE") {
         e.preventDefault();
         berserkerMode();
+      }
+      if (e.code === "Escape") {
+        e.preventDefault();
+        const state = gameStateRef.current;
+        if (state.gameState === "playing") {
+          state.gameState = "paused";
+          setGameState("paused");
+        } else if (state.gameState === "paused") {
+          state.gameState = "playing";
+          setGameState("playing");
+        }
       }
     };
 
@@ -3447,6 +3428,21 @@ export default function FlappyBirdGame() {
                 </div>
               );
             })()}
+          </div>
+        </div>
+      )}
+
+      {gameState === "paused" && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75">
+          <div className="text-center text-white">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-yellow-400">PAUSED</h2>
+            <p className="text-xl sm:text-2xl mb-8">Press ESC to Resume</p>
+            <div className="text-5xl sm:text-6xl mb-6">⏸️</div>
+            <div className="text-sm sm:text-base opacity-75 space-y-2">
+              <p>Move: A/D or Arrow Keys</p>
+              <p>Jump: Space/W/↑</p>
+              <p>Shoot: X/Z/Click</p>
+            </div>
           </div>
         </div>
       )}
