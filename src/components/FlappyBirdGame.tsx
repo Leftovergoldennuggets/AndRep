@@ -281,7 +281,7 @@ export default function FlappyBirdGame() {
   const berserkerEndTime = useRef<number>(0);
 
   const [displayScore, setDisplayScore] = useState(0);
-  const [gameState, setGameState] = useState<"start" | "story" | "playing" | "gameOver" | "missionComplete" | "victoryIllustration" | "levelComplete">("start");
+  const [gameState, setGameState] = useState<"start" | "story" | "playing" | "paused" | "gameOver" | "missionComplete" | "victoryIllustration" | "levelComplete">("start");
   const [distance, setDistance] = useState(0);
   const [storySlide, setStorySlide] = useState(0);
   
@@ -421,6 +421,9 @@ export default function FlappyBirdGame() {
       alertLevel: 0,
       score: 0,
       distance: 0,
+      combo: 0,
+      comboMultiplier: 1,
+      lastKillTime: 0,
       gameState: "start",
       storySlide: 0,
     };
@@ -541,7 +544,7 @@ export default function FlappyBirdGame() {
         maxHealth: GAME_CONFIG.enemy.health,
         type: enemyType,
         lastShotTime: 0,
-        onGround: enemyType !== 'camera',
+        onGround: enemyType !== 'dog',
         aiState: 'patrol',
         alertLevel: 0,
         lastPlayerSeen: 0,
@@ -551,7 +554,7 @@ export default function FlappyBirdGame() {
     return enemies;
   }, []);
 
-  const generatePowerups = useCallback((startX: number, endX: number) => {
+  const generatePowerups = useCallback(() => {
     // Powerups removed for simplified gameplay
     return [];
   }, []);
@@ -654,7 +657,7 @@ export default function FlappyBirdGame() {
     // Generate new level content
     const newObstacles = generateObstacles(state.level.startX, state.level.endX);
     const newEnemies = generateEnemies(state.level.startX + 400, state.level.endX - 400);
-    const newPowerups = generatePowerups(state.level.startX + 200, state.level.endX - 200);
+    const newPowerups = generatePowerups();
     const newObjectives = generateObjectives();
     const newPrisoners = generatePrisoners(state.level.startX + 300, state.level.endX - 300);
     
@@ -852,7 +855,7 @@ export default function FlappyBirdGame() {
     const level = state.level;
     const newObstacles = generateObstacles(level.startX, level.endX);
     const newEnemies = generateEnemies(level.startX + 400, level.endX - 400);
-    const newPowerups = generatePowerups(level.startX + 200, level.endX - 200);
+    const newPowerups = generatePowerups();
     const newObjectives = generateObjectives();
     const newPrisoners = generatePrisoners(level.startX + 300, level.endX - 300);
     
@@ -1028,6 +1031,7 @@ export default function FlappyBirdGame() {
   const isBerserkerActive = useCallback(() => {
     return Date.now() < berserkerEndTime.current;
   }, []);
+  void isBerserkerActive; // Suppress unused variable warning
 
   const updateEnemyAI = useCallback((enemy: any, playerX: number, playerY: number, currentTime: number) => {
     const dx = playerX - enemy.x;
