@@ -267,6 +267,11 @@ export default function FlappyBirdGame() {
   const animationRef = useRef<number>(0);
   const keysRef = useRef<Set<string>>(new Set());
   const lastShotTime = useRef<number>(0);
+  
+  // Special ability cooldowns
+  const lastDashTime = useRef<number>(0);
+  const lastBerserkerTime = useRef<number>(0);
+  const berserkerEndTime = useRef<number>(0);
 
   const [displayScore, setDisplayScore] = useState(0);
   const [gameState, setGameState] = useState<"start" | "story" | "playing" | "gameOver" | "missionComplete" | "victoryIllustration" | "bossIntro" | "levelComplete">("start");
@@ -800,15 +805,19 @@ export default function FlappyBirdGame() {
     const currentTime = Date.now();
     const weapon = GAME_CONFIG.weapons[state.player.weapon];
     
-    if (currentTime - lastShotTime.current < weapon.fireRate || state.player.ammo <= 0) {
+    // BERSERKER MODE - much faster fire rate!
+    const berserkerActive = Date.now() < berserkerEndTime.current;
+    const fireRate = berserkerActive ? weapon.fireRate * 0.3 : weapon.fireRate; // 3x faster in berserker mode
+    
+    if (currentTime - lastShotTime.current < fireRate || state.player.ammo <= 0) {
       return;
     }
     
     lastShotTime.current = currentTime;
     state.player.ammo--;
     
-    // Add camera shake
-    state.camera.shake = 3;
+    // Enhanced camera shake in berserker mode
+    state.camera.shake = berserkerActive ? 8 : 3;
     
     // Create muzzle flash particles based on direction
     const directionMultiplier = state.player.direction === 'right' ? 1 : -1;
@@ -846,84 +855,166 @@ export default function FlappyBirdGame() {
     }
   }, [createParticles]);
 
+  // SPECIAL ABILITY Q - REBEL DASH
+  const rebelDash = useCallback(() => {
+    const state = gameStateRef.current;
+    const currentTime = Date.now();
+    
+    // Cooldown check (3 seconds)
+    if (currentTime - lastDashTime.current < 3000) {
+      return; // Still on cooldown
+    }
+    
+    if (state.gameState !== "playing") {
+      return;
+    }
+    
+    lastDashTime.current = currentTime;
+    
+    // Powerful dash movement
+    const dashDistance = 200;
+    const dashDirection = state.player.direction === 'right' ? 1 : -1;
+    state.player.x += dashDistance * dashDirection;
+    
+    // Temporary invulnerability (1.5 seconds)
+    state.player.spawnImmunity = Math.max(state.player.spawnImmunity, 1500);
+    
+    // Epic visual effects
+    state.camera.shake = Math.max(state.camera.shake, 15);
+    
+    // Create massive particle trail
+    for (let i = 0; i < 8; i++) {
+      const trailX = state.player.x - (i * 25 * dashDirection);
+      createParticles(trailX, state.player.y + GAME_CONFIG.player.size/2, 'spark', 4);
+    }
+    
+    // Create explosion effect at start and end
+    createParticles(state.player.x - dashDistance * dashDirection, state.player.y + GAME_CONFIG.player.size/2, 'explosion', 6);
+    createParticles(state.player.x, state.player.y + GAME_CONFIG.player.size/2, 'explosion', 6);
+    
+  }, [createParticles]);
+
+  // SPECIAL ABILITY E - BERSERKER MODE  
+  const berserkerMode = useCallback(() => {
+    const state = gameStateRef.current;
+    const currentTime = Date.now();
+    
+    // Cooldown check (8 seconds)
+    if (currentTime - lastBerserkerTime.current < 8000) {
+      return; // Still on cooldown
+    }
+    
+    if (state.gameState !== "playing") {
+      return;
+    }
+    
+    lastBerserkerTime.current = currentTime;
+    berserkerEndTime.current = currentTime + 4000; // 4 second duration
+    
+    // Visual effect for activation
+    state.camera.shake = Math.max(state.camera.shake, 12);
+    createParticles(state.player.x + GAME_CONFIG.player.size/2, state.player.y + GAME_CONFIG.player.size/2, 'explosion', 8);
+    
+  }, [createParticles]);
+
+  // Helper function to check if berserker mode is active
+  const isBerserkerActive = useCallback(() => {
+    return Date.now() < berserkerEndTime.current;
+  }, []);
+
   const updateEnemyAI = useCallback((enemy: any, playerX: number, playerY: number, currentTime: number) => {
     const dx = playerX - enemy.x;
     const dy = playerY - enemy.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
     
-    // Update alert level based on distance and line of sight
-    if (distance < 200) {
-      enemy.alertLevel = Math.min(100, enemy.alertLevel + 2);
+    // MUCH MORE AGGRESSIVE DETECTION - enemies spot you from further away
+    if (distance < 400) { // Increased from 200
+      enemy.alertLevel = Math.min(100, enemy.alertLevel + 5); // Increased from 2
       enemy.lastPlayerSeen = currentTime;
-    } else if (currentTime - enemy.lastPlayerSeen > 3000) {
-      enemy.alertLevel = Math.max(0, enemy.alertLevel - 1);
+    } else if (currentTime - enemy.lastPlayerSeen > 2000) { // Reduced from 3000
+      enemy.alertLevel = Math.max(0, enemy.alertLevel - 2); // Increased decay rate
     }
     
-    // AI State machine
+    // AI State machine - MUCH MORE AGGRESSIVE
     switch (enemy.aiState) {
       case 'patrol':
-        if (enemy.alertLevel > 30) {
+        if (enemy.alertLevel > 15) { // Reduced from 30 - they get suspicious faster
           enemy.aiState = 'chase';
         }
-        // Patrol movement for guards and K9 dogs
+        // FASTER patrol movement
         if ((enemy.type === 'guard' || enemy.type === 'dog') && enemy.onGround) {
-          // Initialize patrol direction if not set
           if (!enemy.patrolDirection) {
             enemy.patrolDirection = Math.random() > 0.5 ? 1 : -1;
             enemy.patrolStartX = enemy.x;
           }
           
-          // Dogs patrol faster than guards
-          const patrolSpeed = enemy.type === 'dog' ? 1.2 : 0.5;
-          const patrolRange = enemy.type === 'dog' ? 150 : 100;
+          // MUCH FASTER patrol speeds
+          const patrolSpeed = enemy.type === 'dog' ? 2.5 : 1.2; // Increased from 1.2/0.5
+          const patrolRange = enemy.type === 'dog' ? 200 : 150; // Increased ranges
           
-          // Move in patrol direction
           enemy.x += enemy.patrolDirection * patrolSpeed;
           
-          // Check if we've reached patrol boundary
           if (Math.abs(enemy.x - enemy.patrolStartX) > patrolRange) {
-            enemy.patrolDirection *= -1; // Reverse direction
+            enemy.patrolDirection *= -1;
           }
         }
         break;
         
       case 'chase':
-        if (distance < 100) {
+        if (distance < 150) { // Increased from 100
           enemy.aiState = 'attack';
-        } else if (enemy.alertLevel < 10) {
+        } else if (enemy.alertLevel < 5) { // Reduced from 10 - stay alert longer
           enemy.aiState = 'patrol';
         }
-        // Move towards player
+        // MUCH FASTER chase movement
         if ((enemy.type === 'guard' || enemy.type === 'dog') && enemy.onGround) {
-          // Dogs move faster when chasing
-          const moveSpeed = enemy.type === 'dog' ? 2.5 : 1;
+          const moveSpeed = enemy.type === 'dog' ? 4.0 : 2.5; // Increased from 2.5/1
           enemy.x += dx > 0 ? moveSpeed : -moveSpeed;
         }
         break;
         
       case 'attack':
-        if (distance > 150) {
+        // Stay in attack mode much longer and closer
+        if (distance > 200) { // Increased from 150
           enemy.aiState = 'chase';
-        } else if (enemy.health < enemy.maxHealth * 0.3) {
+        } else if (enemy.health < enemy.maxHealth * 0.2) { // Reduced from 0.3 - fight harder
           enemy.aiState = 'retreat';
+        }
+        // Move to optimal attack distance
+        if ((enemy.type === 'guard' || enemy.type === 'dog') && enemy.onGround) {
+          const optimalDistance = 120;
+          if (distance > optimalDistance + 20) {
+            // Move closer
+            const moveSpeed = enemy.type === 'dog' ? 3.0 : 2.0;
+            enemy.x += dx > 0 ? moveSpeed : -moveSpeed;
+          } else if (distance < optimalDistance - 20) {
+            // Move back slightly
+            const moveSpeed = enemy.type === 'dog' ? 1.5 : 1.0;
+            enemy.x += dx > 0 ? -moveSpeed : moveSpeed;
+          }
         }
         break;
         
       case 'retreat':
-        // Move away from player
+        // FASTER retreat movement
         if (enemy.type === 'guard' && enemy.onGround) {
-          const moveSpeed = 1.5;
+          const moveSpeed = 2.5; // Increased from 1.5
           enemy.x += dx > 0 ? -moveSpeed : moveSpeed;
         }
-        if (distance > 200) {
+        if (distance > 300) { // Increased from 200
           enemy.aiState = 'cover';
         }
         break;
         
       case 'cover':
-        // Try to find cover (simple implementation)
-        if (enemy.alertLevel < 20) {
+        // Shorter cover time - get back to fighting faster
+        if (enemy.alertLevel < 30) { // Increased from 20
           enemy.aiState = 'patrol';
+        }
+        // Even in cover, try to move to better position
+        if (enemy.onGround && Math.random() < 0.02) { // 2% chance per frame
+          enemy.patrolDirection = Math.random() > 0.5 ? 1 : -1;
+          enemy.x += enemy.patrolDirection * 0.8;
         }
         break;
     }
@@ -1632,7 +1723,10 @@ export default function FlappyBirdGame() {
 
   // Basic damage calculation
   const calculateDamage = useCallback((baseDamage: number) => {
-    return Math.round(baseDamage);
+    // BERSERKER MODE - 2x damage bonus!
+    const berserkerActive = Date.now() < berserkerEndTime.current;
+    const damageMultiplier = berserkerActive ? 2.0 : 1.0;
+    return Math.round(baseDamage * damageMultiplier);
   }, []);
 
   const gameLoop = useCallback(() => {
@@ -1770,26 +1864,35 @@ export default function FlappyBirdGame() {
           distance = Math.sqrt((enemy.x - state.player.x) ** 2 + (enemy.y - state.player.y) ** 2);
         }
         
-        // Enhanced enemy shooting based on AI state
+        // MUCH MORE AGGRESSIVE SHOOTING
         const canShoot = enemy.aiState === 'attack' || enemy.aiState === 'chase';
-        if (enemy.type === 'guard' && canShoot && distance < 250 && screenX > -100 && screenX < GAME_CONFIG.canvas.width + 100) {
-          const fireRate = enemy.aiState === 'attack' ? GAME_CONFIG.enemy.fireRate * 0.7 : GAME_CONFIG.enemy.fireRate;
+        if (enemy.type === 'guard' && canShoot && distance < 400 && screenX > -200 && screenX < GAME_CONFIG.canvas.width + 200) {
+          // MUCH FASTER fire rate
+          const baseFireRate = GAME_CONFIG.enemy.fireRate * 0.3; // 3x faster than before
+          const fireRate = enemy.aiState === 'attack' ? baseFireRate * 0.5 : baseFireRate; // Even faster in attack mode
+          
           if (currentTime - enemy.lastShotTime > fireRate) {
             enemy.lastShotTime = currentTime;
-            const bulletSpeed = GAME_CONFIG.bullet.speed * 0.7;
+            const bulletSpeed = GAME_CONFIG.bullet.speed * 1.2; // Faster bullets
             const dx = state.player.x - enemy.x;
             const dy = state.player.y - enemy.y;
             
-            // Add some inaccuracy based on distance and AI state
-            const accuracy = enemy.aiState === 'attack' ? 0.95 : 0.8;
-            const spread = (1 - accuracy) * (Math.random() - 0.5) * 0.5;
+            // MUCH BETTER ACCURACY - they're trained guards!
+            const accuracy = enemy.aiState === 'attack' ? 0.98 : 0.9; // Increased from 0.95/0.8
+            const spread = (1 - accuracy) * (Math.random() - 0.5) * 0.3; // Reduced spread
             
-            state.enemyBullets.push({
-              x: enemy.x,
-              y: enemy.y + GAME_CONFIG.enemy.size / 2,
-              velocityX: (dx / distance) * bulletSpeed + spread,
-              velocityY: (dy / distance) * bulletSpeed + spread,
-            });
+            // Sometimes fire multiple shots in burst
+            const burstSize = enemy.aiState === 'attack' && Math.random() < 0.3 ? 2 : 1;
+            
+            for (let i = 0; i < burstSize; i++) {
+              const burstSpread = i * 0.1 * (Math.random() - 0.5);
+              state.enemyBullets.push({
+                x: enemy.x,
+                y: enemy.y + GAME_CONFIG.enemy.size / 2,
+                velocityX: (dx / distance) * bulletSpeed + spread + burstSpread,
+                velocityY: (dy / distance) * bulletSpeed + spread + burstSpread,
+              });
+            }
           }
         }
         
@@ -1865,13 +1968,25 @@ export default function FlappyBirdGame() {
         const bulletRect = { x: bullet.x, y: bullet.y, width: GAME_CONFIG.bullet.size, height: GAME_CONFIG.bullet.size };
         
         if (checkCollision(playerRect, bulletRect)) {
-          // Normal damage
-          state.player.health -= 1;
-          state.enemyBullets.splice(i, 1);
-          
-          if (state.player.health <= 0) {
-            state.gameState = "gameOver";
-            setGameState("gameOver");
+          // Only take bullet damage if not immune from spawn
+          if (state.player.spawnImmunity <= 0) {
+            state.player.health -= 1;
+            state.enemyBullets.splice(i, 1);
+            
+            // Add brief invincibility after bullet hit (prevents instant death from multiple bullets)
+            state.player.spawnImmunity = 800; // 0.8 seconds
+            
+            // Add visual feedback
+            state.camera.shake = Math.max(state.camera.shake, 8);
+            createParticles(state.player.x + GAME_CONFIG.player.size/2, state.player.y + GAME_CONFIG.player.size/2, 'blood', 3);
+            
+            if (state.player.health <= 0) {
+              state.gameState = "gameOver";
+              setGameState("gameOver");
+            }
+          } else {
+            // Remove bullet even if player is immune
+            state.enemyBullets.splice(i, 1);
           }
         }
       }
@@ -2821,6 +2936,78 @@ export default function FlappyBirdGame() {
         objY += 12;
       });
       
+      // === SPECIAL ABILITIES ===
+      const abilitiesY = objY + 15;
+      ctx.textAlign = "left";
+      ctx.font = "bold 12px 'Courier New', monospace";
+      ctx.fillStyle = "#ff00ff";
+      ctx.fillText("SPECIAL ABILITIES:", hudX + 15, abilitiesY);
+      
+      const currentTime = Date.now();
+      
+      // Dash ability (Q key) - 3 second cooldown
+      const dashCooldownRemaining = Math.max(0, 3000 - (currentTime - lastDashTime.current));
+      const dashReady = dashCooldownRemaining === 0;
+      
+      const dashAbilityY = abilitiesY + 15;
+      ctx.font = "10px 'Courier New', monospace";
+      ctx.fillStyle = dashReady ? "#00ff00" : "#666666";
+      const dashStatus = dashReady ? "[READY]" : `[${Math.ceil(dashCooldownRemaining / 1000)}S]`;
+      ctx.fillText(`[Q] DASH ${dashStatus}`, hudX + 20, dashAbilityY);
+      
+      // Dash cooldown bar
+      if (!dashReady) {
+        const dashBarX = hudX + 120;
+        const dashBarY = dashAbilityY - 8;
+        const dashBarWidth = 60;
+        const dashBarHeight = 8;
+        
+        // Background
+        ctx.fillStyle = "#330033";
+        ctx.fillRect(dashBarX, dashBarY, dashBarWidth, dashBarHeight);
+        
+        // Fill based on cooldown progress
+        const dashProgress = 1 - (dashCooldownRemaining / 3000);
+        ctx.fillStyle = "#ff00ff";
+        ctx.fillRect(dashBarX, dashBarY, dashBarWidth * dashProgress, dashBarHeight);
+        
+        // Border
+        ctx.strokeStyle = "#666666";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(dashBarX, dashBarY, dashBarWidth, dashBarHeight);
+      }
+      
+      // Berserker ability (E key) - 8 second cooldown
+      const berserkerCooldownRemaining = Math.max(0, 8000 - (currentTime - lastBerserkerTime.current));
+      const berserkerReady = berserkerCooldownRemaining === 0;
+      
+      const berserkerAbilityY = dashAbilityY + 15;
+      ctx.fillStyle = berserkerReady ? "#00ff00" : "#666666";
+      const berserkerStatus = berserkerReady ? "[READY]" : `[${Math.ceil(berserkerCooldownRemaining / 1000)}S]`;
+      ctx.fillText(`[E] BERSERKER ${berserkerStatus}`, hudX + 20, berserkerAbilityY);
+      
+      // Berserker cooldown bar
+      if (!berserkerReady) {
+        const berserkerBarX = hudX + 120;
+        const berserkerBarY = berserkerAbilityY - 8;
+        const berserkerBarWidth = 60;
+        const berserkerBarHeight = 8;
+        
+        // Background
+        ctx.fillStyle = "#330000";
+        ctx.fillRect(berserkerBarX, berserkerBarY, berserkerBarWidth, berserkerBarHeight);
+        
+        // Fill based on cooldown progress
+        const berserkerProgress = 1 - (berserkerCooldownRemaining / 8000);
+        ctx.fillStyle = "#ff0000";
+        ctx.fillRect(berserkerBarX, berserkerBarY, berserkerBarWidth * berserkerProgress, berserkerBarHeight);
+        
+        // Border
+        ctx.strokeStyle = "#666666";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(berserkerBarX, berserkerBarY, berserkerBarWidth, berserkerBarHeight);
+      }
+      
       
       
       // === TOP-RIGHT COMPASS AND STATUS ===
@@ -2895,6 +3082,14 @@ export default function FlappyBirdGame() {
         e.preventDefault();
         shoot();
       }
+      if (e.code === "KeyQ") {
+        e.preventDefault();
+        rebelDash();
+      }
+      if (e.code === "KeyE") {
+        e.preventDefault();
+        berserkerMode();
+      }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -2919,7 +3114,7 @@ export default function FlappyBirdGame() {
       document.removeEventListener("keyup", handleKeyUp);
       canvas?.removeEventListener("click", handleClick);
     };
-  }, [jump, shoot, startGame]);
+  }, [jump, shoot, rebelDash, berserkerMode, startGame]);
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-black">

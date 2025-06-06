@@ -407,6 +407,28 @@ Transformed overwhelming text wall into engaging cinematic experience that playe
 ### Additional Commits Made During This Session
 - Element removal and game simplification for cleaner gameplay experience
 
+## Current Feature: Special Ability HUD Indicators
+**STATUS**: Completed successfully
+
+### Work Done During This Session
+
+- [x] **SPECIAL ABILITY COOLDOWN INDICATORS ADDED**: Current session
+  - **Located HUD Section**: Found HUD rendering in FlappyBirdGame.tsx around line 2790-2940
+  - **Added Ability Section**: Created new "SPECIAL ABILITIES" section after Mission Objectives
+  - **Q Key - Dash Ability**: Added cooldown indicator with 3-second timer display
+    * Shows [Q] DASH [READY] when available, [Q] DASH [2S] when on cooldown
+    * Purple progress bar shows cooldown progress visually
+    * Text color changes: green when ready, gray when on cooldown
+  - **E Key - Berserker Ability**: Added cooldown indicator with 8-second timer display
+    * Shows [E] BERSERKER [READY] when available, [E] BERSERKER [5S] when on cooldown
+    * Red progress bar shows cooldown progress visually
+    * Text color changes: green when ready, gray when on cooldown
+  - **Visual Design**: Military-style monospace fonts matching existing HUD aesthetic
+  - **Real-time Updates**: Cooldowns update dynamically using existing lastDashTime and lastBerserkerTime refs
+
+### Commits Made During This Session
+- Add special ability cooldown indicators to HUD for Q and E keys
+
 ## Remaining Enhancement Ideas
 - Sound effects and music for boss encounters
 - Score persistence/high scores across levels
