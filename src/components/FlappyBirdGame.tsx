@@ -121,6 +121,24 @@ interface GameState {
 
 type WeaponType = 'pistol' | 'shotgun' | 'rifle' | 'grenade';
 
+// Utility Functions
+const calculateDistance = (x1: number, y1: number, x2: number, y2: number): number => {
+  return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+};
+
+const clamp = (value: number, min: number, max: number): number => {
+  return Math.max(min, Math.min(max, value));
+};
+
+const randomRange = (min: number, max: number): number => {
+  return Math.random() * (max - min) + min;
+};
+
+const isInViewport = (x: number, cameraX: number, margin: number = 100): boolean => {
+  return x > cameraX - margin && x < cameraX + GAME_CONFIG.canvas.width + margin;
+};
+
+// Game Configuration Constants
 const GAME_CONFIG = {
   canvas: {
     width: 1200,
@@ -132,7 +150,7 @@ const GAME_CONFIG = {
     gravity: 0.8,
     jumpForce: -20,
     moveSpeed: 10,
-    scrollSpeed: 5, // How fast the world moves left
+    scrollSpeed: 5,
   },
   weapons: {
     pistol: { damage: 20, fireRate: 300, ammo: 50, spread: 0 },
@@ -151,8 +169,32 @@ const GAME_CONFIG = {
     size: 9,
   },
   world: {
-    groundLevel: 750, // Y position of the ground (800 - 50)
+    groundLevel: 750,
   },
+  // Extracted magic numbers
+  distances: {
+    SAFE_SPAWN_ZONE: 600,
+    BOSS_SPAWN_DISTANCE: 300,
+    CAMERA_FOLLOW_OFFSET: 600,
+  },
+  cooldowns: {
+    MULTI_SHOT: 4000,
+    EXECUTION_DASH: 6000,
+    BERSERKER_MODE: 8000,
+    SPAWN_IMMUNITY: 2000,
+  },
+  particles: {
+    EXPLOSION_COUNT: 30,
+    BLOOD_COUNT: 8,
+    SPARK_COUNT: 10,
+    LIFETIME: 1000,
+  },
+  ui: {
+    HEALTH_BAR_WIDTH: 200,
+    HEALTH_BAR_HEIGHT: 20,
+    PROGRESS_BAR_WIDTH: 300,
+    PROGRESS_BAR_HEIGHT: 10,
+  }
 };
 
 const WEAPONS_INFO = {
