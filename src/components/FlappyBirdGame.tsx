@@ -3517,13 +3517,13 @@ export default function FlappyBirdGame() {
               {/* Story Text */}
               <div className="space-y-6">
                 <p 
-                  className="text-sm sm:text-base md:text-lg leading-relaxed"
+                  className="text-sm sm:text-base md:text-lg leading-relaxed text-white italic"
                   style={{
                     fontFamily: 'monospace',
                     letterSpacing: '1px'
                   }}
                 >
-                  Against all odds, Red has triumphed over the forces of darkness. The legend is complete, but the story continues...
+                  "Justice served. The road ahead is mine, Wilbur."
                 </p>
               </div>
               
