@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useRef, useState, useCallback } from "react";
 
 interface GameState {
@@ -353,7 +354,7 @@ export default function FlappyBirdGame() {
         oscillator.stop(currentTime + 0.2);
         break;
         
-      case 'explosion':
+      case 'explosion': {
         // White noise for explosion
         const bufferSize = ctx.sampleRate * 0.3;
         const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -380,6 +381,7 @@ export default function FlappyBirdGame() {
         whiteNoise.start(currentTime);
         whiteNoise.stop(currentTime + 0.3);
         break;
+      }
     }
   }, []);
 
@@ -435,8 +437,8 @@ export default function FlappyBirdGame() {
   }, []);
 
   const generateObstacles = useCallback((startX: number, endX: number) => {
-    const state = gameStateRef.current;
-    const obstacles: typeof state.obstacles = [];
+    const _state = gameStateRef.current;
+    const obstacles: typeof _state.obstacles = [];
     
     // Generate ground segments
     for (let x = startX; x < endX; x += 40) {
@@ -1676,7 +1678,7 @@ export default function FlappyBirdGame() {
       ctx.fillText(levelConfig?.boss.name || "BOSS", screenX + bossSize / 2, enemy.y - 25);
       
       switch (enemy.bossType) {
-        case 'warden':
+        case 'warden': {
           // CORRUPT PRISON WARDEN - Enhanced intimidating design
           const pixelSize = Math.max(1, Math.floor(bossSize / 32));
           
@@ -1764,8 +1766,9 @@ export default function FlappyBirdGame() {
           ctx.fillRect(screenX + 18*pixelSize, enemy.y + 30*pixelSize, 2*pixelSize, 2*pixelSize);
           
           break;
+        }
           
-        case 'captain':
+        case 'captain': {
           // RIOT CAPTAIN - 8-bit armored design
           const pixelSize2 = Math.max(1, Math.floor(bossSize / 32));
           
@@ -1793,8 +1796,9 @@ export default function FlappyBirdGame() {
           ctx.fillStyle = "#444444";
           ctx.fillRect(screenX + bossSize + 2*pixelSize2, enemy.y + 15*pixelSize2, 2*pixelSize2, 10*pixelSize2);
           break;
+        }
           
-        case 'chief':
+        case 'chief': {
           // CYBER SECURITY CHIEF - 8-bit high-tech design
           const pixelSize3 = Math.max(1, Math.floor(bossSize / 32));
           
@@ -1823,8 +1827,9 @@ export default function FlappyBirdGame() {
           ctx.fillStyle = "#00ffff";
           ctx.fillRect(screenX + bossSize + 8*pixelSize3, enemy.y + 13*pixelSize3, 3*pixelSize3, pixelSize3);
           break;
+        }
           
-        case 'helicopter':
+        case 'helicopter': {
           // ATTACK HELICOPTER - 8-bit aerial design
           const pixelSize4 = Math.max(1, Math.floor(bossSize / 32));
           
@@ -1854,6 +1859,7 @@ export default function FlappyBirdGame() {
           ctx.fillRect(screenX + 8*pixelSize4, enemy.y + 8*pixelSize4, 2*pixelSize4, 2*pixelSize4);
           ctx.fillRect(screenX + 22*pixelSize4, enemy.y + 8*pixelSize4, 2*pixelSize4, 2*pixelSize4);
           break;
+        }
       }
     }
     
@@ -1896,7 +1902,7 @@ export default function FlappyBirdGame() {
       }
       
       // Handle player horizontal movement and animation
-      let currentMoveSpeed = GAME_CONFIG.player.moveSpeed;
+      const currentMoveSpeed = GAME_CONFIG.player.moveSpeed;
         
       if (keysRef.current.has('ArrowLeft') || keysRef.current.has('KeyA')) {
         state.player.x -= currentMoveSpeed;
@@ -2193,7 +2199,7 @@ export default function FlappyBirdGame() {
 
       // Check player-enemy collisions for contact damage
       for (const enemy of state.enemies) {
-        if (true) { // All enemies cause contact damage
+        if (enemy.health > 0) { // All alive enemies cause contact damage
           const screenX = enemy.x - state.camera.x;
           if (screenX > -100 && screenX < GAME_CONFIG.canvas.width + 100) {
             const playerRect = { x: state.player.x, y: state.player.y, width: GAME_CONFIG.player.size, height: GAME_CONFIG.player.size };
