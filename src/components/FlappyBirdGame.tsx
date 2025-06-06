@@ -3356,7 +3356,7 @@ export default function FlappyBirdGame() {
           className="absolute inset-0 flex flex-col items-center justify-center"
           style={{
             backgroundImage: 'url(/endscreengameover.png)',
-            backgroundSize: 'cover',
+            backgroundSize: 'contain',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
             backgroundColor: '#000000'
