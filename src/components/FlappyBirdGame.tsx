@@ -815,7 +815,7 @@ export default function FlappyBirdGame() {
             state.enemyBullets.push({
               x: boss.x,
               y: boss.y + 20,
-              velocityX: direction * 10,
+              velocityX: direction * 7, // Reduced from 10 to 7
               velocityY: -1 + Math.random() * 2,
             });
             boss.lastShotTime = Date.now();
@@ -2050,7 +2050,7 @@ export default function FlappyBirdGame() {
           
           if (currentTime - enemy.lastShotTime > fireRate) {
             enemy.lastShotTime = currentTime;
-            const bulletSpeed = GAME_CONFIG.bullet.speed * 1.2; // Faster bullets
+            const bulletSpeed = GAME_CONFIG.bullet.speed * 0.9; // Slightly slower than player bullets
             const dx = state.player.x - enemy.x;
             const dy = state.player.y - enemy.y;
             
