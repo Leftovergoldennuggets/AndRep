@@ -3391,7 +3391,7 @@ export default function FlappyBirdGame() {
               {/* Illustration */}
               <div className="py-4">
                 <img 
-                  src="/Endscreen.png"
+                  src="/endscreengameover.png"
                   alt="Game Over - The Legend Ends"
                   className="w-full h-auto max-h-96 object-contain"
                   style={{
@@ -3399,7 +3399,7 @@ export default function FlappyBirdGame() {
                     imageRendering: 'crisp-edges'
                   }}
                   onError={(e) => {
-                    console.log('Failed to load image: /Endscreen.png');
+                    console.log('Failed to load image: /endscreengameover.png');
                     e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkdBTUUgT1ZFUjwvdGV4dD48L3N2Zz4=';
                   }}
                 />
@@ -3506,7 +3506,7 @@ export default function FlappyBirdGame() {
               {/* Illustration */}
               <div className="py-4">
                 <img 
-                  src="/endscreenvictory.png"
+                  src="/newendscreenvictory.png"
                   alt="Victory - The Legend Lives On"
                   className="w-full h-auto max-h-96 object-contain"
                   style={{
@@ -3514,7 +3514,7 @@ export default function FlappyBirdGame() {
                     imageRendering: 'crisp-edges'
                   }}
                   onError={(e) => {
-                    console.log('Failed to load image: /endscreenvictory.png');
+                    console.log('Failed to load image: /newendscreenvictory.png');
                     e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNPTklORyBTT09OPC90ZXh0Pjwvc3ZnPg==';
                   }}
                 />
