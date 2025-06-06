@@ -61,7 +61,7 @@ interface GameState {
     y: number;
     width: number;
     height: number;
-    type: 'wall' | 'fence' | 'crate' | 'platform' | 'ground' | 'door' | 'switch';
+    type: 'fence' | 'crate' | 'platform' | 'ground' | 'door' | 'switch';
     health?: number;
     maxHealth?: number;
     isDestructible: boolean;
@@ -452,19 +452,7 @@ export default function FlappyBirdGame() {
     for (let x = startX; x < endX; x += 100 + Math.random() * 100) {
       const obstacleType = Math.random();
       
-      if (obstacleType < 0.1) {
-        // Wall obstacle
-        const height = 80 + Math.random() * 120;
-        obstacles.push({
-          x: x + Math.random() * 100,
-          y: GAME_CONFIG.world.groundLevel - height,
-          width: 20 + Math.random() * 40,
-          height: height,
-          type: 'wall',
-          isDestructible: false,
-          isInteractive: false,
-        });
-      } else if (obstacleType < 0.5) {
+      if (obstacleType < 0.5) {
         // More platforms for jumping gameplay
         const baseHeight = 80 + Math.random() * 40;
         const width = 60 + Math.random() * 40;
@@ -2685,13 +2673,6 @@ export default function FlappyBirdGame() {
               groundGradient.addColorStop(0.2, "#666666");
               groundGradient.addColorStop(1, "#2A2A2A");
               ctx.fillStyle = groundGradient;
-            } else if (obstacle.type === 'wall') {
-              // Prison concrete walls with weathering
-              const wallGradient = ctx.createLinearGradient(screenX, obstacle.y, screenX + obstacle.width, obstacle.y);
-              wallGradient.addColorStop(0, "#555555");
-              wallGradient.addColorStop(0.5, "#404040");
-              wallGradient.addColorStop(1, "#505050");
-              ctx.fillStyle = wallGradient;
             } else if (obstacle.type === 'platform') {
               // Industrial metal grating platforms
               const platformGradient = ctx.createLinearGradient(screenX, obstacle.y, screenX, obstacle.y + obstacle.height);
@@ -2722,16 +2703,6 @@ export default function FlappyBirdGame() {
               for (let i = 0; i < obstacle.width / 20; i++) {
                 ctx.fillRect(screenX + 5 + i * 20, obstacle.y + 2, 3, 3);
                 ctx.fillRect(screenX + 5 + i * 20, obstacle.y + obstacle.height - 5, 3, 3);
-              }
-            } else if (obstacle.type === 'wall') {
-              // Concrete panel lines
-              ctx.strokeStyle = "#333333";
-              ctx.lineWidth = 2;
-              for (let i = 1; i < obstacle.height / 30; i++) {
-                ctx.beginPath();
-                ctx.moveTo(screenX, obstacle.y + i * 30);
-                ctx.lineTo(screenX + obstacle.width, obstacle.y + i * 30);
-                ctx.stroke();
               }
             } else if (obstacle.type === 'ground') {
               // Concrete texture with cracks
