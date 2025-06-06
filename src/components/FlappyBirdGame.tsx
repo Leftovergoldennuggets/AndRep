@@ -2599,43 +2599,7 @@ export default function FlappyBirdGame() {
       }
     }
     
-    // Draw distance markers every 50m
-    if (state.gameState !== "start") {
-      ctx.save();
-      for (let distanceMarker = 0; distanceMarker <= 500; distanceMarker += 50) {
-        const markerX = 400 + distanceMarker * 10; // Convert distance to world position
-        const screenX = markerX - state.camera.x;
-        
-        if (screenX > -100 && screenX < GAME_CONFIG.canvas.width + 100) {
-          // Draw marker post
-          ctx.fillStyle = "#666666";
-          ctx.fillRect(screenX - 2, GAME_CONFIG.world.groundLevel - 60, 4, 60);
-          
-          // Draw sign background
-          ctx.fillStyle = "#1a1a1a";
-          ctx.fillRect(screenX - 40, GAME_CONFIG.world.groundLevel - 80, 80, 30);
-          
-          // Draw sign border
-          ctx.strokeStyle = "#ffd700";
-          ctx.lineWidth = 2;
-          ctx.strokeRect(screenX - 40, GAME_CONFIG.world.groundLevel - 80, 80, 30);
-          
-          // Draw distance text
-          ctx.fillStyle = "#ffd700";
-          ctx.font = "bold 16px Arial";
-          ctx.textAlign = "center";
-          ctx.fillText(`${distanceMarker}m`, screenX, GAME_CONFIG.world.groundLevel - 58);
-          
-          // Special marker at 300m (boss location)
-          if (distanceMarker === 300) {
-            ctx.fillStyle = "#ff0000";
-            ctx.font = "bold 12px Arial";
-            ctx.fillText("DANGER!", screenX, GAME_CONFIG.world.groundLevel - 40);
-          }
-        }
-      }
-      ctx.restore();
-    }
+    // Distance markers removed per user request
     
     // Add dramatic lighting effects for badass atmosphere
     if (state.gameState !== "start") {

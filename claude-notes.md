@@ -457,16 +457,21 @@ Transformed overwhelming text wall into engaging cinematic experience that playe
 ### Additional Commits Made During This Session
 - Element removal and game simplification for cleaner gameplay experience
 
-## Current Feature: Enemy Bullet Speed Reduction
+## Current Feature: Distance Marker Removal
 **STATUS**: Completed successfully
 
 ### Work Done During This Session
 
-- [x] **SLOWED DOWN ENEMY BULLETS**: Current session
+- [x] **REMOVED YELLOW DISTANCE MARKERS**: Current session
+  - **Removed Visual Clutter**: Eliminated all distance marker posts and signs every 50m
+  - **Cleaner Environment**: No more yellow boxes showing distance values
+  - **Simplified Display**: Removed marker posts, backgrounds, borders, and text
+  - **Less UI Distraction**: Players can focus on gameplay without constant distance reminders
+
+- [x] **SLOWED DOWN ENEMY BULLETS**: Previous session
   - **Boss Bullets**: Reduced speed from 10 to 7 (30% slower)
   - **Guard Bullets**: Reduced speed from 1.2x player speed to 0.9x player speed (25% slower)
   - **Better Dodging**: Bullets are now easier to dodge while maintaining challenge
-  - **Improved Balance**: Enemy projectiles no longer overwhelmingly fast
 
 - [x] **INCREASED PLATFORM FREQUENCY**: Previous session
   - **Frequency Boost**: Increased platform generation from 20% to 50% chance (0.2 → 0.5)
