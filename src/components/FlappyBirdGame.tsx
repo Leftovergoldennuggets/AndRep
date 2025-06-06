@@ -114,7 +114,7 @@ interface GameState {
   combo: number;
   comboMultiplier: number;
   lastKillTime: number;
-  gameState: "start" | "story" | "playing" | "paused" | "gameOver" | "missionComplete" | "victoryIllustration" | "bossIntro" | "levelComplete";
+  gameState: "start" | "story" | "playing" | "paused" | "gameOver" | "missionComplete" | "victoryIllustration" | "levelComplete";
   storySlide: number;
 }
 
@@ -281,7 +281,7 @@ export default function FlappyBirdGame() {
   const berserkerEndTime = useRef<number>(0);
 
   const [displayScore, setDisplayScore] = useState(0);
-  const [gameState, setGameState] = useState<"start" | "story" | "playing" | "gameOver" | "missionComplete" | "victoryIllustration" | "bossIntro" | "levelComplete">("start");
+  const [gameState, setGameState] = useState<"start" | "story" | "playing" | "gameOver" | "missionComplete" | "victoryIllustration" | "levelComplete">("start");
   const [distance, setDistance] = useState(0);
   const [storySlide, setStorySlide] = useState(0);
   
@@ -780,17 +780,7 @@ export default function FlappyBirdGame() {
     state.enemies.push(boss);
     state.level.bossSpawned = true;
     
-    // Trigger boss intro
-    state.gameState = "bossIntro";
-    setGameState("bossIntro");
-    
-    // Show boss intro for 2 seconds, then return to playing
-    setTimeout(() => {
-      if (gameStateRef.current.gameState === "bossIntro") {
-        gameStateRef.current.gameState = "playing";
-        setGameState("playing");
-      }
-    }, 2000);
+    // Boss spawns directly without intro screen
   }, []);
 
   const updateBoss = useCallback((boss: typeof gameStateRef.current.enemies[0], _deltaTime: number) => {
@@ -3462,21 +3452,6 @@ export default function FlappyBirdGame() {
         </div>
       )}
 
-      {gameState === "bossIntro" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-85 rounded-lg px-4">
-          <div className="text-center text-white max-w-md">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-red-500 animate-pulse">⚠️ BOSS ENCOUNTER ⚠️</h2>
-            <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-2 text-yellow-400">
-              {gameStateRef.current.level && LEVELS[gameStateRef.current.level.current as keyof typeof LEVELS]?.boss.name}
-            </h3>
-            <p className="text-lg mb-6 text-gray-300">
-              {gameStateRef.current.level && LEVELS[gameStateRef.current.level.current as keyof typeof LEVELS]?.boss.description}
-            </p>
-            <div className="text-6xl mb-4">💀</div>
-            <p className="text-sm opacity-75">Prepare for battle...</p>
-          </div>
-        </div>
-      )}
 
       {gameState === "levelComplete" && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 rounded-lg">
