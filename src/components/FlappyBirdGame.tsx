@@ -260,7 +260,7 @@ const LEVELS = {
     boss: {
       type: 'warden' as const,
       name: "The Corrupt Warden",
-      health: 120,
+      health: 300, // Increased from 120 - much tankier
       size: 90,
       attackPattern: "charge_and_shoot",
       description: "The corrupt warden blocks your escape with his massive shotgun!",
@@ -826,24 +826,46 @@ export default function FlappyBirdGame() {
     if (!levelConfig || boss.type !== 'boss') return;
     
     const distanceToPlayer = Math.abs(boss.x - player.x);
-    const playerInRange = distanceToPlayer < 400;
+    const playerInRange = distanceToPlayer < 600; // Increased from 400 - larger aggro range
     
     // Boss movement and attack patterns
     switch (boss.bossType) {
-      case 'warden': // Level 1 - Corrupt Warden with shotgun
+      case 'warden': // Level 1 - Corrupt Warden with shotgun - MUCH HARDER!
         if (playerInRange) {
           const direction = player.x > boss.x ? 1 : -1;
-          boss.x += direction * 2; // Aggressive charging
+          boss.x += direction * 4; // Much faster charging - doubled speed!
           
-          if (Date.now() - boss.lastShotTime > 800) {
-            // Rapid shotgun fire
-            state.enemyBullets.push({
-              x: boss.x,
-              y: boss.y + 20,
-              velocityX: direction * 5, // Reduced for better dodging
-              velocityY: -1 + Math.random() * 2,
-            });
+          if (Date.now() - boss.lastShotTime > 400) { // Faster fire rate: 800ms -> 400ms
+            // Multiple shotgun pellets like real shotgun
+            for (let i = 0; i < 3; i++) { // 3 pellets per shot instead of 1
+              state.enemyBullets.push({
+                x: boss.x + (i - 1) * 20, // Spread pellets horizontally
+                y: boss.y + 20,
+                velocityX: direction * (7 + Math.random() * 2), // Faster bullets: 5 -> 7-9
+                velocityY: -2 + Math.random() * 4, // More vertical spread
+              });
+            }
             boss.lastShotTime = Date.now();
+            
+            // Camera shake for intimidation
+            state.camera.shake = Math.max(state.camera.shake, 8);
+          }
+          
+          // Special rage mode when health is low
+          if (boss.health < boss.maxHealth * 0.3) { // Below 30% health
+            // BERSERKER MODE - even faster attacks!
+            if (Date.now() - boss.lastShotTime > 200) { // Super fast shooting
+              // Extra bullet barrage
+              for (let i = 0; i < 2; i++) {
+                state.enemyBullets.push({
+                  x: boss.x,
+                  y: boss.y + 20,
+                  velocityX: direction * (8 + Math.random() * 3),
+                  velocityY: -3 + Math.random() * 6,
+                });
+              }
+            }
+            boss.x += direction * 6; // Even faster charging in rage mode
           }
         }
         break;
