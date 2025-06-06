@@ -464,19 +464,36 @@ export default function FlappyBirdGame() {
           isDestructible: false,
           isInteractive: false,
         });
-      } else if (obstacleType < 0.2) {
-        // Single platform only - much less frequent
-        const height = 80 + Math.random() * 40;
+      } else if (obstacleType < 0.5) {
+        // More platforms for jumping gameplay
+        const baseHeight = 80 + Math.random() * 40;
         const width = 60 + Math.random() * 40;
+        const platformThickness = 15 + Math.random() * 10;
+        
+        // Create main platform
         obstacles.push({
           x: x + Math.random() * 50,
-          y: GAME_CONFIG.world.groundLevel - height,
+          y: GAME_CONFIG.world.groundLevel - baseHeight,
           width: width,
-          height: 15 + Math.random() * 10,
+          height: platformThickness,
           type: 'platform',
           isDestructible: false,
           isInteractive: false,
         });
+        
+        // 30% chance for a second level platform above
+        if (Math.random() < 0.3) {
+          const upperHeight = baseHeight + 60 + Math.random() * 30;
+          obstacles.push({
+            x: x + Math.random() * 30,
+            y: GAME_CONFIG.world.groundLevel - upperHeight,
+            width: width * 0.7,
+            height: platformThickness,
+            type: 'platform',
+            isDestructible: false,
+            isInteractive: false,
+          });
+        }
       } else if (obstacleType < 0.75) {
         // SECURITY DOOR - interactive!
         obstacles.push({
