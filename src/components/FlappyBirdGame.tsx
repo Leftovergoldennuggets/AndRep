@@ -3408,31 +3408,13 @@ export default function FlappyBirdGame() {
               {/* Story Text */}
               <div className="space-y-6">
                 <p 
-                  className="text-sm sm:text-base md:text-lg leading-relaxed text-gray-300"
+                  className="text-sm sm:text-base md:text-lg leading-relaxed text-white italic"
                   style={{
                     fontFamily: 'monospace',
                     letterSpacing: '1px'
                   }}
                 >
-                  Strapped to the electric chair, Red sees Wilbur's spirit watching over him. The corrupt warden adjusts the final switch, but Red feels no fear—only the peace of knowing he fought for what was right.
-                </p>
-                <p 
-                  className="text-xs sm:text-sm md:text-base leading-relaxed text-red-400 italic"
-                  style={{
-                    fontFamily: 'monospace',
-                    letterSpacing: '1px'
-                  }}
-                >
-                  "I'm coming, Wilbur... We'll watch over the farm together from the other side. The truth will live on, even if we don't."
-                </p>
-                <p 
-                  className="text-xs sm:text-sm md:text-base leading-relaxed text-cyan-400"
-                  style={{
-                    fontFamily: 'monospace',
-                    letterSpacing: '1px'
-                  }}
-                >
-                  In death, legends are born. Red's sacrifice will inspire others to rise against corruption. The rebellion has only just begun.
+                  "I'm coming, Wilbur... The truth will live on."
                 </p>
               </div>
               
