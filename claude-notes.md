@@ -1,34 +1,24 @@
-# Claude Notes
+# Claude Code Session Notes
 
-## Current Session - Weapon Switching Feature
+## Current Feature: Shotgun Implementation & Weapon Switching
+- Fixed hard-coded bullet count for shotgun weapon
+- Added bulletCount property to shotgun configuration in GAME_CONFIG
+- Shotgun now properly uses the bulletCount from configuration (5 pellets)
+- Changed starting weapon from pistol to shotgun
+- Added E key weapon switching between pistol and shotgun
+- Updated control instructions to show E key for weapon switching
+- Removed berserker mode from E key to avoid conflict
 
-### Feature: Add weapon switching with R key
-- Status: Complete
-- Date: 2025-12-06
+## Commits Made This Session:
+1. fix: use weapon bulletCount property for shotgun instead of hard-coded value
+2. [pending] feat: add weapon switching with E key and start with shotgun
 
-### Changes Made:
-1. Added `switchWeapon` function in FlappyBirdGame.tsx that:
-   - Cycles through weapons in order: pistol → shotgun → rifle → grenade → pistol
-   - Provides half ammo if switching to an empty weapon
-   - Plays pickup sound effect
-   - Shows visual feedback with colored particles matching the weapon
+## Status:
+- Shotgun weapon is fully implemented and fixed
+- Player now starts with shotgun
+- E key toggles between pistol and shotgun
+- Each weapon switch gives full ammo for the new weapon
 
-2. Updated keyboard event handler:
-   - Added R key handler to trigger weapon switching
-   - Added `switchWeapon` to the useEffect dependency array
-
-3. Updated UI controls display:
-   - Added "Switch Weapon: R" to the pause menu controls
-   - Also added the special abilities (Q for Dash, E for Berserk) to make controls complete
-
-### Commits Made:
-- feat: add weapon switching with R key
-
-### Important Context:
-- E key was already taken for berserkerMode, so used R key instead
-- Weapon order follows logical progression from weakest to strongest
-- Visual feedback uses weapon-specific colors defined in WEAPONS_INFO
-- Sound feedback reuses existing pickup sound
-
-### File Locations:
-- /Users/AndersEidesvik/projects/AndRep/src/components/FlappyBirdGame.tsx - Main game file with all changes
+## Next Steps:
+- Consider keeping ammo counts separate per weapon
+- Add visual indicator for current weapon in HUD

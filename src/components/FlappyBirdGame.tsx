@@ -1035,7 +1035,7 @@ export default function FlappyBirdGame() {
     }
   }, [createParticles]);
 
-  // WEAPON SWITCHING - CYCLE THROUGH AVAILABLE WEAPONS
+  // WEAPON SWITCHING - TOGGLE BETWEEN PISTOL AND SHOTGUN
   const switchWeapon = useCallback(() => {
     const state = gameStateRef.current;
     
@@ -1043,18 +1043,13 @@ export default function FlappyBirdGame() {
       return;
     }
     
-    // Define weapon order
-    const weaponOrder: WeaponType[] = ['pistol', 'shotgun', 'rifle', 'grenade'];
-    const currentIndex = weaponOrder.indexOf(state.player.weapon);
-    const nextIndex = (currentIndex + 1) % weaponOrder.length;
-    
-    // Switch to next weapon
-    state.player.weapon = weaponOrder[nextIndex];
-    
-    // Give some ammo for the new weapon if it's empty
-    const weaponConfig = GAME_CONFIG.weapons[state.player.weapon];
-    if (state.player.ammo === 0) {
-      state.player.ammo = Math.floor(weaponConfig.ammo / 2); // Give half the default ammo
+    // Toggle between pistol and shotgun
+    if (state.player.weapon === 'pistol') {
+      state.player.weapon = 'shotgun';
+      state.player.ammo = GAME_CONFIG.weapons.shotgun.ammo;
+    } else {
+      state.player.weapon = 'pistol';
+      state.player.ammo = GAME_CONFIG.weapons.pistol.ammo;
     }
     
     // Play a sound effect (reuse pickup sound)
@@ -3262,10 +3257,6 @@ export default function FlappyBirdGame() {
       }
       if (e.code === "KeyE") {
         e.preventDefault();
-        berserkerMode();
-      }
-      if (e.code === "KeyR") {
-        e.preventDefault();
         switchWeapon();
       }
       if (e.code === "Escape") {
@@ -3455,8 +3446,8 @@ export default function FlappyBirdGame() {
               <p>Move: A/D or Arrow Keys</p>
               <p>Jump: Space/W/↑</p>
               <p>Shoot: X/Z/Click</p>
-              <p>Switch Weapon: R</p>
-              <p>Dash: Q | Berserk: E</p>
+              <p>Switch Weapon: E</p>
+              <p>Dash: Q</p>
             </div>
           </div>
         </div>
