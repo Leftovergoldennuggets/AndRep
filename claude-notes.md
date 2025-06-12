@@ -590,3 +590,20 @@ Transformed overwhelming text wall into engaging cinematic experience that playe
 - Score persistence/high scores across levels
 - Additional weapon unlock system  
 - Achievement system for boss defeats
+
+## Current Feature: Shotgun Implementation
+- Fixed hard-coded bullet count for shotgun weapon
+- Added bulletCount property to shotgun configuration in GAME_CONFIG
+- Shotgun now properly uses the bulletCount from configuration (5 pellets)
+
+## Commits Made This Session:
+1. [pending] fix: use weapon bulletCount property for shotgun instead of hard-coded value
+
+## Status:
+- Shotgun weapon is fully implemented and fixed
+- Ready for testing in game
+
+## Next Steps:
+- Test shotgun weapon in game
+- Verify spread pattern works correctly
+- Check damage and ammo consumption

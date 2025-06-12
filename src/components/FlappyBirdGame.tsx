@@ -154,7 +154,7 @@ const GAME_CONFIG = {
   },
   weapons: {
     pistol: { damage: 20, fireRate: 300, ammo: 50, spread: 0 },
-    shotgun: { damage: 15, fireRate: 800, ammo: 20, spread: 0.3 },
+    shotgun: { damage: 15, fireRate: 800, ammo: 20, spread: 0.3, bulletCount: 5 },
     rifle: { damage: 35, fireRate: 150, ammo: 30, spread: 0.1 },
     grenade: { damage: 80, fireRate: 2000, ammo: 5, spread: 0 },
   },
@@ -1010,7 +1010,8 @@ export default function FlappyBirdGame() {
     
     if (state.player.weapon === 'shotgun') {
       // Shotgun fires multiple pellets in the facing direction
-      for (let i = 0; i < 5; i++) {
+      const bulletCount = (weapon as any).bulletCount || 5;
+      for (let i = 0; i < bulletCount; i++) {
         const spread = (Math.random() - 0.5) * weapon.spread;
         state.bullets.push({
           x: muzzleX,
