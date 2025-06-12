@@ -276,8 +276,8 @@ export default function FlappyBirdGame() {
       y: GAME_CONFIG.world.groundLevel - GAME_CONFIG.player.size,
       velocityY: 0,
       health: GAME_CONFIG.player.maxHealth,
-      weapon: 'pistol',
-      ammo: GAME_CONFIG.weapons.pistol.ammo,
+      weapon: 'shotgun',
+      ammo: GAME_CONFIG.weapons.shotgun.ammo,
       onGround: true,
       animationFrame: 0,
       direction: 'right',
@@ -434,8 +434,8 @@ export default function FlappyBirdGame() {
         y: GAME_CONFIG.world.groundLevel - GAME_CONFIG.player.size,
         velocityY: 0,
         health: GAME_CONFIG.player.maxHealth,
-        weapon: 'pistol',
-        ammo: GAME_CONFIG.weapons.pistol.ammo,
+        weapon: 'shotgun',
+        ammo: GAME_CONFIG.weapons.shotgun.ammo,
         onGround: true,
         animationFrame: 0,
         direction: 'right',
@@ -679,8 +679,8 @@ export default function FlappyBirdGame() {
     state.player.y = GAME_CONFIG.world.groundLevel - GAME_CONFIG.player.size;
     state.player.velocityY = 0;
     state.player.health = GAME_CONFIG.player.maxHealth;
-    state.player.weapon = 'pistol';
-    state.player.ammo = GAME_CONFIG.weapons.pistol.ammo;
+    state.player.weapon = 'shotgun';
+    state.player.ammo = GAME_CONFIG.weapons.shotgun.ammo;
     state.player.onGround = true;
     state.player.animationFrame = 0;
     state.player.direction = 'right';
@@ -1033,6 +1033,40 @@ export default function FlappyBirdGame() {
         trail: [],
       });
     }
+  }, [createParticles]);
+
+  // WEAPON SWITCHING - CYCLE THROUGH AVAILABLE WEAPONS
+  const switchWeapon = useCallback(() => {
+    const state = gameStateRef.current;
+    
+    if (state.gameState !== "playing") {
+      return;
+    }
+    
+    // Define weapon order
+    const weaponOrder: WeaponType[] = ['pistol', 'shotgun', 'rifle', 'grenade'];
+    const currentIndex = weaponOrder.indexOf(state.player.weapon);
+    const nextIndex = (currentIndex + 1) % weaponOrder.length;
+    
+    // Switch to next weapon
+    state.player.weapon = weaponOrder[nextIndex];
+    
+    // Give some ammo for the new weapon if it's empty
+    const weaponConfig = GAME_CONFIG.weapons[state.player.weapon];
+    if (state.player.ammo === 0) {
+      state.player.ammo = Math.floor(weaponConfig.ammo / 2); // Give half the default ammo
+    }
+    
+    // Play a sound effect (reuse pickup sound)
+    playSound('pickup');
+    
+    // Visual feedback - create some particles
+    createParticles(
+      state.player.x + GAME_CONFIG.canvas.width / 2 - state.camera.x,
+      state.player.y + 15,
+      WEAPONS_INFO[state.player.weapon].color,
+      5
+    );
   }, [createParticles]);
 
   // SPECIAL ABILITY Q - REBEL DASH
@@ -3230,6 +3264,10 @@ export default function FlappyBirdGame() {
         e.preventDefault();
         berserkerMode();
       }
+      if (e.code === "KeyR") {
+        e.preventDefault();
+        switchWeapon();
+      }
       if (e.code === "Escape") {
         e.preventDefault();
         const state = gameStateRef.current;
@@ -3265,7 +3303,7 @@ export default function FlappyBirdGame() {
       document.removeEventListener("keyup", handleKeyUp);
       canvas?.removeEventListener("click", handleClick);
     };
-  }, [jump, shoot, rebelDash, berserkerMode, startGame]);
+  }, [jump, shoot, rebelDash, berserkerMode, startGame, switchWeapon]);
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-black">
@@ -3417,6 +3455,8 @@ export default function FlappyBirdGame() {
               <p>Move: A/D or Arrow Keys</p>
               <p>Jump: Space/W/↑</p>
               <p>Shoot: X/Z/Click</p>
+              <p>Switch Weapon: R</p>
+              <p>Dash: Q | Berserk: E</p>
             </div>
           </div>
         </div>
