@@ -4,13 +4,13 @@ import {
   GameState, 
   WeaponType, 
   Enemy, 
-  Bullet, 
-  Obstacle, 
+  Bullet as _Bullet, 
+  Obstacle as _Obstacle, 
   ObstacleType,
   Powerup, 
-  Vector2D,
-  Particle,
-  LevelTheme
+  Vector2D as _Vector2D,
+  Particle as _Particle,
+  LevelTheme as _LevelTheme
 } from "./game/types";
 import { 
   GAME_DIMENSIONS, 
@@ -27,15 +27,15 @@ import { WEAPONS, canFire } from "./game/weapons";
 import { 
   STORY_SLIDES, 
   LEVELS, 
-  BOSS_CONFIGS, 
-  ANIMAL_TYPES, 
-  ANIMAL_SIZES 
+  BOSS_CONFIGS as _BOSS_CONFIGS, 
+  ANIMAL_TYPES as _ANIMAL_TYPES, 
+  ANIMAL_SIZES as _ANIMAL_SIZES 
 } from "./game/config";
 import { 
   clamp, 
-  distance, 
+  distance as _distance, 
   angle, 
-  randomRange, 
+  randomRange as _randomRange, 
   randomInt, 
   checkCollision, 
   isInViewport, 
@@ -134,7 +134,7 @@ export default function FlappyBirdGameRefactored() {
   // Game loop update function
   const updateGame = useCallback((currentTime: number) => {
     const state = gameStateRef.current;
-    const { player, enemies, bullets, enemyBullets, particles, camera, level } = state;
+    const { player, enemies: _enemies, bullets: _bullets, enemyBullets: _enemyBullets, particles, camera, level } = state;
     
     // Update camera shake
     updateCameraShake(camera);
@@ -361,8 +361,8 @@ export default function FlappyBirdGameRefactored() {
       enemy.y += enemy.velocityY;
       
       // Ground collision
-      if (enemy.y > GAME_DIMENSIONS.GROUND_HEIGHT - ENEMY_SIZES[enemy.type].HEIGHT) {
-        enemy.y = GAME_DIMENSIONS.GROUND_HEIGHT - ENEMY_SIZES[enemy.type].HEIGHT;
+      if (enemy.y > GAME_DIMENSIONS.GROUND_HEIGHT - ENEMY_SIZES[enemy.type.toUpperCase() as keyof typeof ENEMY_SIZES].HEIGHT) {
+        enemy.y = GAME_DIMENSIONS.GROUND_HEIGHT - ENEMY_SIZES[enemy.type.toUpperCase() as keyof typeof ENEMY_SIZES].HEIGHT;
         enemy.velocityY = 0;
         enemy.onGround = true;
       }
@@ -389,7 +389,7 @@ export default function FlappyBirdGameRefactored() {
   // Update enemy AI
   const updateEnemyAI = (enemy: Enemy, state: GameState, currentTime: number) => {
     const { player } = state;
-    const dist = distance(enemy, player);
+    const dist = _distance(enemy, player);
     
     // Update alert level
     if (dist < AI.DETECTION_RANGE) {
@@ -439,7 +439,7 @@ export default function FlappyBirdGameRefactored() {
       case 'cover':
         // Move to cover position
         if (enemy.coverPosition) {
-          const coverDist = distance(enemy, enemy.coverPosition);
+          const coverDist = _distance(enemy, enemy.coverPosition);
           if (coverDist > 10) {
             const dx = enemy.coverPosition.x - enemy.x;
             enemy.x += Math.sign(dx) * AI.CHASE_SPEED;
@@ -468,8 +468,8 @@ export default function FlappyBirdGameRefactored() {
     const angleToPlayer = angle(enemy, player);
     
     state.enemyBullets.push({
-      x: enemy.x + ENEMY_SIZES[enemy.type].WIDTH / 2,
-      y: enemy.y + ENEMY_SIZES[enemy.type].HEIGHT / 2,
+      x: enemy.x + ENEMY_SIZES[enemy.type.toUpperCase() as keyof typeof ENEMY_SIZES].WIDTH / 2,
+      y: enemy.y + ENEMY_SIZES[enemy.type.toUpperCase() as keyof typeof ENEMY_SIZES].HEIGHT / 2,
       velocityX: Math.cos(angleToPlayer) * PHYSICS.ENEMY_BULLET_SPEED,
       velocityY: Math.sin(angleToPlayer) * PHYSICS.ENEMY_BULLET_SPEED,
       damage: 10,
@@ -546,14 +546,14 @@ export default function FlappyBirdGameRefactored() {
   
   // Check all collisions
   const checkAllCollisions = (state: GameState) => {
-    const { player, enemies, bullets, enemyBullets, obstacles, powerups } = state;
+    const { player, enemies, bullets, enemyBullets, obstacles: _obstacles, powerups } = state;
     
     // Player-enemy collisions
     if (player.spawnImmunity <= 0) {
       enemies.forEach(enemy => {
         if (checkCollision(
           { ...player, width: PLAYER.WIDTH, height: PLAYER.HEIGHT },
-          { ...enemy, width: ENEMY_SIZES[enemy.type].WIDTH, height: ENEMY_SIZES[enemy.type].HEIGHT }
+          { ...enemy, width: ENEMY_SIZES[enemy.type.toUpperCase() as keyof typeof ENEMY_SIZES].WIDTH, height: ENEMY_SIZES[enemy.type.toUpperCase() as keyof typeof ENEMY_SIZES].HEIGHT }
         )) {
           player.health -= 10;
           player.spawnImmunity = 1000;
@@ -569,7 +569,7 @@ export default function FlappyBirdGameRefactored() {
       enemies.forEach(enemy => {
         if (checkCollision(
           { ...bullet, width: 10, height: 10 },
-          { ...enemy, width: ENEMY_SIZES[enemy.type].WIDTH, height: ENEMY_SIZES[enemy.type].HEIGHT }
+          { ...enemy, width: ENEMY_SIZES[enemy.type.toUpperCase() as keyof typeof ENEMY_SIZES].WIDTH, height: ENEMY_SIZES[enemy.type.toUpperCase() as keyof typeof ENEMY_SIZES].HEIGHT }
         )) {
           enemy.health -= bullet.damage;
           enemy.hitFlash = 10;
@@ -646,7 +646,7 @@ export default function FlappyBirdGameRefactored() {
       
       switch (objective.type) {
         case 'escape':
-          if (objective.target && distance(state.player, objective.target) < 50) {
+          if (objective.target && _distance(state.player, objective.target) < 50) {
             objective.completed = true;
             objective.currentCount = 1;
           }
@@ -719,7 +719,7 @@ export default function FlappyBirdGameRefactored() {
         
         state.enemies.push({
           x,
-          y: GAME_DIMENSIONS.GROUND_HEIGHT - ENEMY_SIZES[enemyType].HEIGHT,
+          y: GAME_DIMENSIONS.GROUND_HEIGHT - ENEMY_SIZES[enemyType.toUpperCase() as keyof typeof ENEMY_SIZES].HEIGHT,
           velocityY: 0,
           health: enemyType === 'dog' ? 40 : 60,
           maxHealth: enemyType === 'dog' ? 40 : 60,
@@ -756,7 +756,7 @@ export default function FlappyBirdGameRefactored() {
     const state = gameStateRef.current;
     
     // Clear canvas
-    ctx.fillStyle = COLORS.BACKGROUND[state.level.theme];
+    ctx.fillStyle = COLORS.BACKGROUND[state.level.theme.toUpperCase() as keyof typeof COLORS.BACKGROUND];
     ctx.fillRect(0, 0, GAME_DIMENSIONS.WIDTH, GAME_DIMENSIONS.HEIGHT);
     
     // Save context and apply camera transform
@@ -841,7 +841,7 @@ export default function FlappyBirdGameRefactored() {
     state.enemies.forEach(enemy => {
       if (!isInViewport(enemy, state.camera.x)) return;
       
-      const size = ENEMY_SIZES[enemy.type];
+      const size = ENEMY_SIZES[enemy.type.toUpperCase() as keyof typeof ENEMY_SIZES];
       
       // Apply hit flash
       if (enemy.hitFlash && enemy.hitFlash > 0) {

@@ -121,22 +121,7 @@ interface GameState {
 
 type WeaponType = 'pistol' | 'shotgun' | 'rifle' | 'grenade';
 
-// Utility Functions
-const calculateDistance = (x1: number, y1: number, x2: number, y2: number): number => {
-  return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-};
-
-const clamp = (value: number, min: number, max: number): number => {
-  return Math.max(min, Math.min(max, value));
-};
-
-const randomRange = (min: number, max: number): number => {
-  return Math.random() * (max - min) + min;
-};
-
-const isInViewport = (x: number, cameraX: number, margin: number = 100): boolean => {
-  return x > cameraX - margin && x < cameraX + GAME_CONFIG.canvas.width + margin;
-};
+// Utility Functions (removed unused functions)
 
 // Game Configuration Constants
 const GAME_CONFIG = {
@@ -1061,12 +1046,13 @@ export default function FlappyBirdGame() {
     }
     
     // Play a sound effect (reuse pickup sound)
-    playSound('pickup');
+    playSound('powerup');
     
     // Visual feedback - create some particles
     createParticles(
       state.player.x + GAME_CONFIG.canvas.width / 2 - state.camera.x,
       state.player.y + 15,
+      'spark',
       WEAPONS_INFO[state.player.weapon].color,
       5
     );
@@ -1541,7 +1527,6 @@ export default function FlappyBirdGame() {
       ctx.fill();
       
       // BODY - More dynamic pose
-      const shoulderOffset = walkFrame < 2 ? -1 : 1;
       
       // Torso (tapered)
       ctx.fillStyle = "#1565c0";

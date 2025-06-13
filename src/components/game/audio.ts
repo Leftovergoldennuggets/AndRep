@@ -125,7 +125,7 @@ export class AudioSystem {
     }
   }
 
-  playBossMusic(start: boolean): void {
+  playBossMusic(_start: boolean): void {
     // Placeholder for boss music implementation
     // In a real implementation, this would load and play an audio file
   }
