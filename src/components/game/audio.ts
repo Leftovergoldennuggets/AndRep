@@ -78,7 +78,7 @@ export class AudioSystem {
         oscillator.stop(currentTime + 0.3);
         break;
         
-      case 'explosion':
+      case 'explosion': {
         // Create noise for explosion
         const bufferSize = this.audioContext.sampleRate * 0.3;
         const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
@@ -101,6 +101,7 @@ export class AudioSystem {
         whiteNoise.start(currentTime);
         whiteNoise.stop(currentTime + 0.3);
         break;
+      }
         
       case 'dash':
         oscillator.type = 'sine';

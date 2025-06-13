@@ -447,7 +447,7 @@ export default function FlappyBirdGameRefactored() {
         }
         break;
         
-      case 'retreat':
+      case 'retreat': {
         // Move away from player
         const dx = enemy.x - player.x;
         enemy.x += Math.sign(dx) * AI.CHASE_SPEED;
@@ -456,6 +456,7 @@ export default function FlappyBirdGameRefactored() {
           enemy.aiState = 'patrol';
         }
         break;
+      }
     }
   };
   
