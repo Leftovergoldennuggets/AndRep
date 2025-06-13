@@ -312,6 +312,7 @@ export default function FlappyBirdGame() {
   const [gameState, setGameState] = useState<"start" | "story" | "playing" | "paused" | "gameOver" | "missionComplete" | "victoryIllustration" | "levelComplete">("start");
   const [distance, setDistance] = useState(0);
   const [storySlide, setStorySlide] = useState(0);
+  const [showControls, setShowControls] = useState(false);
   
   // Sound system using Web Audio API
   const audioContext = useRef<AudioContext | null>(null);
@@ -3373,6 +3374,10 @@ export default function FlappyBirdGame() {
           setGameState("playing");
         }
       }
+      if (e.code === "KeyC") {
+        e.preventDefault();
+        setShowControls(!showControls);
+      }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -3832,6 +3837,116 @@ export default function FlappyBirdGame() {
           >
             PLAY AGAIN
           </button>
+        </div>
+      )}
+
+      {/* Controls Hint Button */}
+      {(gameState === "playing" || gameState === "paused") && !showControls && (
+        <div className="absolute top-4 right-4 z-40">
+          <button
+            onClick={() => setShowControls(true)}
+            className="px-3 py-2 bg-gray-800 bg-opacity-80 border border-gray-500 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+            title="Show Controls (Press C)"
+          >
+            <span className="font-mono">Controls (C)</span>
+          </button>
+        </div>
+      )}
+
+      {/* Controls Overlay */}
+      {showControls && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-90 z-50">
+          <div className="max-w-4xl mx-auto p-8 text-center">
+            <div className="bg-gray-900 border-2 border-cyan-300 rounded-lg p-8 shadow-2xl">
+              <h2 className="text-4xl font-bold mb-6 text-cyan-300" style={{ fontFamily: 'monospace' }}>
+                GAME CONTROLS
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-white">
+                {/* Movement Controls */}
+                <div className="space-y-4">
+                  <h3 className="text-2xl font-bold text-yellow-400 mb-4" style={{ fontFamily: 'monospace' }}>
+                    MOVEMENT
+                  </h3>
+                  <div className="space-y-3 text-left">
+                    <div className="flex items-center gap-4">
+                      <div className="flex gap-1">
+                        <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">←</kbd>
+                        <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">A</kbd>
+                      </div>
+                      <span>Move Left</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex gap-1">
+                        <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">→</kbd>
+                        <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">D</kbd>
+                      </div>
+                      <span>Move Right</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex gap-1">
+                        <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">↑</kbd>
+                        <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">W</kbd>
+                        <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded">SPACE</kbd>
+                      </div>
+                      <span>Jump</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Combat Controls */}
+                <div className="space-y-4">
+                  <h3 className="text-2xl font-bold text-red-400 mb-4" style={{ fontFamily: 'monospace' }}>
+                    COMBAT
+                  </h3>
+                  <div className="space-y-3 text-left">
+                    <div className="flex items-center gap-4">
+                      <div className="flex gap-1">
+                        <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">X</kbd>
+                        <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">Z</kbd>
+                      </div>
+                      <span>Shoot</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">Q</kbd>
+                      <span className="text-yellow-300">Rebel Dash</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">E</kbd>
+                      <span className="text-orange-300">Switch Weapon</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Game Controls */}
+              <div className="mt-8 pt-6 border-t border-gray-600">
+                <h3 className="text-2xl font-bold text-green-400 mb-4" style={{ fontFamily: 'monospace' }}>
+                  GAME
+                </h3>
+                <div className="flex justify-center gap-8 text-left">
+                  <div className="flex items-center gap-4">
+                    <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded">ESC</kbd>
+                    <span>Pause/Resume</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">C</kbd>
+                    <span>Show/Hide Controls</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8">
+                <button
+                  onClick={() => setShowControls(false)}
+                  className="px-8 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors text-xl font-bold"
+                  style={{ fontFamily: 'monospace' }}
+                >
+                  CLOSE (C)
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
