@@ -206,45 +206,45 @@ const WEAPONS_INFO = {
 
 const STORY_SLIDES = [
   {
-    title: "THE LEGEND OF RED",
-    subtitle: "PRIDE OF BLACKWATER FARM",
-    text: "In the depths of Blackwater Maximum Security Prison, one rooster stood above all others. Red the Magnificent - three-time champion, beloved by all, and guardian of the farm. His golden feathers caught the morning sun as he proudly protected his fellow animals...",
+    title: "PRIDE OF THE FARM",
+    subtitle: "RED THE MAGNIFICENT",
+    text: "Three-time champion. Beloved protector. Every morning, Red's crow meant safety. Every night, his watch meant peace. The animals slept soundly knowing their guardian stood tall.",
     image: "/panel1.png",
     color: "text-yellow-400",
     bgColor: "from-yellow-900 to-yellow-700",
     panelBg: "bg-yellow-100 text-black"
   },
   {
-    title: "DARKNESS REVEALED",
-    subtitle: "THE CORRUPT CONSPIRACY", 
-    text: "But beneath the surface, evil festered. Red discovered the horrifying truth - corrupt guards were torturing innocent farm animals for sport. What he witnessed that dark night would haunt him forever. The system was rotten to its core...",
+    title: "HORROR UNVEILED",
+    subtitle: "THE DARK SECRET", 
+    text: "Red heard the screams first. Then came the laughter - cruel, cold, inhuman. Behind the barn, guards tortured innocents for sport. His heart shattered. Everything he protected was a lie.",
     image: "/panel2.png",
     color: "text-red-400",
     bgColor: "from-red-900 to-red-700", 
     panelBg: "bg-red-100 text-black"
   },
   {
-    title: "BLOOD AND BETRAYAL",
-    subtitle: "WILBUR'S ULTIMATE SACRIFICE",
-    text: "When Wilbur the pig - Red's dearest friend and moral compass - stepped forward to shield the younglings from brutal punishment, the guards showed no mercy. With his dying breath, Wilbur whispered: 'Promise me... fight for them all...'",
+    title: "WILBUR'S SACRIFICE",
+    subtitle: "A HERO'S FAREWELL",
+    text: "\"No! Take me instead!\" Wilbur threw himself between the guards and the piglets. The baton came down hard. As Red held his dying friend, Wilbur whispered: \"Promise me... save them all.\"",
     image: "/panel3.png",
     color: "text-purple-400",
     bgColor: "from-purple-900 to-purple-700",
     panelBg: "bg-purple-100 text-black"
   },
   {
-    title: "VENGEANCE UNLEASHED",
-    subtitle: "THE ONE-ROOSTER WAR",
-    text: "Grief transformed into fury. Fury became unstoppable force. In a blaze of righteous violence, Red carved through the corrupt guards like a feathered hurricane. Three fell that night. Justice was served in blood and thunder. The rebellion had begun...",
+    title: "RAGE UNLEASHED",
+    subtitle: "JUSTICE IN BLOOD",
+    text: "Something primal awakened. Red's talons found flesh. His beak tasted vengeance. Three guards fell before they could scream. In the carnage, a rebel was born.",
     image: "/panel4.png",
     color: "text-orange-400",
     bgColor: "from-orange-900 to-orange-700",
     panelBg: "bg-orange-100 text-black"
   },
   {
-    title: "THE FINAL GAMBIT",
-    subtitle: "ESCAPE OR DIE TRYING",
-    text: "Now branded the most dangerous prisoner in Blackwater's history, Red faces his ultimate test. Locked in maximum security, surrounded by enemies, with only his wits and warrior spirit. Tonight, he breaks free - or dies in the attempt. For Wilbur. For justice. For freedom.",
+    title: "FREEDOM OR DEATH",
+    subtitle: "THE GREAT ESCAPE",
+    text: "Maximum security can't hold a promise. Tonight, Red runs the gauntlet. For every friend lost. For every tear shed. The Rebel Rooster rises.",
     image: "/panel5.png",
     color: "text-green-400", 
     bgColor: "from-green-900 to-green-700",
@@ -490,8 +490,10 @@ export default function FlappyBirdGame() {
         width: 40,
         height: GAME_CONFIG.canvas.height - GAME_CONFIG.world.groundLevel,
         type: 'ground',
-        isDestructible: false,
+        isDestructible: true,
         isInteractive: false,
+        health: 50,
+        maxHealth: 50,
       });
     }
     
@@ -512,8 +514,10 @@ export default function FlappyBirdGame() {
           width: width,
           height: platformThickness,
           type: 'platform',
-          isDestructible: false,
+          isDestructible: true,
           isInteractive: false,
+          health: 30,
+          maxHealth: 30,
         });
         
         // 30% chance for a second level platform above
@@ -525,8 +529,10 @@ export default function FlappyBirdGame() {
             width: width * 0.7,
             height: platformThickness,
             type: 'platform',
-            isDestructible: false,
+            isDestructible: true,
             isInteractive: false,
+            health: 30,
+            maxHealth: 30,
           });
         }
       } else if (obstacleType < 0.75) {
@@ -551,8 +557,10 @@ export default function FlappyBirdGame() {
           width: 10,
           height: 60,
           type: 'fence',
-          isDestructible: false,
+          isDestructible: true,
           isInteractive: false,
+          health: 20,
+          maxHealth: 20,
         });
       }
     }
@@ -1427,7 +1435,7 @@ export default function FlappyBirdGame() {
     ctx.restore();
   }, []);
 
-  const drawEnemy = useCallback((ctx: CanvasRenderingContext2D, enemy: any, screenX: number) => {
+  const drawEnemy = useCallback((ctx: CanvasRenderingContext2D, enemy: any, screenX: number, playerX: number) => {
     const size = GAME_CONFIG.enemy.size;
     
     // Apply red tint if enemy was recently hit
@@ -1440,128 +1448,238 @@ export default function FlappyBirdGame() {
     }
     
     if (enemy.type === 'guard') {
-      // 1950s PRISON WARDEN - Classic blue police uniform
+      // DYNAMIC PRISON GUARD - More detailed and animated
       
-      // Draw shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-      ctx.fillRect(screenX, enemy.y + size + 2, size, 6);
+      // Draw dynamic shadow
+      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+      ctx.beginPath();
+      ctx.ellipse(screenX + 14, enemy.y + size + 4, 12, 3, 0, 0, Math.PI * 2);
+      ctx.fill();
       
-      // HEAD - 1950s style
-      ctx.fillStyle = "#f4c2a1"; // Classic skin tone
-      ctx.fillRect(screenX + 8, enemy.y + 4, 12, 10); // Head
+      // Walking animation frame
+      const walkFrame = Math.floor(Date.now() / 150) % 4;
+      const bobOffset = Math.sin(walkFrame * Math.PI / 2) * 2;
       
-      // 1950s WARDEN CAP - Classic police hat
-      ctx.fillStyle = "#1a237e"; // Deep police blue
-      ctx.fillRect(screenX + 6, enemy.y + 2, 16, 6); // Hat main
-      ctx.fillStyle = "#0d47a1"; // Darker blue for depth
-      ctx.fillRect(screenX + 7, enemy.y + 3, 14, 3); // Hat crown
+      // HEAD - More rounded and detailed
+      ctx.save();
       
-      // Hat visor - classic black leather
-      ctx.fillStyle = "#212121";
-      ctx.fillRect(screenX + 5, enemy.y + 6, 18, 2); // Visor
+      // Head shape (rounded)
+      ctx.fillStyle = "#f4c2a1";
+      ctx.beginPath();
+      ctx.arc(screenX + 14, enemy.y + 9 + bobOffset, 6, 0, Math.PI * 2);
+      ctx.fill();
       
-      // Police badge on hat
-      ctx.fillStyle = "#ffd700"; // Gold badge
-      ctx.fillRect(screenX + 12, enemy.y + 4, 4, 2);
-      ctx.fillStyle = "#ffed4e"; // Badge highlight
-      ctx.fillRect(screenX + 13, enemy.y + 4, 2, 1);
+      // Neck
+      ctx.fillRect(screenX + 12, enemy.y + 13 + bobOffset, 4, 3);
       
-      // FACE - Stern 1950s authority figure
-      // Eyes - authoritative and serious
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(screenX + 10, enemy.y + 8, 2, 2);
-      ctx.fillRect(screenX + 16, enemy.y + 8, 2, 2);
-      ctx.fillStyle = "#2e2e2e"; // Dark pupils
-      ctx.fillRect(screenX + 11, enemy.y + 8, 1, 2);
-      ctx.fillRect(screenX + 17, enemy.y + 8, 1, 2);
+      // POLICE CAP - More dynamic shape
+      ctx.fillStyle = "#1a237e";
+      ctx.beginPath();
+      ctx.moveTo(screenX + 8, enemy.y + 7 + bobOffset);
+      ctx.lineTo(screenX + 20, enemy.y + 7 + bobOffset);
+      ctx.lineTo(screenX + 22, enemy.y + 9 + bobOffset);
+      ctx.lineTo(screenX + 6, enemy.y + 9 + bobOffset);
+      ctx.closePath();
+      ctx.fill();
       
-      // Stern eyebrows
-      ctx.fillStyle = "#8d6e63";
-      ctx.fillRect(screenX + 9, enemy.y + 7, 3, 1);
-      ctx.fillRect(screenX + 16, enemy.y + 7, 3, 1);
-      
-      // Nose
-      ctx.fillStyle = "#e0a875";
-      ctx.fillRect(screenX + 13, enemy.y + 9, 2, 2);
-      
-      // Mustache - classic 1950s warden style
-      ctx.fillStyle = "#6d4c41";
-      ctx.fillRect(screenX + 11, enemy.y + 11, 6, 2);
-      
-      // Grim mouth
-      ctx.fillStyle = "#d32f2f";
-      ctx.fillRect(screenX + 12, enemy.y + 12, 4, 1);
-      
-      // BLUE POLICE UNIFORM - Classic 1950s style
-      const uniformGradient = ctx.createLinearGradient(screenX, enemy.y + 14, screenX, enemy.y + size);
-      uniformGradient.addColorStop(0, "#1565c0"); // Police blue
-      uniformGradient.addColorStop(0.5, "#0d47a1"); // Darker blue
-      uniformGradient.addColorStop(1, "#0a237e"); // Deep blue
-      ctx.fillStyle = uniformGradient;
-      ctx.fillRect(screenX + 6, enemy.y + 14, 16, size - 16);
-      
-      // UNIFORM DETAILS - Police shirt styling
-      // Collar
+      // Cap top
       ctx.fillStyle = "#0d47a1";
-      ctx.fillRect(screenX + 8, enemy.y + 14, 12, 3);
+      ctx.beginPath();
+      ctx.arc(screenX + 14, enemy.y + 5 + bobOffset, 7, Math.PI, 0);
+      ctx.fill();
       
-      // Police badge on chest
-      ctx.fillStyle = "#ffd700"; // Gold police badge
-      ctx.fillRect(screenX + 8, enemy.y + 16, 4, 3);
-      ctx.fillStyle = "#ffed4e"; // Badge highlight
-      ctx.fillRect(screenX + 9, enemy.y + 17, 2, 1);
-      
-      // Name tag
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(screenX + 14, enemy.y + 16, 6, 2);
+      // Visor
       ctx.fillStyle = "#000000";
-      ctx.fillRect(screenX + 15, enemy.y + 16, 4, 1);
+      ctx.fillRect(screenX + 7, enemy.y + 8 + bobOffset, 14, 2);
       
-      // Uniform buttons - brass buttons down the front
-      ctx.fillStyle = "#ffb300"; // Brass color
-      ctx.fillRect(screenX + 13, enemy.y + 20, 2, 2);
-      ctx.fillRect(screenX + 13, enemy.y + 24, 2, 2);
-      ctx.fillRect(screenX + 13, enemy.y + 28, 2, 2);
-      
-      // Shoulder epaulettes - rank insignia
+      // Badge on cap (star shape)
       ctx.fillStyle = "#ffd700";
-      ctx.fillRect(screenX + 6, enemy.y + 15, 3, 1);
-      ctx.fillRect(screenX + 19, enemy.y + 15, 3, 1);
+      ctx.save();
+      ctx.translate(screenX + 14, enemy.y + 5 + bobOffset);
+      ctx.scale(0.3, 0.3);
+      for (let i = 0; i < 5; i++) {
+        ctx.rotate(Math.PI * 2 / 5);
+        ctx.fillRect(-1, -6, 2, 6);
+      }
+      ctx.restore();
       
-      // ARMS - Blue uniform sleeves
+      // FACE - More expressive
+      // Eyes with animation
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(screenX + 10, enemy.y + 9 + bobOffset, 3, 2);
+      ctx.fillRect(screenX + 15, enemy.y + 9 + bobOffset, 3, 2);
+      
+      // Pupils (looking at player)
+      const playerDir = playerX < enemy.x ? 0 : 1;
+      ctx.fillStyle = "#1a1a1a";
+      ctx.fillRect(screenX + 10 + playerDir, enemy.y + 9 + bobOffset, 2, 2);
+      ctx.fillRect(screenX + 15 + playerDir, enemy.y + 9 + bobOffset, 2, 2);
+      
+      // Angry eyebrows
+      ctx.strokeStyle = "#4a4a4a";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(screenX + 9, enemy.y + 8 + bobOffset);
+      ctx.lineTo(screenX + 12, enemy.y + 9 + bobOffset);
+      ctx.moveTo(screenX + 16, enemy.y + 9 + bobOffset);
+      ctx.lineTo(screenX + 19, enemy.y + 8 + bobOffset);
+      ctx.stroke();
+      
+      // Nose (triangular)
+      ctx.fillStyle = "#e0a875";
+      ctx.beginPath();
+      ctx.moveTo(screenX + 14, enemy.y + 10 + bobOffset);
+      ctx.lineTo(screenX + 13, enemy.y + 12 + bobOffset);
+      ctx.lineTo(screenX + 15, enemy.y + 12 + bobOffset);
+      ctx.fill();
+      
+      // Mustache (curved)
+      ctx.fillStyle = "#6d4c41";
+      ctx.beginPath();
+      ctx.arc(screenX + 12, enemy.y + 12 + bobOffset, 2, 0, Math.PI);
+      ctx.arc(screenX + 16, enemy.y + 12 + bobOffset, 2, 0, Math.PI);
+      ctx.fill();
+      
+      // BODY - More dynamic pose
+      const shoulderOffset = walkFrame < 2 ? -1 : 1;
+      
+      // Torso (tapered)
       ctx.fillStyle = "#1565c0";
-      ctx.fillRect(screenX + 2, enemy.y + 18, 4, 8); // Left arm
-      ctx.fillRect(screenX + 22, enemy.y + 18, 4, 8); // Right arm
+      ctx.beginPath();
+      ctx.moveTo(screenX + 10, enemy.y + 16 + bobOffset);
+      ctx.lineTo(screenX + 18, enemy.y + 16 + bobOffset);
+      ctx.lineTo(screenX + 17, enemy.y + 32);
+      ctx.lineTo(screenX + 11, enemy.y + 32);
+      ctx.closePath();
+      ctx.fill();
       
-      // Hands - holding nightstick
-      ctx.fillStyle = "#f4c2a1"; // Skin tone
-      ctx.fillRect(screenX + 1, enemy.y + 24, 3, 4); // Left hand
-      ctx.fillRect(screenX + 24, enemy.y + 24, 3, 4); // Right hand
+      // Collar detail
+      ctx.fillStyle = "#0d47a1";
+      ctx.beginPath();
+      ctx.moveTo(screenX + 10, enemy.y + 16 + bobOffset);
+      ctx.lineTo(screenX + 18, enemy.y + 16 + bobOffset);
+      ctx.lineTo(screenX + 16, enemy.y + 18 + bobOffset);
+      ctx.lineTo(screenX + 12, enemy.y + 18 + bobOffset);
+      ctx.fill();
       
-      // NIGHTSTICK - Classic 1950s police baton
-      ctx.fillStyle = "#3e2723"; // Dark wood
-      ctx.fillRect(screenX - 8, enemy.y + 22, 12, 2);
-      ctx.fillStyle = "#5d4037"; // Wood grain
-      ctx.fillRect(screenX - 7, enemy.y + 22, 10, 1);
+      // Badge (shield shape)
+      ctx.fillStyle = "#ffd700";
+      ctx.beginPath();
+      ctx.moveTo(screenX + 10, enemy.y + 19 + bobOffset);
+      ctx.lineTo(screenX + 12, enemy.y + 19 + bobOffset);
+      ctx.lineTo(screenX + 12, enemy.y + 21 + bobOffset);
+      ctx.lineTo(screenX + 11, enemy.y + 22 + bobOffset);
+      ctx.lineTo(screenX + 10, enemy.y + 21 + bobOffset);
+      ctx.fill();
       
-      // Belt and holster
-      ctx.fillStyle = "#2e2e2e"; // Black leather belt
-      ctx.fillRect(screenX + 6, enemy.y + 30, 16, 2);
-      ctx.fillStyle = "#1a1a1a"; // Holster
-      ctx.fillRect(screenX + 19, enemy.y + 28, 4, 6);
+      // ARMS - Animated
+      const armSwing = Math.sin(walkFrame * Math.PI / 2) * 15;
       
-      // LEGS - Blue uniform pants
-      ctx.fillStyle = "#0d47a1"; // Police blue pants
-      ctx.fillRect(screenX + 8, enemy.y + size - 8, 5, 10); // Left leg
-      ctx.fillRect(screenX + 15, enemy.y + size - 8, 5, 10); // Right leg
+      // Left arm
+      ctx.fillStyle = "#1565c0";
+      ctx.save();
+      ctx.translate(screenX + 10, enemy.y + 18 + bobOffset);
+      ctx.rotate(armSwing * Math.PI / 180);
+      ctx.fillRect(-2, 0, 4, 10);
+      // Hand
+      ctx.fillStyle = "#f4c2a1";
+      ctx.beginPath();
+      ctx.arc(0, 10, 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
       
-      // CLASSIC BLACK POLICE SHOES
-      ctx.fillStyle = "#212121";
-      ctx.fillRect(screenX + 7, enemy.y + size - 2, 6, 4); // Left shoe
-      ctx.fillRect(screenX + 15, enemy.y + size - 2, 6, 4); // Right shoe
-      ctx.fillStyle = "#424242"; // Shoe shine
-      ctx.fillRect(screenX + 8, enemy.y + size - 1, 4, 1);
-      ctx.fillRect(screenX + 16, enemy.y + size - 1, 4, 1);
+      // Right arm with nightstick
+      ctx.save();
+      ctx.translate(screenX + 18, enemy.y + 18 + bobOffset);
+      ctx.rotate(-armSwing * Math.PI / 180);
+      ctx.fillStyle = "#1565c0";
+      ctx.fillRect(-2, 0, 4, 10);
+      
+      // Hand holding nightstick
+      ctx.fillStyle = "#f4c2a1";
+      ctx.beginPath();
+      ctx.arc(0, 10, 2, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Nightstick (at angle)
+      ctx.rotate(-30 * Math.PI / 180);
+      ctx.fillStyle = "#3e2723";
+      ctx.fillRect(-1, 8, 2, 12);
+      // Handle
+      ctx.fillStyle = "#2e2e2e";
+      ctx.fillRect(-2, 18, 4, 3);
+      ctx.restore();
+      
+      // Belt
+      ctx.fillStyle = "#2e2e2e";
+      ctx.fillRect(screenX + 9, enemy.y + 30, 10, 3);
+      // Belt buckle
+      ctx.fillStyle = "#c0c0c0";
+      ctx.fillRect(screenX + 13, enemy.y + 30, 2, 3);
+      
+      // LEGS - Walking animation
+      const legFrame = walkFrame % 2;
+      
+      // Left leg
+      ctx.fillStyle = "#0d47a1";
+      if (legFrame === 0) {
+        // Forward
+        ctx.beginPath();
+        ctx.moveTo(screenX + 11, enemy.y + 32);
+        ctx.lineTo(screenX + 13, enemy.y + 32);
+        ctx.lineTo(screenX + 12, enemy.y + 38);
+        ctx.lineTo(screenX + 10, enemy.y + 38);
+        ctx.fill();
+      } else {
+        // Back
+        ctx.beginPath();
+        ctx.moveTo(screenX + 11, enemy.y + 32);
+        ctx.lineTo(screenX + 13, enemy.y + 32);
+        ctx.lineTo(screenX + 14, enemy.y + 38);
+        ctx.lineTo(screenX + 12, enemy.y + 38);
+        ctx.fill();
+      }
+      
+      // Right leg
+      if (legFrame === 1) {
+        // Forward
+        ctx.beginPath();
+        ctx.moveTo(screenX + 15, enemy.y + 32);
+        ctx.lineTo(screenX + 17, enemy.y + 32);
+        ctx.lineTo(screenX + 16, enemy.y + 38);
+        ctx.lineTo(screenX + 14, enemy.y + 38);
+        ctx.fill();
+      } else {
+        // Back
+        ctx.beginPath();
+        ctx.moveTo(screenX + 15, enemy.y + 32);
+        ctx.lineTo(screenX + 17, enemy.y + 32);
+        ctx.lineTo(screenX + 18, enemy.y + 38);
+        ctx.lineTo(screenX + 16, enemy.y + 38);
+        ctx.fill();
+      }
+      
+      // SHOES - More detailed
+      ctx.fillStyle = "#1a1a1a";
+      // Left shoe
+      const leftShoeX = legFrame === 0 ? screenX + 9 : screenX + 11;
+      ctx.beginPath();
+      ctx.moveTo(leftShoeX, enemy.y + 38);
+      ctx.lineTo(leftShoeX + 5, enemy.y + 38);
+      ctx.lineTo(leftShoeX + 6, enemy.y + 40);
+      ctx.lineTo(leftShoeX - 1, enemy.y + 40);
+      ctx.fill();
+      
+      // Right shoe  
+      const rightShoeX = legFrame === 1 ? screenX + 13 : screenX + 15;
+      ctx.beginPath();
+      ctx.moveTo(rightShoeX, enemy.y + 38);
+      ctx.lineTo(rightShoeX + 5, enemy.y + 38);
+      ctx.lineTo(rightShoeX + 6, enemy.y + 40);
+      ctx.lineTo(rightShoeX - 1, enemy.y + 40);
+      ctx.fill();
+      
+      ctx.restore();
       
     } else if (enemy.type === 'dog') {
       // 1950s POLICE DOG - Classic German Shepherd
@@ -3006,7 +3124,7 @@ export default function FlappyBirdGame() {
       state.enemies.forEach((enemy) => {
         const screenX = enemy.x - state.camera.x;
         if (screenX > -GAME_CONFIG.enemy.size && screenX < GAME_CONFIG.canvas.width) {
-          drawEnemy(ctx, enemy, screenX);
+          drawEnemy(ctx, enemy, screenX, state.player.x);
         }
       });
 

@@ -6,6 +6,7 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
+  console.log("HomePage loading, about to render FlappyBirdGame");
   return (
     <div className="w-full h-full fixed inset-0 overflow-hidden">
       <FlappyBirdGame />
