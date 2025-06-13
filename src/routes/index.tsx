@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import FlappyBirdGame from "@/components/FlappyBirdGame";
+import FlappyBirdGame from "@/components/FlappyBirdGameRefactored";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
