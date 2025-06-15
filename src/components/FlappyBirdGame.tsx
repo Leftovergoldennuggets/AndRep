@@ -121,22 +121,7 @@ interface GameState {
 
 type WeaponType = 'pistol' | 'shotgun' | 'rifle' | 'grenade';
 
-// Utility Functions
-const calculateDistance = (x1: number, y1: number, x2: number, y2: number): number => {
-  return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-};
-
-const clamp = (value: number, min: number, max: number): number => {
-  return Math.max(min, Math.min(max, value));
-};
-
-const randomRange = (min: number, max: number): number => {
-  return Math.random() * (max - min) + min;
-};
-
-const isInViewport = (x: number, cameraX: number, margin: number = 100): boolean => {
-  return x > cameraX - margin && x < cameraX + GAME_CONFIG.canvas.width + margin;
-};
+// Utility Functions (removed unused functions)
 
 // Game Configuration Constants
 const GAME_CONFIG = {
@@ -327,6 +312,7 @@ export default function FlappyBirdGame() {
   const [gameState, setGameState] = useState<"start" | "story" | "playing" | "paused" | "gameOver" | "missionComplete" | "victoryIllustration" | "levelComplete">("start");
   const [distance, setDistance] = useState(0);
   const [storySlide, setStorySlide] = useState(0);
+  const [showControls, setShowControls] = useState(false);
   
   // Sound system using Web Audio API
   const audioContext = useRef<AudioContext | null>(null);
@@ -1061,12 +1047,13 @@ export default function FlappyBirdGame() {
     }
     
     // Play a sound effect (reuse pickup sound)
-    playSound('pickup');
+    playSound('powerup');
     
     // Visual feedback - create some particles
     createParticles(
       state.player.x + GAME_CONFIG.canvas.width / 2 - state.camera.x,
       state.player.y + 15,
+      'spark',
       WEAPONS_INFO[state.player.weapon].color,
       5
     );
@@ -1541,7 +1528,6 @@ export default function FlappyBirdGame() {
       ctx.fill();
       
       // BODY - More dynamic pose
-      const shoulderOffset = walkFrame < 2 ? -1 : 1;
       
       // Torso (tapered)
       ctx.fillStyle = "#1565c0";
@@ -1891,91 +1877,234 @@ export default function FlappyBirdGame() {
       
       switch (enemy.bossType) {
         case 'warden': {
-          // CORRUPT PRISON WARDEN - Enhanced intimidating design
-          const pixelSize = Math.max(1, Math.floor(bossSize / 32));
+          // CORRUPT PRISON WARDEN - Enhanced organic intimidating design
+          const time = Date.now() * 0.001;
+          const breathingOffset = Math.sin(time * 2) * 1.5; // Subtle breathing animation
+          const evilGlow = Math.sin(time * 3) * 0.3 + 0.7; // Pulsing evil aura
           
-          // MENACING SILHOUETTE - Dark shadow effect
-          ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-          ctx.fillRect(screenX + 2, enemy.y + 2, bossSize + 4, bossSize + 4);
+          // MENACING AURA - Pulsing dark energy
+          const gradient = ctx.createRadialGradient(
+            screenX + bossSize/2, enemy.y + bossSize/2, 0,
+            screenX + bossSize/2, enemy.y + bossSize/2, bossSize * 0.8
+          );
+          gradient.addColorStop(0, `rgba(150, 0, 0, ${evilGlow * 0.3})`);
+          gradient.addColorStop(1, 'rgba(0, 0, 0, 0.1)');
+          ctx.fillStyle = gradient;
+          ctx.fillRect(screenX - 10, enemy.y - 10, bossSize + 20, bossSize + 20);
           
-          // LARGE SCARRED HEAD - Battle-worn features
-          ctx.fillStyle = "#b8956e"; // Darker, weathered skin
-          ctx.fillRect(screenX + 8*pixelSize, enemy.y + 2*pixelSize, 16*pixelSize, 14*pixelSize);
+          // IMPOSING SILHOUETTE - Dynamic shadow
+          ctx.fillStyle = `rgba(0, 0, 0, ${0.4 + evilGlow * 0.1})`;
+          ctx.beginPath();
+          ctx.ellipse(screenX + bossSize/2, enemy.y + bossSize + 5, bossSize/2 + 3, 8, 0, 0, Math.PI * 2);
+          ctx.fill();
           
-          // FACIAL SCARS - Cross scar over left eye
-          ctx.fillStyle = "#8b6f47";
-          ctx.fillRect(screenX + 10*pixelSize, enemy.y + 4*pixelSize, 2*pixelSize, 8*pixelSize);
-          ctx.fillRect(screenX + 8*pixelSize, enemy.y + 6*pixelSize, 6*pixelSize, 2*pixelSize);
+          // MUSCULAR HEAD - Organic rounded shape with breathing
+          ctx.fillStyle = "#a67c5a"; // Weathered skin tone
+          ctx.beginPath();
+          ctx.ellipse(
+            screenX + bossSize/2, 
+            enemy.y + 15 + breathingOffset * 0.5, 
+            18, 16 + breathingOffset, 
+            0, 0, Math.PI * 2
+          );
+          ctx.fill();
           
-          // MENACING EYES - Glowing red with rage
+          // Head shading for dimension
+          ctx.fillStyle = "#8b6b47";
+          ctx.beginPath();
+          ctx.ellipse(screenX + bossSize/2 + 2, enemy.y + 18 + breathingOffset * 0.5, 15, 13, 0, 0, Math.PI);
+          ctx.fill();
+          
+          // INTIMIDATING FACIAL SCARS - Jagged battle wounds
+          ctx.strokeStyle = "#6b4a2a";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          // Diagonal scar across left eye
+          ctx.moveTo(screenX + 15, enemy.y + 10);
+          ctx.lineTo(screenX + 25, enemy.y + 22);
+          // Vertical scar on forehead
+          ctx.moveTo(screenX + 30, enemy.y + 8);
+          ctx.lineTo(screenX + 32, enemy.y + 18);
+          ctx.stroke();
+          
+          // PIERCING EVIL EYES - Glowing with malice
+          const eyeGlow = Math.sin(time * 4) * 0.2 + 0.8;
           ctx.fillStyle = "#ffffff";
-          ctx.fillRect(screenX + 10*pixelSize, enemy.y + 6*pixelSize, 4*pixelSize, 3*pixelSize);
-          ctx.fillRect(screenX + 18*pixelSize, enemy.y + 6*pixelSize, 4*pixelSize, 3*pixelSize);
-          ctx.fillStyle = "#ff0000"; // Blood-red pupils
-          ctx.fillRect(screenX + 11*pixelSize, enemy.y + 7*pixelSize, 2*pixelSize, 2*pixelSize);
-          ctx.fillRect(screenX + 19*pixelSize, enemy.y + 7*pixelSize, 2*pixelSize, 2*pixelSize);
+          ctx.beginPath();
+          ctx.ellipse(screenX + 20, enemy.y + 16, 4, 3, 0, 0, Math.PI * 2);
+          ctx.ellipse(screenX + 32, enemy.y + 16, 4, 3, 0, 0, Math.PI * 2);
+          ctx.fill();
           
-          // ANGRY FURROWED BROW
-          ctx.fillStyle = "#8b6f47";
-          ctx.fillRect(screenX + 9*pixelSize, enemy.y + 5*pixelSize, 6*pixelSize, pixelSize);
-          ctx.fillRect(screenX + 17*pixelSize, enemy.y + 5*pixelSize, 6*pixelSize, pixelSize);
+          // Evil red pupils with glow effect
+          ctx.fillStyle = `rgb(${255 * eyeGlow}, 0, 0)`;
+          ctx.beginPath();
+          ctx.ellipse(screenX + 20, enemy.y + 16, 2, 2, 0, 0, Math.PI * 2);
+          ctx.ellipse(screenX + 32, enemy.y + 16, 2, 2, 0, 0, Math.PI * 2);
+          ctx.fill();
           
-          // WARDEN CAP - More detailed and intimidating
-          ctx.fillStyle = "#0a0a0a"; // Darker black
-          ctx.fillRect(screenX + 6*pixelSize, enemy.y, 20*pixelSize, 4*pixelSize);
-          ctx.fillRect(screenX + 7*pixelSize, enemy.y - 3*pixelSize, 18*pixelSize, 3*pixelSize);
+          // Eye glow effect
+          ctx.shadowColor = '#ff0000';
+          ctx.shadowBlur = 8;
+          ctx.fillStyle = '#ff4444';
+          ctx.beginPath();
+          ctx.ellipse(screenX + 20, enemy.y + 16, 1, 1, 0, 0, Math.PI * 2);
+          ctx.ellipse(screenX + 32, enemy.y + 16, 1, 1, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
           
-          // Cap badge - Skull and crossbones
+          // MENACING BROW - Furrowed with anger
+          ctx.fillStyle = "#8b6b47";
+          ctx.beginPath();
+          ctx.moveTo(screenX + 14, enemy.y + 12);
+          ctx.lineTo(screenX + 26, enemy.y + 10);
+          ctx.lineTo(screenX + 26, enemy.y + 13);
+          ctx.lineTo(screenX + 14, enemy.y + 15);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(screenX + 28, enemy.y + 10);
+          ctx.lineTo(screenX + 38, enemy.y + 12);
+          ctx.lineTo(screenX + 38, enemy.y + 15);
+          ctx.lineTo(screenX + 28, enemy.y + 13);
+          ctx.fill();
+          
+          // WARDEN CAP - Military style with curves
+          ctx.fillStyle = "#1a1a1a";
+          ctx.beginPath();
+          ctx.ellipse(screenX + bossSize/2, enemy.y + 5, 22, 8, 0, 0, Math.PI * 2);
+          ctx.fill();
+          
+          // Cap visor - curved and imposing
+          ctx.fillStyle = "#0d0d0d";
+          ctx.beginPath();
+          ctx.ellipse(screenX + bossSize/2, enemy.y + 8, 20, 4, 0, 0, Math.PI);
+          ctx.fill();
+          
+          // Cap badge - Menacing skull with glow
           ctx.fillStyle = "#ffd700";
-          ctx.fillRect(screenX + 13*pixelSize, enemy.y + pixelSize, 6*pixelSize, 3*pixelSize);
+          ctx.beginPath();
+          ctx.ellipse(screenX + bossSize/2, enemy.y + 4, 6, 4, 0, 0, Math.PI * 2);
+          ctx.fill();
+          
+          // Skull details
           ctx.fillStyle = "#000000";
-          ctx.fillRect(screenX + 14*pixelSize, enemy.y + pixelSize, 2*pixelSize, pixelSize);
-          ctx.fillRect(screenX + 17*pixelSize, enemy.y + pixelSize, 2*pixelSize, pixelSize);
-          ctx.fillRect(screenX + 15*pixelSize, enemy.y + 2*pixelSize, 2*pixelSize, pixelSize);
+          ctx.fillRect(screenX + bossSize/2 - 2, enemy.y + 2, 2, 2); // Left eye socket
+          ctx.fillRect(screenX + bossSize/2 + 1, enemy.y + 2, 2, 2); // Right eye socket
+          ctx.fillRect(screenX + bossSize/2, enemy.y + 5, 1, 2); // Nasal cavity
           
-          // MASSIVE MUSCULAR BODY - Dark uniform with details
-          ctx.fillStyle = "#0a0a0a";
-          ctx.fillRect(screenX + 4*pixelSize, enemy.y + 16*pixelSize, 24*pixelSize, bossSize - 22*pixelSize);
+          // IMPOSING MUSCULAR BODY - Organic shape with breathing
+          ctx.fillStyle = "#1a1a1a";
+          ctx.beginPath();
+          ctx.roundRect(
+            screenX + 8, 
+            enemy.y + 32 + breathingOffset, 
+            bossSize - 16, 
+            bossSize - 40 + breathingOffset * 2, 
+            8
+          );
+          ctx.fill();
           
-          // Uniform details - Rank stripes
-          ctx.fillStyle = "#ffd700";
-          for (let stripe = 0; stripe < 4; stripe++) {
-            ctx.fillRect(screenX + 6*pixelSize, enemy.y + 18*pixelSize + stripe * 3*pixelSize, 8*pixelSize, pixelSize);
-          }
-          
-          // Body armor plating
-          ctx.fillStyle = "#333333";
-          ctx.fillRect(screenX + 8*pixelSize, enemy.y + 20*pixelSize, 16*pixelSize, 8*pixelSize);
-          ctx.fillStyle = "#555555";
-          ctx.fillRect(screenX + 10*pixelSize, enemy.y + 22*pixelSize, 4*pixelSize, 4*pixelSize);
-          ctx.fillRect(screenX + 18*pixelSize, enemy.y + 22*pixelSize, 4*pixelSize, 4*pixelSize);
-          
-          // MASSIVE COMBAT SHOTGUN - More detailed and threatening
+          // Body shading for muscle definition
           ctx.fillStyle = "#2a2a2a";
-          ctx.fillRect(screenX - 8*pixelSize, enemy.y + 18*pixelSize, 16*pixelSize, 4*pixelSize);
+          ctx.beginPath();
+          ctx.roundRect(screenX + 12, enemy.y + 36, bossSize - 24, bossSize - 50, 6);
+          ctx.fill();
           
-          // Shotgun details
+          // Uniform rank stripes - glowing gold
+          ctx.fillStyle = "#ffd700";
+          ctx.shadowColor = '#ffaa00';
+          ctx.shadowBlur = 4;
+          for (let stripe = 0; stripe < 4; stripe++) {
+            ctx.beginPath();
+            ctx.roundRect(
+              screenX + 10, 
+              enemy.y + 38 + stripe * 6, 
+              12, 2, 1
+            );
+            ctx.fill();
+          }
+          ctx.shadowBlur = 0;
+          
+          // TACTICAL BODY ARMOR - Curved plates
+          ctx.fillStyle = "#444444";
+          ctx.beginPath();
+          ctx.roundRect(screenX + 18, enemy.y + 40, 20, 16, 4);
+          ctx.fill();
+          
+          // Armor highlights
           ctx.fillStyle = "#666666";
-          ctx.fillRect(screenX - 10*pixelSize, enemy.y + 19*pixelSize, 3*pixelSize, 2*pixelSize);
-          ctx.fillRect(screenX + 6*pixelSize, enemy.y + 19*pixelSize, 4*pixelSize, 2*pixelSize);
+          ctx.beginPath();
+          ctx.roundRect(screenX + 20, enemy.y + 42, 6, 6, 2);
+          ctx.roundRect(screenX + 30, enemy.y + 42, 6, 6, 2);
+          ctx.fill();
           
-          // Muzzle flash effect (if recently fired)
+          // MASSIVE COMBAT SHOTGUN - Sleek and deadly
+          const weaponY = enemy.y + 36 + breathingOffset * 0.5;
+          ctx.fillStyle = "#333333";
+          ctx.beginPath();
+          ctx.roundRect(screenX - 12, weaponY, 24, 6, 3);
+          ctx.fill();
+          
+          // Shotgun barrel
+          ctx.fillStyle = "#555555";
+          ctx.beginPath();
+          ctx.roundRect(screenX - 16, weaponY + 1, 6, 4, 2);
+          ctx.fill();
+          
+          // Weapon details
+          ctx.fillStyle = "#777777";
+          ctx.beginPath();
+          ctx.roundRect(screenX + 8, weaponY + 2, 6, 2, 1);
+          ctx.fill();
+          
+          // Muzzle flash effect (if recently fired) - Enhanced
           if (Date.now() - enemy.lastShotTime < 200) {
-            ctx.fillStyle = "#ffff00";
-            ctx.fillRect(screenX - 12*pixelSize, enemy.y + 17*pixelSize, 4*pixelSize, 6*pixelSize);
-            ctx.fillStyle = "#ff8800";
-            ctx.fillRect(screenX - 10*pixelSize, enemy.y + 18*pixelSize, 2*pixelSize, 4*pixelSize);
+            const flashIntensity = Math.max(0, 1 - (Date.now() - enemy.lastShotTime) / 200);
+            
+            // Outer flash
+            ctx.fillStyle = `rgba(255, 255, 0, ${flashIntensity * 0.8})`;
+            ctx.beginPath();
+            ctx.ellipse(screenX - 18, weaponY + 3, 8 * flashIntensity, 4 * flashIntensity, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Inner flash
+            ctx.fillStyle = `rgba(255, 140, 0, ${flashIntensity})`;
+            ctx.beginPath();
+            ctx.ellipse(screenX - 16, weaponY + 3, 4 * flashIntensity, 2 * flashIntensity, 0, 0, Math.PI * 2);
+            ctx.fill();
           }
           
-          // MASSIVE HANDS/ARMS
-          ctx.fillStyle = "#b8956e";
-          ctx.fillRect(screenX + 26*pixelSize, enemy.y + 16*pixelSize, 6*pixelSize, 8*pixelSize);
-          ctx.fillRect(screenX - 4*pixelSize, enemy.y + 16*pixelSize, 6*pixelSize, 8*pixelSize);
+          // POWERFUL ARMS - Muscular and organic
+          ctx.fillStyle = "#a67c5a";
+          // Left arm (holding weapon)
+          ctx.beginPath();
+          ctx.ellipse(screenX - 2, enemy.y + 30, 8, 16, -0.3, 0, Math.PI * 2);
+          ctx.fill();
           
-          // Prison keys hanging from belt
+          // Right arm
+          ctx.beginPath();
+          ctx.ellipse(screenX + bossSize + 2, enemy.y + 30, 8, 16, 0.3, 0, Math.PI * 2);
+          ctx.fill();
+          
+          // Hands - clenched fists
+          ctx.fillStyle = "#957048";
+          ctx.beginPath();
+          ctx.ellipse(screenX - 6, enemy.y + 42, 5, 6, 0, 0, Math.PI * 2);
+          ctx.ellipse(screenX + bossSize + 6, enemy.y + 42, 5, 6, 0, 0, Math.PI * 2);
+          ctx.fill();
+          
+          // PRISON KEYS - Jangling with movement
+          const keySwing = Math.sin(time * 8) * 3;
           ctx.fillStyle = "#c0c0c0";
-          ctx.fillRect(screenX + 20*pixelSize, enemy.y + 28*pixelSize, 2*pixelSize, 6*pixelSize);
-          ctx.fillRect(screenX + 18*pixelSize, enemy.y + 30*pixelSize, 2*pixelSize, 2*pixelSize);
+          ctx.beginPath();
+          ctx.roundRect(screenX + 35 + keySwing, enemy.y + 50, 3, 10, 1);
+          ctx.fill();
+          
+          // Key ring
+          ctx.strokeStyle = "#c0c0c0";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(screenX + 36, enemy.y + 48, 3, 0, Math.PI * 2);
+          ctx.stroke();
           
           break;
         }
@@ -3388,6 +3517,10 @@ export default function FlappyBirdGame() {
           setGameState("playing");
         }
       }
+      if (e.code === "KeyC") {
+        e.preventDefault();
+        setShowControls(!showControls);
+      }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -3847,6 +3980,116 @@ export default function FlappyBirdGame() {
           >
             PLAY AGAIN
           </button>
+        </div>
+      )}
+
+      {/* Controls Hint Button */}
+      {(gameState === "playing" || gameState === "paused") && !showControls && (
+        <div className="absolute top-4 right-4 z-40">
+          <button
+            onClick={() => setShowControls(true)}
+            className="px-3 py-2 bg-gray-800 bg-opacity-80 border border-gray-500 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+            title="Show Controls (Press C)"
+          >
+            <span className="font-mono">Controls (C)</span>
+          </button>
+        </div>
+      )}
+
+      {/* Controls Overlay */}
+      {showControls && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-90 z-50">
+          <div className="max-w-4xl mx-auto p-8 text-center">
+            <div className="bg-gray-900 border-2 border-cyan-300 rounded-lg p-8 shadow-2xl">
+              <h2 className="text-4xl font-bold mb-6 text-cyan-300" style={{ fontFamily: 'monospace' }}>
+                GAME CONTROLS
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-white">
+                {/* Movement Controls */}
+                <div className="space-y-4">
+                  <h3 className="text-2xl font-bold text-yellow-400 mb-4" style={{ fontFamily: 'monospace' }}>
+                    MOVEMENT
+                  </h3>
+                  <div className="space-y-3 text-left">
+                    <div className="flex items-center gap-4">
+                      <div className="flex gap-1">
+                        <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">←</kbd>
+                        <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">A</kbd>
+                      </div>
+                      <span>Move Left</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex gap-1">
+                        <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">→</kbd>
+                        <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">D</kbd>
+                      </div>
+                      <span>Move Right</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex gap-1">
+                        <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">↑</kbd>
+                        <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">W</kbd>
+                        <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded">SPACE</kbd>
+                      </div>
+                      <span>Jump</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Combat Controls */}
+                <div className="space-y-4">
+                  <h3 className="text-2xl font-bold text-red-400 mb-4" style={{ fontFamily: 'monospace' }}>
+                    COMBAT
+                  </h3>
+                  <div className="space-y-3 text-left">
+                    <div className="flex items-center gap-4">
+                      <div className="flex gap-1">
+                        <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">X</kbd>
+                        <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">Z</kbd>
+                      </div>
+                      <span>Shoot</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">Q</kbd>
+                      <span className="text-yellow-300">Rebel Dash</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">E</kbd>
+                      <span className="text-orange-300">Switch Weapon</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Game Controls */}
+              <div className="mt-8 pt-6 border-t border-gray-600">
+                <h3 className="text-2xl font-bold text-green-400 mb-4" style={{ fontFamily: 'monospace' }}>
+                  GAME
+                </h3>
+                <div className="flex justify-center gap-8 text-left">
+                  <div className="flex items-center gap-4">
+                    <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded">ESC</kbd>
+                    <span>Pause/Resume</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">C</kbd>
+                    <span>Show/Hide Controls</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8">
+                <button
+                  onClick={() => setShowControls(false)}
+                  className="px-8 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors text-xl font-bold"
+                  style={{ fontFamily: 'monospace' }}
+                >
+                  CLOSE (C)
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

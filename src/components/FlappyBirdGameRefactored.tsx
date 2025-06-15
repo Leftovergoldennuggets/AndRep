@@ -4,13 +4,13 @@ import {
   GameState, 
   WeaponType, 
   Enemy, 
-  Bullet, 
-  Obstacle, 
+  Bullet as _Bullet, 
+  Obstacle as _Obstacle, 
   ObstacleType,
   Powerup, 
-  Vector2D,
-  Particle,
-  LevelTheme
+  Vector2D as _Vector2D,
+  Particle as _Particle,
+  LevelTheme as _LevelTheme
 } from "./game/types";
 import { 
   GAME_DIMENSIONS, 
@@ -27,15 +27,15 @@ import { WEAPONS, canFire } from "./game/weapons";
 import { 
   STORY_SLIDES, 
   LEVELS, 
-  BOSS_CONFIGS, 
-  ANIMAL_TYPES, 
-  ANIMAL_SIZES 
+  BOSS_CONFIGS as _BOSS_CONFIGS, 
+  ANIMAL_TYPES as _ANIMAL_TYPES, 
+  ANIMAL_SIZES as _ANIMAL_SIZES 
 } from "./game/config";
 import { 
   clamp, 
-  distance, 
+  distance as _distance, 
   angle, 
-  randomRange, 
+  randomRange as _randomRange, 
   randomInt, 
   checkCollision, 
   isInViewport, 
@@ -122,6 +122,7 @@ export default function FlappyBirdGameRefactored() {
   const [gameState, setGameState] = useState<"start" | "story" | "playing" | "paused" | "gameOver" | "missionComplete" | "victoryIllustration" | "levelComplete">("start");
   const [distance, setDistance] = useState(0);
   const [storySlide, setStorySlide] = useState(0);
+  const [showControls, setShowControls] = useState(false);
   
   // Initialize audio on mount
   useEffect(() => {
@@ -134,7 +135,7 @@ export default function FlappyBirdGameRefactored() {
   // Game loop update function
   const updateGame = useCallback((currentTime: number) => {
     const state = gameStateRef.current;
-    const { player, enemies, bullets, enemyBullets, particles, camera, level } = state;
+    const { player, enemies: _enemies, bullets: _bullets, enemyBullets: _enemyBullets, particles, camera, level } = state;
     
     // Update camera shake
     updateCameraShake(camera);
@@ -361,8 +362,8 @@ export default function FlappyBirdGameRefactored() {
       enemy.y += enemy.velocityY;
       
       // Ground collision
-      if (enemy.y > GAME_DIMENSIONS.GROUND_HEIGHT - ENEMY_SIZES[enemy.type].HEIGHT) {
-        enemy.y = GAME_DIMENSIONS.GROUND_HEIGHT - ENEMY_SIZES[enemy.type].HEIGHT;
+      if (enemy.y > GAME_DIMENSIONS.GROUND_HEIGHT - ENEMY_SIZES[enemy.type.toUpperCase() as keyof typeof ENEMY_SIZES].HEIGHT) {
+        enemy.y = GAME_DIMENSIONS.GROUND_HEIGHT - ENEMY_SIZES[enemy.type.toUpperCase() as keyof typeof ENEMY_SIZES].HEIGHT;
         enemy.velocityY = 0;
         enemy.onGround = true;
       }
@@ -389,7 +390,7 @@ export default function FlappyBirdGameRefactored() {
   // Update enemy AI
   const updateEnemyAI = (enemy: Enemy, state: GameState, currentTime: number) => {
     const { player } = state;
-    const dist = distance(enemy, player);
+    const dist = _distance(enemy, player);
     
     // Update alert level
     if (dist < AI.DETECTION_RANGE) {
@@ -439,7 +440,7 @@ export default function FlappyBirdGameRefactored() {
       case 'cover':
         // Move to cover position
         if (enemy.coverPosition) {
-          const coverDist = distance(enemy, enemy.coverPosition);
+          const coverDist = _distance(enemy, enemy.coverPosition);
           if (coverDist > 10) {
             const dx = enemy.coverPosition.x - enemy.x;
             enemy.x += Math.sign(dx) * AI.CHASE_SPEED;
@@ -468,8 +469,8 @@ export default function FlappyBirdGameRefactored() {
     const angleToPlayer = angle(enemy, player);
     
     state.enemyBullets.push({
-      x: enemy.x + ENEMY_SIZES[enemy.type].WIDTH / 2,
-      y: enemy.y + ENEMY_SIZES[enemy.type].HEIGHT / 2,
+      x: enemy.x + ENEMY_SIZES[enemy.type.toUpperCase() as keyof typeof ENEMY_SIZES].WIDTH / 2,
+      y: enemy.y + ENEMY_SIZES[enemy.type.toUpperCase() as keyof typeof ENEMY_SIZES].HEIGHT / 2,
       velocityX: Math.cos(angleToPlayer) * PHYSICS.ENEMY_BULLET_SPEED,
       velocityY: Math.sin(angleToPlayer) * PHYSICS.ENEMY_BULLET_SPEED,
       damage: 10,
@@ -546,14 +547,14 @@ export default function FlappyBirdGameRefactored() {
   
   // Check all collisions
   const checkAllCollisions = (state: GameState) => {
-    const { player, enemies, bullets, enemyBullets, obstacles, powerups } = state;
+    const { player, enemies, bullets, enemyBullets, obstacles: _obstacles, powerups } = state;
     
     // Player-enemy collisions
     if (player.spawnImmunity <= 0) {
       enemies.forEach(enemy => {
         if (checkCollision(
           { ...player, width: PLAYER.WIDTH, height: PLAYER.HEIGHT },
-          { ...enemy, width: ENEMY_SIZES[enemy.type].WIDTH, height: ENEMY_SIZES[enemy.type].HEIGHT }
+          { ...enemy, width: ENEMY_SIZES[enemy.type.toUpperCase() as keyof typeof ENEMY_SIZES].WIDTH, height: ENEMY_SIZES[enemy.type.toUpperCase() as keyof typeof ENEMY_SIZES].HEIGHT }
         )) {
           player.health -= 10;
           player.spawnImmunity = 1000;
@@ -569,7 +570,7 @@ export default function FlappyBirdGameRefactored() {
       enemies.forEach(enemy => {
         if (checkCollision(
           { ...bullet, width: 10, height: 10 },
-          { ...enemy, width: ENEMY_SIZES[enemy.type].WIDTH, height: ENEMY_SIZES[enemy.type].HEIGHT }
+          { ...enemy, width: ENEMY_SIZES[enemy.type.toUpperCase() as keyof typeof ENEMY_SIZES].WIDTH, height: ENEMY_SIZES[enemy.type.toUpperCase() as keyof typeof ENEMY_SIZES].HEIGHT }
         )) {
           enemy.health -= bullet.damage;
           enemy.hitFlash = 10;
@@ -646,7 +647,7 @@ export default function FlappyBirdGameRefactored() {
       
       switch (objective.type) {
         case 'escape':
-          if (objective.target && distance(state.player, objective.target) < 50) {
+          if (objective.target && _distance(state.player, objective.target) < 50) {
             objective.completed = true;
             objective.currentCount = 1;
           }
@@ -719,7 +720,7 @@ export default function FlappyBirdGameRefactored() {
         
         state.enemies.push({
           x,
-          y: GAME_DIMENSIONS.GROUND_HEIGHT - ENEMY_SIZES[enemyType].HEIGHT,
+          y: GAME_DIMENSIONS.GROUND_HEIGHT - ENEMY_SIZES[enemyType.toUpperCase() as keyof typeof ENEMY_SIZES].HEIGHT,
           velocityY: 0,
           health: enemyType === 'dog' ? 40 : 60,
           maxHealth: enemyType === 'dog' ? 40 : 60,
@@ -756,7 +757,7 @@ export default function FlappyBirdGameRefactored() {
     const state = gameStateRef.current;
     
     // Clear canvas
-    ctx.fillStyle = COLORS.BACKGROUND[state.level.theme];
+    ctx.fillStyle = COLORS.BACKGROUND[state.level.theme.toUpperCase() as keyof typeof COLORS.BACKGROUND];
     ctx.fillRect(0, 0, GAME_DIMENSIONS.WIDTH, GAME_DIMENSIONS.HEIGHT);
     
     // Save context and apply camera transform
@@ -841,7 +842,7 @@ export default function FlappyBirdGameRefactored() {
     state.enemies.forEach(enemy => {
       if (!isInViewport(enemy, state.camera.x)) return;
       
-      const size = ENEMY_SIZES[enemy.type];
+      const size = ENEMY_SIZES[enemy.type.toUpperCase() as keyof typeof ENEMY_SIZES];
       
       // Apply hit flash
       if (enemy.hitFlash && enemy.hitFlash > 0) {
@@ -1083,6 +1084,10 @@ export default function FlappyBirdGameRefactored() {
         setGameState(gameStateRef.current.gamePaused ? "playing" : "paused");
         gameStateRef.current.gamePaused = !gameStateRef.current.gamePaused;
       }
+      
+      if (e.key === 'c' || e.key === 'C') {
+        setShowControls(!showControls);
+      }
     };
     
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -1142,9 +1147,10 @@ export default function FlappyBirdGameRefactored() {
               >
                 START GAME
               </button>
-              <div className="mt-8 text-sm opacity-80">
+              <div className="mt-8 text-sm opacity-80 space-y-2">
                 <p>Use WASD/Arrow Keys to move, Space to jump</p>
-                <p>Enter to shoot, Q/Shift/R for special abilities</p>
+                <p>Enter/E to shoot, Q/Shift/R for special abilities</p>
+                <p className="text-yellow-400">Press C during gameplay to show/hide controls</p>
               </div>
             </div>
           </div>
@@ -1333,6 +1339,120 @@ export default function FlappyBirdGameRefactored() {
               </h3>
               <p className="text-lg mb-6">Advancing to next level...</p>
             </div>
+          </div>
+        )}
+
+        {/* Controls Overlay */}
+        {showControls && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-90 z-50">
+            <div className="max-w-4xl mx-auto p-8 text-center">
+              <div className="bg-gray-900 border-2 border-cyan-300 rounded-lg p-8 shadow-2xl">
+                <h2 className="text-4xl font-bold mb-6 text-cyan-300" style={{ fontFamily: 'monospace' }}>
+                  GAME CONTROLS
+                </h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-white">
+                  {/* Movement Controls */}
+                  <div className="space-y-4">
+                    <h3 className="text-2xl font-bold text-yellow-400 mb-4" style={{ fontFamily: 'monospace' }}>
+                      MOVEMENT
+                    </h3>
+                    <div className="space-y-3 text-left">
+                      <div className="flex items-center gap-4">
+                        <div className="flex gap-1">
+                          <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">←</kbd>
+                          <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">A</kbd>
+                        </div>
+                        <span>Move Left</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="flex gap-1">
+                          <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">→</kbd>
+                          <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">D</kbd>
+                        </div>
+                        <span>Move Right</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="flex gap-1">
+                          <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">↑</kbd>
+                          <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">W</kbd>
+                          <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded">SPACE</kbd>
+                        </div>
+                        <span>Jump</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Combat Controls */}
+                  <div className="space-y-4">
+                    <h3 className="text-2xl font-bold text-red-400 mb-4" style={{ fontFamily: 'monospace' }}>
+                      COMBAT
+                    </h3>
+                    <div className="space-y-3 text-left">
+                      <div className="flex items-center gap-4">
+                        <div className="flex gap-1">
+                          <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded">ENTER</kbd>
+                          <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">E</kbd>
+                        </div>
+                        <span>Shoot</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">Q</kbd>
+                        <span className="text-yellow-300">Multi-Shot</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded">SHIFT</kbd>
+                        <span className="text-orange-300">Execution Dash</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">R</kbd>
+                        <span className="text-red-300">Berserker Mode</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Game Controls */}
+                <div className="mt-8 pt-6 border-t border-gray-600">
+                  <h3 className="text-2xl font-bold text-green-400 mb-4" style={{ fontFamily: 'monospace' }}>
+                    GAME
+                  </h3>
+                  <div className="flex justify-center gap-8 text-left">
+                    <div className="flex items-center gap-4">
+                      <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">P</kbd>
+                      <span>Pause/Resume</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <kbd className="px-3 py-2 bg-gray-700 border border-gray-500 rounded text-center min-w-[40px]">C</kbd>
+                      <span>Show/Hide Controls</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8">
+                  <button
+                    onClick={() => setShowControls(false)}
+                    className="px-8 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors text-xl font-bold"
+                    style={{ fontFamily: 'monospace' }}
+                  >
+                    CLOSE (C)
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Controls Hint Button */}
+        {(gameState === "playing" || gameState === "paused") && !showControls && (
+          <div className="absolute top-4 right-4 z-40">
+            <button
+              onClick={() => setShowControls(true)}
+              className="px-3 py-2 bg-gray-800 bg-opacity-80 border border-gray-500 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+              title="Show Controls (Press C)"
+            >
+              <span className="font-mono">Controls (C)</span>
+            </button>
           </div>
         )}
       </div>
