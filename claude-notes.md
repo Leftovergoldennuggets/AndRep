@@ -99,8 +99,30 @@ All weapons received significant buffs:
 - Player can still take more damage than original
 - Maintains quality-of-life improvements without trivializing combat
 
+### Boss Phase Balance Fix (After "Berserker Mode" Feedback):
+
+#### Problem Identified:
+- **Normal phase too easy**: Boss wasn't threatening enough early on
+- **Berserker mode too hard**: Became "unstoppable" with 200ms fire rate + 6 speed + chaotic bullets
+- **Inconsistent difficulty**: Massive spike at 30% health made fight unpredictable
+
+#### Balanced Solution:
+- **Consistent challenge**: Made normal phase more threatening from the start
+- **Removed overpowered berserker**: Eliminated the separate 200ms fire rate berserker mode
+- **Smooth scaling**: Rage mode now triggers at 40% health with moderate increases
+- **Better patterns**: More consistent bullet patterns, less chaotic spread
+- **Fire rates**: Normal 300ms → Rage 350ms (vs old Normal 400ms → Berserker 200ms)
+- **Movement**: Consistent 5 speed throughout (vs old Normal 4 → Berserker 6)
+- **Health**: Increased to 280 to account for more consistent difficulty curve
+
+#### Result: Consistent Challenge
+- Boss is threatening from start to finish
+- No more "unstoppable" phase that requires perfect play
+- Rage mode provides escalation without becoming unfair
+- Fight length is appropriate (~6-8 rifle shots or ~11-14 pistol shots)
+
 ### Next Steps:
-- Test and validate the new balanced difficulty
+- Test and validate the consistent boss difficulty
 - Consider adding difficulty settings (Easy/Normal/Hard) for future updates
 
 ### Files Modified:

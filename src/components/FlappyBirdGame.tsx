@@ -827,40 +827,32 @@ export default function FlappyBirdGame() {
       case 'warden': // Level 1 - Corrupt Warden with shotgun - MUCH HARDER!
         if (playerInRange) {
           const direction = player.x > boss.x ? 1 : -1;
-          boss.x += direction * 4; // Much faster charging - doubled speed!
+          const isRageMode = boss.health < boss.maxHealth * 0.4; // Trigger at 40% instead of 30%
           
-          if (Date.now() - boss.lastShotTime > 400) { // Faster fire rate: 800ms -> 400ms
-            // Multiple shotgun pellets like real shotgun
-            for (let i = 0; i < 3; i++) { // 3 pellets per shot instead of 1
+          // Normal phase: More challenging than before
+          boss.x += direction * (isRageMode ? 5 : 5); // Consistent speed, but faster than original
+          
+          // Normal attack pattern - make it more frequent and threatening
+          const normalFireRate = isRageMode ? 350 : 300; // Faster in rage, but not crazy fast
+          if (Date.now() - boss.lastShotTime > normalFireRate) {
+            // More pellets in normal mode to make it challenging
+            const pelletCount = isRageMode ? 4 : 4; // Consistent pellet count
+            for (let i = 0; i < pelletCount; i++) {
               state.enemyBullets.push({
-                x: boss.x + (i - 1) * 20, // Spread pellets horizontally
+                x: boss.x + (i - pelletCount/2) * 15, // Better spread
                 y: boss.y + 20,
-                velocityX: direction * (7 + Math.random() * 2), // Faster bullets: 5 -> 7-9
-                velocityY: -2 + Math.random() * 4, // More vertical spread
+                velocityX: direction * (6 + Math.random() * 2), // Consistent bullet speed
+                velocityY: -1 + Math.random() * 2, // Less chaotic spread
               });
             }
             boss.lastShotTime = Date.now();
             
             // Camera shake for intimidation
-            state.camera.shake = Math.max(state.camera.shake, 8);
+            state.camera.shake = Math.max(state.camera.shake, isRageMode ? 10 : 6);
           }
           
-          // Special rage mode when health is low
-          if (boss.health < boss.maxHealth * 0.3) { // Below 30% health
-            // BERSERKER MODE - even faster attacks!
-            if (Date.now() - boss.lastShotTime > 200) { // Super fast shooting
-              // Extra bullet barrage
-              for (let i = 0; i < 2; i++) {
-                state.enemyBullets.push({
-                  x: boss.x,
-                  y: boss.y + 20,
-                  velocityX: direction * (8 + Math.random() * 3),
-                  velocityY: -3 + Math.random() * 6,
-                });
-              }
-            }
-            boss.x += direction * 6; // Even faster charging in rage mode
-          }
+          // Rage mode effects are already included in the main attack pattern above
+          // No additional berserker mode needed - it's balanced into the normal pattern
         }
         break;
         
