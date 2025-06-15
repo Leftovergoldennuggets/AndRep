@@ -2,40 +2,40 @@ import { WeaponType, WeaponInfo } from './types';
 
 export const WEAPONS: Record<WeaponType, WeaponInfo> = {
   pistol: {
-    damage: 40,  // Doubled from 20
-    fireRate: 200,  // Reduced from 300 - faster shooting
-    ammo: 100,  // Doubled from 50
+    damage: 25,  // Moderate increase from original 20
+    fireRate: 250,  // Slightly faster than original 300
+    ammo: 75,  // 50% more than original 50
     spread: 0,
-    range: 1000,  // Increased from 800
-    bulletSpeed: 25,  // Increased from 18
+    range: 900,  // Slightly increased from 800
+    bulletSpeed: 22,  // Slightly increased from 18
     specialEffect: 'none',
   },
   rifle: {
-    damage: 70,  // Doubled from 35
-    fireRate: 100,  // Reduced from 150 - faster shooting
-    ammo: 60,  // Doubled from 30
-    spread: 0.05,  // Reduced from 0.1 - more accurate
-    range: 1500,  // Increased from 1200
-    bulletSpeed: 35,  // Increased from 25
+    damage: 45,  // Moderate increase from original 35
+    fireRate: 125,  // Slightly faster than original 150
+    ammo: 45,  // 50% more than original 30
+    spread: 0.08,  // Slightly better than original 0.1
+    range: 1350,  // Increased from 1200
+    bulletSpeed: 30,  // Increased from 25
     specialEffect: 'penetrating',
   },
   shotgun: {
-    damage: 30,  // Doubled from 15
-    fireRate: 600,  // Reduced from 800 - faster shooting
-    ammo: 40,  // Doubled from 20
-    spread: 0.25,  // Reduced from 0.3 - tighter spread
-    range: 500,  // Increased from 400
-    bulletSpeed: 20,  // Increased from 15
-    bulletCount: 7,  // Increased from 5 - more pellets
+    damage: 20,  // Moderate increase from original 15
+    fireRate: 700,  // Slightly faster than original 800
+    ammo: 30,  // 50% more than original 20
+    spread: 0.28,  // Slightly better than original 0.3
+    range: 450,  // Slightly increased from 400
+    bulletSpeed: 18,  // Increased from 15
+    bulletCount: 6,  // Increased from 5
     specialEffect: 'knockback',
   },
   grenade: {
-    damage: 150,  // High damage explosive
-    fireRate: 1500,  // Slower fire rate
-    ammo: 10,  // Limited ammo
+    damage: 80,  // Powerful but not one-shot
+    fireRate: 1800,  // Slower fire rate
+    ammo: 8,  // Limited ammo
     spread: 0,
-    range: 800,
-    bulletSpeed: 15,  // Slower projectile
+    range: 600,
+    bulletSpeed: 12,  // Slower projectile
     specialEffect: 'explosive',
   },
 };

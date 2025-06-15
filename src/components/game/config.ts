@@ -86,12 +86,12 @@ export const LEVELS: Record<number, LevelConfig> = {
 export const BOSS_CONFIGS = {
   warden: {
     name: "Corrupt Warden Johnson",
-    health: 150,  // Reduced from 300 - 50% less health
+    health: 250,  // Balanced - not too easy, not too hard
     size: 90,
     color: '#4A5568',
     attackPattern: 'charge_and_shoot',
     phases: 2,
-    speed: 2,  // Reduced from 3 - slower movement
+    speed: 2.5,  // Slightly faster than before
   },
 };
 

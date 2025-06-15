@@ -16,8 +16,8 @@ export const PHYSICS = {
 export const PLAYER = {
   WIDTH: 42,
   HEIGHT: 48,
-  MAX_HEALTH: 150,  // Increased from 100 - more health
-  SPAWN_IMMUNITY_DURATION: 3000,  // Increased from 2000 - longer immunity after respawn
+  MAX_HEALTH: 15,  // Reasonable health increase
+  SPAWN_IMMUNITY_DURATION: 2500,  // Moderate immunity duration
   ANIMATION_SPEED: 5,
 } as const;
 

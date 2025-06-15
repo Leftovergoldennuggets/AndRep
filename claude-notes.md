@@ -79,10 +79,29 @@ All weapons received significant buffs:
 - **Removed duplicate files**: Deleted FlappyBirdGameRefactored.tsx and backup files
 - **Cleaned configurations**: Removed unused theme backgrounds and boss configs
 
+### Difficulty Rebalancing (After "Too Easy" Feedback):
+
+#### Balanced Adjustments Made:
+- **Boss Health**: 150 → 250 (requires multiple hits but not a damage sponge)
+- **Enemy Health**: 30 → 45 (more durable but still reasonable)
+- **Player Health**: 20 → 15 (still improved from original 10)
+- **Weapon Damage**: Reduced to moderate levels (~25% increase from original vs 100%)
+  - Pistol: 40 → 25 damage
+  - Rifle: 70 → 45 damage  
+  - Shotgun: 30 → 20 damage per pellet
+  - Grenade: 150 → 80 damage (powerful but not one-shot boss)
+- **Fire Rates**: Still improved but not overpowered
+- **Enemy Fire Rate**: 2500ms → 2000ms (moderate shooting frequency)
+
+#### Result: Challenging but Fair
+- Boss requires ~4-6 rifle shots or ~10-12 pistol shots
+- Enemies take 2-3 hits with most weapons
+- Player can still take more damage than original
+- Maintains quality-of-life improvements without trivializing combat
+
 ### Next Steps:
-- Continue refactoring the main component by importing and using extracted modules
-- Monitor player feedback to see if difficulty is now appropriate
-- Consider adding difficulty settings (Easy/Normal/Hard)
+- Test and validate the new balanced difficulty
+- Consider adding difficulty settings (Easy/Normal/Hard) for future updates
 
 ### Files Modified:
 1. `/src/components/game/constants.ts`

@@ -131,22 +131,22 @@ const GAME_CONFIG = {
   },
   player: {
     size: 48,
-    maxHealth: 20,  // Doubled from 10 - more health
-    gravity: 0.5,  // Reduced from 0.8 - easier to control
-    jumpForce: -15,  // Less negative from -20 - more controlled jumps
-    moveSpeed: 12,  // Increased from 10 - faster movement
+    maxHealth: 15,  // 50% more than original 10 - reasonable survivability
+    gravity: 0.6,  // Slightly easier than original 0.8
+    jumpForce: -17,  // Slightly easier than original -20
+    moveSpeed: 11,  // Slightly faster than original 10
     scrollSpeed: 5,
   },
   weapons: {
-    pistol: { damage: 40, fireRate: 200, ammo: 100, spread: 0 },  // Doubled damage & ammo, faster fire
-    shotgun: { damage: 30, fireRate: 600, ammo: 40, spread: 0.25, bulletCount: 7 },  // More damage, pellets & ammo
-    rifle: { damage: 70, fireRate: 100, ammo: 60, spread: 0.05 },  // Doubled damage & ammo, faster fire
-    grenade: { damage: 150, fireRate: 1500, ammo: 10, spread: 0 },  // More damage & ammo
+    pistol: { damage: 25, fireRate: 250, ammo: 75, spread: 0 },  // Balanced improvements
+    shotgun: { damage: 20, fireRate: 700, ammo: 30, spread: 0.28, bulletCount: 6 },  // Moderate improvements
+    rifle: { damage: 45, fireRate: 125, ammo: 45, spread: 0.08 },  // Balanced improvements
+    grenade: { damage: 80, fireRate: 1800, ammo: 8, spread: 0 },  // Strong but not one-shot
   },
   enemy: {
     size: 42,
-    health: 30,  // Reduced from 60 - enemies die faster
-    fireRate: 2500,  // Increased from 1500 - enemies shoot slower
+    health: 45,  // Balanced - not too weak, not too strong
+    fireRate: 2000,  // Moderate - not too fast, not too slow
     gravity: 0.8,
   },
   bullet: {
