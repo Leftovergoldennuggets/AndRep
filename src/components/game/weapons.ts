@@ -29,23 +29,14 @@ export const WEAPONS: Record<WeaponType, WeaponInfo> = {
     bulletCount: 7,  // Increased from 5 - more pellets
     specialEffect: 'knockback',
   },
-  sniper: {
-    damage: 150,  // Increased from 80
-    fireRate: 1500,  // Reduced from 2000 - faster shooting
-    ammo: 20,  // Doubled from 10
+  grenade: {
+    damage: 150,  // High damage explosive
+    fireRate: 1500,  // Slower fire rate
+    ammo: 10,  // Limited ammo
     spread: 0,
-    range: 2500,  // Increased from 2000
-    bulletSpeed: 50,  // Increased from 40
-    specialEffect: 'headshot',
-  },
-  machinegun: {
-    damage: 30,  // Doubled from 15
-    fireRate: 50,  // Reduced from 100 - faster shooting
-    ammo: 200,  // Doubled from 100
-    spread: 0.15,  // Reduced from 0.2 - more accurate
-    range: 800,  // Increased from 600
-    bulletSpeed: 30,  // Increased from 20
-    specialEffect: 'suppressing',
+    range: 800,
+    bulletSpeed: 15,  // Slower projectile
+    specialEffect: 'explosive',
   },
 };
 
@@ -53,8 +44,7 @@ export const WEAPON_COLORS: Record<WeaponType, string> = {
   pistol: '#888888',
   rifle: '#2F4F4F',
   shotgun: '#8B4513',
-  sniper: '#1E3A8A',
-  machinegun: '#374151',
+  grenade: '#8B4513',
 };
 
 export const getWeaponInfo = (weaponType: WeaponType): WeaponInfo => {

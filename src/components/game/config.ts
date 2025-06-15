@@ -81,93 +81,6 @@ export const LEVELS: Record<number, LevelConfig> = {
     obstacleDensity: 0.02,  // Reduced from 0.03 - fewer obstacles
     powerupDensity: 0.02,  // Increased from 0.01 - more powerups
   },
-  2: {
-    name: "Cell Block C",
-    theme: 'cellblock',
-    length: 5000,
-    enemyDensity: 0.025,
-    enemyTypes: [
-      { type: 'guard', weight: 0.8 },
-      { type: 'dog', weight: 0.2 },
-    ],
-    boss: 'captain',
-    objectives: [
-      {
-        id: 'rescue-2',
-        type: 'rescue',
-        description: 'Rescue 5 fellow prisoners',
-        targetCount: 5,
-        currentCount: 0,
-        completed: false,
-      },
-      {
-        id: 'survive-2',
-        type: 'survive',
-        description: 'Survive the security lockdown',
-        targetCount: 60000, // 60 seconds
-        currentCount: 0,
-        completed: false,
-      },
-    ],
-    dialogue: "Security Captain Martinez: 'You killed my men! There's no escape now!'",
-    obstacleDensity: 0.04,
-    powerupDensity: 0.008,
-  },
-  3: {
-    name: "Maximum Security",
-    theme: 'security',
-    length: 6000,
-    enemyDensity: 0.03,
-    enemyTypes: [
-      { type: 'guard', weight: 1.0 },
-    ],
-    boss: 'chief',
-    objectives: [
-      {
-        id: 'rescue-3',
-        type: 'rescue',
-        description: 'Free all remaining animals',
-        targetCount: 7,
-        currentCount: 0,
-        completed: false,
-      },
-      {
-        id: 'destroy-3',
-        type: 'destroy',
-        description: 'Destroy the torture equipment',
-        targetCount: 3,
-        currentCount: 0,
-        completed: false,
-      },
-    ],
-    dialogue: "Security Chief Thompson: 'I should have put you down when I had the chance!'",
-    obstacleDensity: 0.05,
-    powerupDensity: 0.006,
-  },
-  4: {
-    name: "The Final Escape",
-    theme: 'escape',
-    length: 7000,
-    enemyDensity: 0.035,
-    enemyTypes: [
-      { type: 'guard', weight: 0.9 },
-      { type: 'dog', weight: 0.1 },
-    ],
-    boss: 'helicopter',
-    objectives: [
-      {
-        id: 'escape-4',
-        type: 'escape',
-        description: 'Reach the freedom beyond the gates',
-        target: { x: 6800, y: 0 },
-        currentCount: 0,
-        completed: false,
-      },
-    ],
-    dialogue: "Attack Helicopter: 'This is your final stand, Red! Surrender now!'",
-    obstacleDensity: 0.06,
-    powerupDensity: 0.005,
-  },
 };
 
 export const BOSS_CONFIGS = {
@@ -179,33 +92,6 @@ export const BOSS_CONFIGS = {
     attackPattern: 'charge_and_shoot',
     phases: 2,
     speed: 2,  // Reduced from 3 - slower movement
-  },
-  captain: {
-    name: "Security Captain Martinez",
-    health: 200,  // Reduced from 400 - 50% less health
-    size: 80,
-    color: '#2D3748',
-    attackPattern: 'tactical_cover',
-    phases: 3,
-    speed: 2.5,  // Reduced from 4 - slower movement
-  },
-  chief: {
-    name: "Security Chief Thompson",
-    health: 250,  // Reduced from 500 - 50% less health
-    size: 85,
-    color: '#1A202C',
-    attackPattern: 'aggressive_assault',
-    phases: 3,
-    speed: 3,  // Reduced from 5 - slower movement
-  },
-  helicopter: {
-    name: "Attack Helicopter",
-    health: 300,  // Reduced from 600 - 50% less health
-    size: 120,
-    color: '#171923',
-    attackPattern: 'aerial_bombardment',
-    phases: 4,
-    speed: 3.5,  // Reduced from 6 - slower movement
   },
 };
 

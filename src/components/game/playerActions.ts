@@ -55,7 +55,7 @@ export function shoot(
 }
 
 export function switchWeapon(player: GameState['player'], direction: 'next' | 'prev'): void {
-  const weapons: WeaponType[] = ['pistol', 'shotgun', 'rifle', 'sniper', 'machinegun'];
+  const weapons: WeaponType[] = ['pistol', 'shotgun', 'rifle', 'grenade'];
   const currentIndex = weapons.indexOf(player.weapon);
   
   let newIndex: number;

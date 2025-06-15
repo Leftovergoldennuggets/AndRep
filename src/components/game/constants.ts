@@ -111,9 +111,6 @@ export const COLORS = {
   AMMO: '#F39C12',
   BACKGROUND: {
     YARD: '#87CEEB',
-    CELLBLOCK: '#4A5568',
-    SECURITY: '#2D3748',
-    ESCAPE: '#1A202C',
   },
   PARTICLES: {
     EXPLOSION: ['#FFA500', '#FF6347', '#FFD700', '#FF4500'],

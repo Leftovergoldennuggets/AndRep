@@ -1,9 +1,9 @@
 // Game type definitions
-export type WeaponType = 'pistol' | 'rifle' | 'shotgun' | 'sniper' | 'machinegun';
+export type WeaponType = 'pistol' | 'rifle' | 'shotgun' | 'grenade';
 
 export type EnemyType = 'guard' | 'dog' | 'boss';
 
-export type BossType = 'warden' | 'captain' | 'chief' | 'helicopter';
+export type BossType = 'warden';
 
 export type AIState = 'patrol' | 'chase' | 'cover' | 'attack' | 'retreat';
 
@@ -13,7 +13,7 @@ export type PowerupType = 'health' | 'ammo' | 'weapon';
 
 export type ObstacleType = 'fence' | 'crate' | 'platform' | 'ground' | 'door' | 'switch';
 
-export type LevelTheme = 'yard' | 'cellblock' | 'security' | 'escape';
+export type LevelTheme = 'yard';
 
 export type ObjectiveType = 'rescue' | 'destroy' | 'survive' | 'escape';
 
