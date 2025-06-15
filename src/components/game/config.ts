@@ -53,7 +53,7 @@ export const LEVELS: Record<number, LevelConfig> = {
     name: "Prison Yard",
     theme: 'yard',
     length: 4000,
-    enemyDensity: 0.02,
+    enemyDensity: 0.01,  // Reduced from 0.02 - fewer enemies
     enemyTypes: [
       { type: 'guard', weight: 0.7 },
       { type: 'dog', weight: 0.3 },
@@ -78,8 +78,8 @@ export const LEVELS: Record<number, LevelConfig> = {
       },
     ],
     dialogue: "The corrupt warden blocks your escape with his massive shotgun!",
-    obstacleDensity: 0.03,
-    powerupDensity: 0.01,
+    obstacleDensity: 0.02,  // Reduced from 0.03 - fewer obstacles
+    powerupDensity: 0.02,  // Increased from 0.01 - more powerups
   },
   2: {
     name: "Cell Block C",
@@ -173,39 +173,39 @@ export const LEVELS: Record<number, LevelConfig> = {
 export const BOSS_CONFIGS = {
   warden: {
     name: "Corrupt Warden Johnson",
-    health: 300,
+    health: 150,  // Reduced from 300 - 50% less health
     size: 90,
     color: '#4A5568',
     attackPattern: 'charge_and_shoot',
     phases: 2,
-    speed: 3,
+    speed: 2,  // Reduced from 3 - slower movement
   },
   captain: {
     name: "Security Captain Martinez",
-    health: 400,
+    health: 200,  // Reduced from 400 - 50% less health
     size: 80,
     color: '#2D3748',
     attackPattern: 'tactical_cover',
     phases: 3,
-    speed: 4,
+    speed: 2.5,  // Reduced from 4 - slower movement
   },
   chief: {
     name: "Security Chief Thompson",
-    health: 500,
+    health: 250,  // Reduced from 500 - 50% less health
     size: 85,
     color: '#1A202C',
     attackPattern: 'aggressive_assault',
     phases: 3,
-    speed: 5,
+    speed: 3,  // Reduced from 5 - slower movement
   },
   helicopter: {
     name: "Attack Helicopter",
-    health: 600,
+    health: 300,  // Reduced from 600 - 50% less health
     size: 120,
     color: '#171923',
     attackPattern: 'aerial_bombardment',
     phases: 4,
-    speed: 6,
+    speed: 3.5,  // Reduced from 6 - slower movement
   },
 };
 

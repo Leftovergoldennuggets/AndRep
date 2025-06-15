@@ -6,18 +6,18 @@ export const GAME_DIMENSIONS = {
 } as const;
 
 export const PHYSICS = {
-  GRAVITY: 0.6,
-  JUMP_FORCE: -12,
-  PLAYER_SPEED: 5,
-  BULLET_SPEED: 15,
-  ENEMY_BULLET_SPEED: 8,
+  GRAVITY: 0.4,  // Reduced from 0.6 - slower falling, easier to control
+  JUMP_FORCE: -14,  // Increased from -12 - higher jumps
+  PLAYER_SPEED: 7,  // Increased from 5 - faster movement
+  BULLET_SPEED: 20,  // Increased from 15 - easier to hit enemies
+  ENEMY_BULLET_SPEED: 5,  // Reduced from 8 - easier to dodge
 } as const;
 
 export const PLAYER = {
   WIDTH: 42,
   HEIGHT: 48,
-  MAX_HEALTH: 100,
-  SPAWN_IMMUNITY_DURATION: 2000,
+  MAX_HEALTH: 150,  // Increased from 100 - more health
+  SPAWN_IMMUNITY_DURATION: 3000,  // Increased from 2000 - longer immunity after respawn
   ANIMATION_SPEED: 5,
 } as const;
 
@@ -55,29 +55,29 @@ export const COMBAT = {
 } as const;
 
 export const AI = {
-  PATROL_SPEED: 1,
-  CHASE_SPEED: 2,
-  DETECTION_RANGE: 300,
-  ATTACK_RANGE: 400,
+  PATROL_SPEED: 0.5,  // Reduced from 1 - slower patrolling enemies
+  CHASE_SPEED: 1.5,  // Reduced from 2 - slower chasing
+  DETECTION_RANGE: 200,  // Reduced from 300 - enemies detect from shorter distance
+  ATTACK_RANGE: 300,  // Reduced from 400 - enemies attack from closer range
   COVER_SEARCH_RANGE: 200,
-  ALERT_DECAY_RATE: 1,
+  ALERT_DECAY_RATE: 2,  // Increased from 1 - enemies lose alert faster
 } as const;
 
 export const SPECIAL_ABILITIES = {
   MULTI_SHOT: {
-    COOLDOWN: 4000,
-    BULLET_COUNT: 3,
-    SPREAD_ANGLE: Math.PI / 8,
+    COOLDOWN: 2000,  // Reduced from 4000 - more frequent special attacks
+    BULLET_COUNT: 5,  // Increased from 3 - more bullets
+    SPREAD_ANGLE: Math.PI / 6,  // Wider spread for better coverage
   },
   EXECUTION_DASH: {
-    COOLDOWN: 6000,
-    DISTANCE: 300,
-    DAMAGE: 50,
+    COOLDOWN: 3000,  // Reduced from 6000 - more frequent dashes
+    DISTANCE: 400,  // Increased from 300 - longer dash
+    DAMAGE: 100,  // Increased from 50 - more damage
   },
   BERSERKER_MODE: {
-    COOLDOWN: 8000,
-    DURATION: 5000,
-    DAMAGE_MULTIPLIER: 2,
+    COOLDOWN: 5000,  // Reduced from 8000 - more frequent berserker mode
+    DURATION: 7000,  // Increased from 5000 - longer duration
+    DAMAGE_MULTIPLIER: 3,  // Increased from 2 - more damage
   },
 } as const;
 

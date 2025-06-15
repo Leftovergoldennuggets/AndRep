@@ -131,27 +131,27 @@ const GAME_CONFIG = {
   },
   player: {
     size: 48,
-    maxHealth: 10,
-    gravity: 0.8,
-    jumpForce: -20,
-    moveSpeed: 10,
+    maxHealth: 20,  // Doubled from 10 - more health
+    gravity: 0.5,  // Reduced from 0.8 - easier to control
+    jumpForce: -15,  // Less negative from -20 - more controlled jumps
+    moveSpeed: 12,  // Increased from 10 - faster movement
     scrollSpeed: 5,
   },
   weapons: {
-    pistol: { damage: 20, fireRate: 300, ammo: 50, spread: 0 },
-    shotgun: { damage: 15, fireRate: 800, ammo: 20, spread: 0.3, bulletCount: 5 },
-    rifle: { damage: 35, fireRate: 150, ammo: 30, spread: 0.1 },
-    grenade: { damage: 80, fireRate: 2000, ammo: 5, spread: 0 },
+    pistol: { damage: 40, fireRate: 200, ammo: 100, spread: 0 },  // Doubled damage & ammo, faster fire
+    shotgun: { damage: 30, fireRate: 600, ammo: 40, spread: 0.25, bulletCount: 7 },  // More damage, pellets & ammo
+    rifle: { damage: 70, fireRate: 100, ammo: 60, spread: 0.05 },  // Doubled damage & ammo, faster fire
+    grenade: { damage: 150, fireRate: 1500, ammo: 10, spread: 0 },  // More damage & ammo
   },
   enemy: {
     size: 42,
-    health: 60,
-    fireRate: 1500,
+    health: 30,  // Reduced from 60 - enemies die faster
+    fireRate: 2500,  // Increased from 1500 - enemies shoot slower
     gravity: 0.8,
   },
   bullet: {
-    speed: 18,
-    size: 9,
+    speed: 25,  // Increased from 18 - faster bullets
+    size: 12,  // Increased from 9 - bigger bullets, easier to hit
   },
   world: {
     groundLevel: 750,
@@ -163,10 +163,10 @@ const GAME_CONFIG = {
     CAMERA_FOLLOW_OFFSET: 600,
   },
   cooldowns: {
-    MULTI_SHOT: 4000,
-    EXECUTION_DASH: 6000,
-    BERSERKER_MODE: 8000,
-    SPAWN_IMMUNITY: 2000,
+    MULTI_SHOT: 2000,  // Reduced from 4000 - more frequent
+    EXECUTION_DASH: 3000,  // Reduced from 6000 - more frequent
+    BERSERKER_MODE: 5000,  // Reduced from 8000 - more frequent
+    SPAWN_IMMUNITY: 3000,  // Increased from 2000 - longer immunity
   },
   particles: {
     EXPLOSION_COUNT: 30,
@@ -245,7 +245,7 @@ const LEVELS = {
     boss: {
       type: 'warden' as const,
       name: "The Corrupt Warden",
-      health: 300, // Increased from 120 - much tankier
+      health: 150, // Reduced from 300 for easier difficulty
       size: 90,
       attackPattern: "charge_and_shoot",
       description: "The corrupt warden blocks your escape with his massive shotgun!",
