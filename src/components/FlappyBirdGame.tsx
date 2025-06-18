@@ -191,28 +191,28 @@ const WEAPONS_INFO = {
 
 const STORY_SLIDES = [
   {
-    text: "Three-time champion. Beloved protector. Every morning, Red's crow meant safety. Every night, his watch meant peace. The animals slept soundly knowing their guardian stood tall.",
+    text: "Red the Magnificent - three-time champion and beloved guardian of Blackwater Farm. His morning crow meant safety, his watch meant peace.",
     image: "/panel1.png",
     color: "text-yellow-400",
     bgColor: "from-yellow-900 to-yellow-700",
     panelBg: "bg-yellow-100 text-black"
   },
   {
-    text: "Red heard the screams first. Then came the laughter - cruel, cold, inhuman. Behind the barn, guards tortured innocents for sport. His heart shattered. Everything he protected was a lie.",
+    text: "Screams pierced the night. Cruel laughter echoed behind the barn. Red discovered the horrifying truth - guards tortured innocent animals for sport.",
     image: "/panel2.png",
     color: "text-red-400",
     bgColor: "from-red-900 to-red-700", 
     panelBg: "bg-red-100 text-black"
   },
   {
-    text: "\"No! Take me instead!\" Wilbur threw himself between the guards and the piglets. The baton came down hard. As Red held his dying friend, Wilbur whispered: \"Promise me... save them all.\"",
+    text: "Wilbur threw himself between the guards and the piglets. \"Take me instead!\" The baton fell. \"Promise me,\" he whispered, \"save them all.\"",
     image: "/panel3.png",
     color: "text-purple-400",
     bgColor: "from-purple-900 to-purple-700",
     panelBg: "bg-purple-100 text-black"
   },
   {
-    text: "Something primal awakened. Red's talons found flesh. His beak tasted vengeance. Three guards fell before they could scream. In the carnage, a rebel was born.",
+    text: "Now branded the most dangerous prisoner in Blackwater, Red faces maximum security. Tonight, he breaks free or dies trying. The great escape begins!",
     image: "/panel4.png",
     color: "text-orange-400",
     bgColor: "from-orange-900 to-orange-700",

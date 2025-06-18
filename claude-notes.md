@@ -24,6 +24,8 @@ Removed title and subtitle elements from story slides:
    - Cleaned up STORY_SLIDES array to remove title and subtitle fields
    - Removed panel 5 (unnecessary final slide)
    - Removed "Keep running, rebel rooster! The prison never ends!" text
+   - Updated all panel text to be more concise and impactful
+   - Rewrote panel 4 to better set up the prison escape theme
    
 #### Result:
 - Cleaner, more focused story slides
@@ -32,6 +34,8 @@ Removed title and subtitle elements from story slides:
 - Less text clutter on screen
 - Shorter, more concise story flow (4 panels instead of 5)
 - Removed distracting footer text
+- More concise and punchy storytelling
+- Better transition from story to gameplay with escape theme
 
 ## Previous Status: Fixed responsive display issues
 
