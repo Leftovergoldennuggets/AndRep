@@ -191,8 +191,6 @@ const WEAPONS_INFO = {
 
 const STORY_SLIDES = [
   {
-    title: "PRIDE OF THE FARM",
-    subtitle: "RED THE MAGNIFICENT",
     text: "Three-time champion. Beloved protector. Every morning, Red's crow meant safety. Every night, his watch meant peace. The animals slept soundly knowing their guardian stood tall.",
     image: "/panel1.png",
     color: "text-yellow-400",
@@ -200,8 +198,6 @@ const STORY_SLIDES = [
     panelBg: "bg-yellow-100 text-black"
   },
   {
-    title: "HORROR UNVEILED",
-    subtitle: "THE DARK SECRET", 
     text: "Red heard the screams first. Then came the laughter - cruel, cold, inhuman. Behind the barn, guards tortured innocents for sport. His heart shattered. Everything he protected was a lie.",
     image: "/panel2.png",
     color: "text-red-400",
@@ -209,8 +205,6 @@ const STORY_SLIDES = [
     panelBg: "bg-red-100 text-black"
   },
   {
-    title: "WILBUR'S SACRIFICE",
-    subtitle: "A HERO'S FAREWELL",
     text: "\"No! Take me instead!\" Wilbur threw himself between the guards and the piglets. The baton came down hard. As Red held his dying friend, Wilbur whispered: \"Promise me... save them all.\"",
     image: "/panel3.png",
     color: "text-purple-400",
@@ -218,8 +212,6 @@ const STORY_SLIDES = [
     panelBg: "bg-purple-100 text-black"
   },
   {
-    title: "RAGE UNLEASHED",
-    subtitle: "JUSTICE IN BLOOD",
     text: "Something primal awakened. Red's talons found flesh. His beak tasted vengeance. Three guards fell before they could scream. In the carnage, a rebel was born.",
     image: "/panel4.png",
     color: "text-orange-400",
@@ -227,8 +219,6 @@ const STORY_SLIDES = [
     panelBg: "bg-orange-100 text-black"
   },
   {
-    title: "FREEDOM OR DEATH",
-    subtitle: "THE GREAT ESCAPE",
     text: "Maximum security can't hold a promise. Tonight, Red runs the gauntlet. For every friend lost. For every tear shed. The Rebel Rooster rises.",
     image: "/panel5.png",
     color: "text-green-400", 
@@ -3647,33 +3637,11 @@ export default function FlappyBirdGame() {
                     CHAPTER {storySlide + 1} / {STORY_SLIDES.length}
                   </div>
                   
-                  {/* Title */}
-                  <div className="space-y-4">
-                    <h2 
-                      className="text-3xl sm:text-4xl md:text-5xl font-bold text-yellow-300"
-                      style={{
-                        fontFamily: 'monospace',
-                        letterSpacing: '4px'
-                      }}
-                    >
-                      {slide.title}
-                    </h2>
-                    <h3 
-                      className="text-xl sm:text-2xl md:text-3xl font-bold text-white"
-                      style={{
-                        fontFamily: 'monospace',
-                        letterSpacing: '2px'
-                      }}
-                    >
-                      {slide.subtitle}
-                    </h3>
-                  </div>
-                  
                   {/* Illustration */}
                   <div className="py-4">
                     <img 
                       src={slide.image}
-                      alt={`${slide.title} - ${slide.subtitle}`}
+                      alt={`Story panel ${storySlide + 1}`}
                       className="w-full h-auto max-h-96 object-contain"
                       style={{
                         filter: 'contrast(1.1) saturate(1.2)',

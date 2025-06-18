@@ -1,6 +1,35 @@
 # Claude Code Session Notes
 
-## Current Status: Fixed responsive display issues
+## Current Status: Fixed intro story UI
+
+### Intro Story Improvement
+
+#### Problem:
+- Yellow title and white subtitle on each story slide were cluttering the interface
+- Made the story slides feel less smooth and more text-heavy
+- Reduced visual focus on the story illustrations
+
+#### Solution:
+Removed title and subtitle elements from story slides:
+- Removed yellow title text (large heading)
+- Removed white subtitle text (smaller heading)
+- Kept chapter indicator and story text for context
+- Updated image alt text to be more generic
+- Cleaned up STORY_SLIDES data structure by removing unused title/subtitle fields
+
+#### Changes Made:
+1. **FlappyBirdGame.tsx**:
+   - Removed title and subtitle rendering sections
+   - Updated image alt text to use chapter number instead of title/subtitle
+   - Cleaned up STORY_SLIDES array to remove title and subtitle fields
+   
+#### Result:
+- Cleaner, more focused story slides
+- Better visual emphasis on story illustrations
+- Smoother reading experience
+- Less text clutter on screen
+
+## Previous Status: Fixed responsive display issues
 
 ### Responsive Display Fix
 
@@ -37,6 +66,14 @@ Implemented dynamic canvas scaling with aspect ratio preservation:
 
 #### Commits:
 - fix: add responsive canvas scaling for proper display on all screen sizes
+- fix: separate UI overlays from canvas scaling to ensure buttons remain visible
+
+#### Final Status:
+Reverted to db867d9 - the version where the story screen requires scrolling but the game displays properly scaled. This version maintains:
+- Dynamic canvas scaling with proper aspect ratio
+- UI overlays positioned independently from canvas
+- Story screen with scrollable content (buttons may require scrolling on smaller screens)
+- Game properly centered and scaled on all screen sizes
 
 ## Previous Status: Making game easier based on player feedback
 
