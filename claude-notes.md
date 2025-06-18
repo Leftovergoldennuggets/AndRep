@@ -22,12 +22,16 @@ Removed title and subtitle elements from story slides:
    - Removed title and subtitle rendering sections
    - Updated image alt text to use chapter number instead of title/subtitle
    - Cleaned up STORY_SLIDES array to remove title and subtitle fields
+   - Removed panel 5 (unnecessary final slide)
+   - Removed "Keep running, rebel rooster! The prison never ends!" text
    
 #### Result:
 - Cleaner, more focused story slides
 - Better visual emphasis on story illustrations
 - Smoother reading experience
 - Less text clutter on screen
+- Shorter, more concise story flow (4 panels instead of 5)
+- Removed distracting footer text
 
 ## Previous Status: Fixed responsive display issues
 

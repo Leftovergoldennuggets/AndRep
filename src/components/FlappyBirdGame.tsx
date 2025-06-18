@@ -217,13 +217,6 @@ const STORY_SLIDES = [
     color: "text-orange-400",
     bgColor: "from-orange-900 to-orange-700",
     panelBg: "bg-orange-100 text-black"
-  },
-  {
-    text: "Maximum security can't hold a promise. Tonight, Red runs the gauntlet. For every friend lost. For every tear shed. The Rebel Rooster rises.",
-    image: "/panel5.png",
-    color: "text-green-400", 
-    bgColor: "from-green-900 to-green-700",
-    panelBg: "bg-green-100 text-black"
   }
 ];
 
@@ -4105,11 +4098,6 @@ export default function FlappyBirdGame() {
         </div>
       )}
 
-      <div className="mt-4 text-center text-white">
-        <p className="text-sm opacity-80">
-          Keep running, rebel rooster! The prison never ends! 🐓🏃‍♂️
-        </p>
-      </div>
     </div>
   );
 }
