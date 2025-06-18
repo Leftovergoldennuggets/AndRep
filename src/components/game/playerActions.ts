@@ -3,6 +3,22 @@ import { WEAPONS } from './weapons';
 import { PHYSICS, SPECIAL_ABILITIES } from './constants';
 import { createParticles } from './particles';
 
+export function updateSpawnAnimation(player: GameState['player'], deltaTime: number): void {
+  if (player.spawnState === 'in_cell') {
+    player.cellBreakTimer += deltaTime;
+    if (player.cellBreakTimer >= 1000) { // 1 second delay before breaking out
+      player.spawnState = 'breaking_out';
+      player.cellBreakTimer = 0;
+    }
+  } else if (player.spawnState === 'breaking_out') {
+    player.cellBreakTimer += deltaTime;
+    if (player.cellBreakTimer >= 800) { // 0.8 seconds of breaking animation
+      player.spawnState = 'free';
+      player.cellBreakTimer = 0;
+    }
+  }
+}
+
 export function jump(player: GameState['player']): void {
   if (player.onGround) {
     player.velocityY = PHYSICS.JUMP_FORCE;

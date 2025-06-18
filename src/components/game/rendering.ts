@@ -25,14 +25,91 @@ export function drawPlayer(
 ): void {
   const screenX = player.x - cameraX;
   
-  // Player body (rooster)
-  ctx.fillStyle = player.spawnImmunity > 0 ? 'rgba(255, 100, 100, 0.7)' : COLORS.PLAYER;
-  ctx.fillRect(screenX, player.y, 48, 48);
+  // Draw cell if player is spawning
+  if (player.spawnState !== 'free') {
+    drawSpawnCell(ctx, player, screenX);
+  }
   
-  // Simple weapon indicator
-  ctx.fillStyle = '#8B4513';
-  const weaponX = player.direction === 'left' ? screenX - 10 : screenX + 48;
-  ctx.fillRect(weaponX, player.y + 20, 15, 5);
+  // Only draw player if breaking out or free
+  if (player.spawnState !== 'in_cell') {
+    // Player body (rooster)
+    ctx.fillStyle = player.spawnImmunity > 0 ? 'rgba(255, 100, 100, 0.7)' : COLORS.PLAYER;
+    ctx.fillRect(screenX, player.y, 48, 48);
+    
+    // Simple weapon indicator (only when free)
+    if (player.spawnState === 'free') {
+      ctx.fillStyle = '#8B4513';
+      const weaponX = player.direction === 'left' ? screenX - 10 : screenX + 48;
+      ctx.fillRect(weaponX, player.y + 20, 15, 5);
+    }
+  }
+}
+
+function drawSpawnCell(
+  ctx: CanvasRenderingContext2D,
+  player: Player,
+  screenX: number
+): void {
+  const cellWidth = 80;
+  const cellHeight = 90;
+  const cellX = screenX - 16; // Center cell around player
+  const cellY = player.y - 20;
+  
+  // Cell walls
+  ctx.fillStyle = '#444444';
+  ctx.fillRect(cellX, cellY, cellWidth, cellHeight);
+  
+  // Cell interior
+  ctx.fillStyle = '#666666';
+  ctx.fillRect(cellX + 4, cellY + 4, cellWidth - 8, cellHeight - 8);
+  
+  if (player.spawnState === 'breaking_out') {
+    // Add breaking effect
+    const breakProgress = player.cellBreakTimer / 800; // 800ms duration
+    const shakeAmount = Math.sin(Date.now() * 0.02) * breakProgress * 3;
+    
+    // Draw cracks
+    ctx.strokeStyle = '#FFFF00';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    
+    // Vertical cracks
+    for (let i = 0; i < 3; i++) {
+      const x = cellX + 20 + i * 20 + shakeAmount;
+      ctx.moveTo(x, cellY);
+      ctx.lineTo(x, cellY + cellHeight * breakProgress);
+    }
+    
+    // Horizontal cracks
+    for (let i = 0; i < 2; i++) {
+      const y = cellY + 30 + i * 30;
+      ctx.moveTo(cellX, y);
+      ctx.lineTo(cellX + cellWidth * breakProgress, y + shakeAmount);
+    }
+    
+    ctx.stroke();
+    
+    // Add sparks/particles effect
+    if (breakProgress > 0.5) {
+      for (let i = 0; i < 5; i++) {
+        const sparkX = cellX + Math.random() * cellWidth;
+        const sparkY = cellY + Math.random() * cellHeight;
+        ctx.fillStyle = '#FFFF00';
+        ctx.fillRect(sparkX, sparkY, 2, 2);
+      }
+    }
+  } else {
+    // Draw bars for intact cell
+    ctx.strokeStyle = '#333333';
+    ctx.lineWidth = 3;
+    for (let i = 0; i < 6; i++) {
+      const x = cellX + 10 + i * 10;
+      ctx.beginPath();
+      ctx.moveTo(x, cellY);
+      ctx.lineTo(x, cellY + cellHeight);
+      ctx.stroke();
+    }
+  }
 }
 
 export function drawEnemy(

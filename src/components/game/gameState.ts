@@ -15,6 +15,8 @@ export function createInitialGameState(): Partial<GameState> {
       animationFrame: 0,
       direction: 'right',
       spawnImmunity: PLAYER.SPAWN_IMMUNITY_DURATION,
+      spawnState: 'in_cell',
+      cellBreakTimer: 0,
     },
     level: {
       current: 1,
@@ -211,6 +213,8 @@ export function resetLevel(gameState: GameState, levelNumber: number): void {
   gameState.player.velocityY = 0;
   gameState.player.onGround = true;
   gameState.player.spawnImmunity = PLAYER.SPAWN_IMMUNITY_DURATION;
+  gameState.player.spawnState = 'in_cell';
+  gameState.player.cellBreakTimer = 0;
   
   // Reset camera
   gameState.camera.x = 0;

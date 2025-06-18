@@ -14,6 +14,8 @@ interface GameState {
     animationFrame: number;
     direction: 'left' | 'right';
     spawnImmunity: number;
+    spawnState: 'in_cell' | 'breaking_out' | 'free';
+    cellBreakTimer: number;
   };
   level: {
     current: number;
@@ -254,6 +256,8 @@ export default function FlappyBirdGame() {
       animationFrame: 0,
       direction: 'right',
       spawnImmunity: 2000, // 2 seconds of spawn immunity
+      spawnState: 'in_cell',
+      cellBreakTimer: 0,
     },
     level: {
       current: 1,
@@ -413,6 +417,8 @@ export default function FlappyBirdGame() {
         animationFrame: 0,
         direction: 'right',
         spawnImmunity: 2000, // 2 seconds of spawn immunity
+        spawnState: 'in_cell',
+        cellBreakTimer: 0,
       },
       level: {
         current: 1,
@@ -1353,6 +1359,70 @@ export default function FlappyBirdGame() {
     }
   }, []);
 
+  const drawSpawnCell = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number) => {
+    const state = gameStateRef.current;
+    const cellWidth = 80;
+    const cellHeight = 90;
+    const cellX = x - 16; // Center cell around player
+    const cellY = y - 20;
+    
+    // Cell walls
+    ctx.fillStyle = '#444444';
+    ctx.fillRect(cellX, cellY, cellWidth, cellHeight);
+    
+    // Cell interior
+    ctx.fillStyle = '#666666';
+    ctx.fillRect(cellX + 4, cellY + 4, cellWidth - 8, cellHeight - 8);
+    
+    if (state.player.spawnState === 'breaking_out') {
+      // Add breaking effect
+      const breakProgress = state.player.cellBreakTimer / 800; // 800ms duration
+      const shakeAmount = Math.sin(Date.now() * 0.02) * breakProgress * 3;
+      
+      // Draw cracks
+      ctx.strokeStyle = '#FFFF00';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      
+      // Vertical cracks
+      for (let i = 0; i < 3; i++) {
+        const crackX = cellX + 20 + i * 20 + shakeAmount;
+        ctx.moveTo(crackX, cellY);
+        ctx.lineTo(crackX, cellY + cellHeight * breakProgress);
+      }
+      
+      // Horizontal cracks
+      for (let i = 0; i < 2; i++) {
+        const crackY = cellY + 30 + i * 30;
+        ctx.moveTo(cellX, crackY);
+        ctx.lineTo(cellX + cellWidth * breakProgress, crackY + shakeAmount);
+      }
+      
+      ctx.stroke();
+      
+      // Add sparks/particles effect
+      if (breakProgress > 0.5) {
+        for (let i = 0; i < 5; i++) {
+          const sparkX = cellX + Math.random() * cellWidth;
+          const sparkY = cellY + Math.random() * cellHeight;
+          ctx.fillStyle = '#FFFF00';
+          ctx.fillRect(sparkX, sparkY, 2, 2);
+        }
+      }
+    } else {
+      // Draw bars for intact cell
+      ctx.strokeStyle = '#333333';
+      ctx.lineWidth = 3;
+      for (let i = 0; i < 6; i++) {
+        const barX = cellX + 10 + i * 10;
+        ctx.beginPath();
+        ctx.moveTo(barX, cellY);
+        ctx.lineTo(barX, cellY + cellHeight);
+        ctx.stroke();
+      }
+    }
+  }, []);
+
   const drawPlayer = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number) => {
     const size = GAME_CONFIG.player.size;
     const state = gameStateRef.current;
@@ -1361,6 +1431,17 @@ export default function FlappyBirdGame() {
     const direction = state.player.direction;
     
     ctx.save();
+
+    // Draw cell if player is spawning
+    if (state.player.spawnState !== 'free') {
+      drawSpawnCell(ctx, x, y);
+    }
+
+    // Only draw player if breaking out or free
+    if (state.player.spawnState === 'in_cell') {
+      ctx.restore();
+      return;
+    }
     
     // Add invincibility visual effect (flashing)
     if (state.player.spawnImmunity > 0) {
@@ -2414,6 +2495,21 @@ export default function FlappyBirdGame() {
         state.player.spawnImmunity -= 16; // Reduce by ~16ms per frame
       }
       
+      // Update spawn animation state
+      if (state.player.spawnState === 'in_cell') {
+        state.player.cellBreakTimer += 16; // ~16ms per frame
+        if (state.player.cellBreakTimer >= 1000) { // 1 second delay before breaking out
+          state.player.spawnState = 'breaking_out';
+          state.player.cellBreakTimer = 0;
+        }
+      } else if (state.player.spawnState === 'breaking_out') {
+        state.player.cellBreakTimer += 16;
+        if (state.player.cellBreakTimer >= 800) { // 0.8 seconds of breaking animation
+          state.player.spawnState = 'free';
+          state.player.cellBreakTimer = 0;
+        }
+      }
+      
       // COMBO DECAY SYSTEM - combos expire after 3 seconds
       const currentTime = Date.now();
       if (state.combo > 0 && currentTime - state.lastKillTime > 3000) {
@@ -2421,19 +2517,21 @@ export default function FlappyBirdGame() {
         state.comboMultiplier = 1.0;
       }
       
-      // Handle player horizontal movement and animation
-      const currentMoveSpeed = GAME_CONFIG.player.moveSpeed;
-        
-      if (keysRef.current.has('ArrowLeft') || keysRef.current.has('KeyA')) {
-        state.player.x -= currentMoveSpeed;
-        state.player.direction = 'left';
-        state.player.animationFrame = (state.player.animationFrame + 1) % 8;
-      } else if (keysRef.current.has('ArrowRight') || keysRef.current.has('KeyD')) {
-        state.player.x += currentMoveSpeed;
-        state.player.direction = 'right';
-        state.player.animationFrame = (state.player.animationFrame + 1) % 8;
-      } else {
-        state.player.animationFrame = 0;
+      // Handle player horizontal movement and animation (only when free)
+      if (state.player.spawnState === 'free') {
+        const currentMoveSpeed = GAME_CONFIG.player.moveSpeed;
+          
+        if (keysRef.current.has('ArrowLeft') || keysRef.current.has('KeyA')) {
+          state.player.x -= currentMoveSpeed;
+          state.player.direction = 'left';
+          state.player.animationFrame = (state.player.animationFrame + 1) % 8;
+        } else if (keysRef.current.has('ArrowRight') || keysRef.current.has('KeyD')) {
+          state.player.x += currentMoveSpeed;
+          state.player.direction = 'right';
+          state.player.animationFrame = (state.player.animationFrame + 1) % 8;
+        } else {
+          state.player.animationFrame = 0;
+        }
       }
 
       // Camera follows player with shake effect

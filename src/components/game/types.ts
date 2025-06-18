@@ -43,6 +43,8 @@ export interface Player extends Entity {
   animationFrame: number;
   direction: 'left' | 'right';
   spawnImmunity: number;
+  spawnState: 'in_cell' | 'breaking_out' | 'free';
+  cellBreakTimer: number;
 }
 
 export interface BossBehaviorState {
