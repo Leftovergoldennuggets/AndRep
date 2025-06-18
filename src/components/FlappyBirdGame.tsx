@@ -1982,234 +1982,308 @@ export default function FlappyBirdGame() {
       
       switch (enemy.bossType) {
         case 'warden': {
-          // CORRUPT PRISON WARDEN - Enhanced organic intimidating design
+          // CORRUPT PRISON WARDEN - Pixel Art Boss Design
           const time = Date.now() * 0.001;
-          const breathingOffset = Math.sin(time * 2) * 1.5; // Subtle breathing animation
-          const evilGlow = Math.sin(time * 3) * 0.3 + 0.7; // Pulsing evil aura
+          const breathingOffset = Math.sin(time * 2) * 0.5; // Subtle pixel breathing
           
-          // MENACING AURA - Pulsing dark energy
-          const gradient = ctx.createRadialGradient(
-            screenX + bossSize/2, enemy.y + bossSize/2, 0,
-            screenX + bossSize/2, enemy.y + bossSize/2, bossSize * 0.8
-          );
-          gradient.addColorStop(0, `rgba(150, 0, 0, ${evilGlow * 0.3})`);
-          gradient.addColorStop(1, 'rgba(0, 0, 0, 0.1)');
-          ctx.fillStyle = gradient;
-          ctx.fillRect(screenX - 10, enemy.y - 10, bossSize + 20, bossSize + 20);
+          // Enhanced movement-based animations
+          const isMoving = Math.abs(enemy.velocityX || 0) > 0;
+          const moveIntensity = Math.min(Math.abs(enemy.velocityX || 0) / 8, 1);
+          const walkCycle = isMoving ? Math.sin(time * 15 * (1 + moveIntensity)) * (1 + moveIntensity) : 0;
+          const isRageMode = enemy.phase && enemy.phase > 1;
+          const ragePulse = isRageMode ? Math.sin(time * 20) * 0.5 + 0.5 : 0;
           
-          // IMPOSING SILHOUETTE - Dynamic shadow
-          ctx.fillStyle = `rgba(0, 0, 0, ${0.4 + evilGlow * 0.1})`;
-          ctx.beginPath();
-          ctx.ellipse(screenX + bossSize/2, enemy.y + bossSize + 5, bossSize/2 + 3, 8, 0, 0, Math.PI * 2);
-          ctx.fill();
+          // Pixel-perfect animations
+          const blinkCycle = Math.sin(time * 3);
+          const eyeHeight = blinkCycle > 0.95 ? 1 : 2;
+          const pixelSize = Math.max(1, Math.floor(bossSize / 45)); // Dynamic pixel scaling
           
-          // MUSCULAR HEAD - Organic rounded shape with breathing
-          ctx.fillStyle = "#a67c5a"; // Weathered skin tone
-          ctx.beginPath();
-          ctx.ellipse(
-            screenX + bossSize/2, 
-            enemy.y + 15 + breathingOffset * 0.5, 
-            18, 16 + breathingOffset, 
-            0, 0, Math.PI * 2
-          );
-          ctx.fill();
+          // PIXEL ART SHADOW
+          ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+          ctx.fillRect(screenX + 3*pixelSize, enemy.y + bossSize + 2, 39*pixelSize, 4*pixelSize);
           
-          // Head shading for dimension
+          // PIXEL ART HEAD - Large intimidating head with walking bob
+          const headY = enemy.y + Math.floor(breathingOffset) + Math.floor(walkCycle * 0.3);
+          
+          // Head base (skin tone)
+          ctx.fillStyle = "#d4a574";
+          ctx.fillRect(screenX + 12*pixelSize, headY + 2*pixelSize, 21*pixelSize, 16*pixelSize);
+          
+          // Head shading (right side)
+          ctx.fillStyle = "#b8935f";
+          ctx.fillRect(screenX + 28*pixelSize, headY + 4*pixelSize, 5*pixelSize, 14*pixelSize);
+          ctx.fillRect(screenX + 24*pixelSize, headY + 16*pixelSize, 9*pixelSize, 2*pixelSize);
+          
+          // Forehead highlight
+          ctx.fillStyle = "#e8c18a";
+          ctx.fillRect(screenX + 14*pixelSize, headY + 3*pixelSize, 12*pixelSize, 3*pixelSize);
+          
+          // PIXEL ART FACIAL SCARS
           ctx.fillStyle = "#8b6b47";
-          ctx.beginPath();
-          ctx.ellipse(screenX + bossSize/2 + 2, enemy.y + 18 + breathingOffset * 0.5, 15, 13, 0, 0, Math.PI);
-          ctx.fill();
-          
-          // INTIMIDATING FACIAL SCARS - Jagged battle wounds
-          ctx.strokeStyle = "#6b4a2a";
-          ctx.lineWidth = 2;
-          ctx.beginPath();
           // Diagonal scar across left eye
-          ctx.moveTo(screenX + 15, enemy.y + 10);
-          ctx.lineTo(screenX + 25, enemy.y + 22);
+          ctx.fillRect(screenX + 16*pixelSize, headY + 8*pixelSize, pixelSize, 2*pixelSize);
+          ctx.fillRect(screenX + 17*pixelSize, headY + 10*pixelSize, pixelSize, 2*pixelSize);
+          ctx.fillRect(screenX + 18*pixelSize, headY + 12*pixelSize, pixelSize, 2*pixelSize);
           // Vertical scar on forehead
-          ctx.moveTo(screenX + 30, enemy.y + 8);
-          ctx.lineTo(screenX + 32, enemy.y + 18);
-          ctx.stroke();
+          ctx.fillRect(screenX + 26*pixelSize, headY + 4*pixelSize, pixelSize, 4*pixelSize);
           
-          // PIERCING EVIL EYES - Glowing with malice
-          const eyeGlow = Math.sin(time * 4) * 0.2 + 0.8;
-          ctx.fillStyle = "#ffffff";
-          ctx.beginPath();
-          ctx.ellipse(screenX + 20, enemy.y + 16, 4, 3, 0, 0, Math.PI * 2);
-          ctx.ellipse(screenX + 32, enemy.y + 16, 4, 3, 0, 0, Math.PI * 2);
-          ctx.fill();
+          // PIXEL ART EYES - Evil and animated
+          const eyeGlow = isRageMode ? Math.floor(ragePulse * 2) : 0;
+          const pupilOffset = enemy.velocityX ? Math.sign(enemy.velocityX) * pixelSize : 0;
           
-          // Evil red pupils with glow effect
-          ctx.fillStyle = `rgb(${255 * eyeGlow}, 0, 0)`;
-          ctx.beginPath();
-          ctx.ellipse(screenX + 20, enemy.y + 16, 2, 2, 0, 0, Math.PI * 2);
-          ctx.ellipse(screenX + 32, enemy.y + 16, 2, 2, 0, 0, Math.PI * 2);
-          ctx.fill();
-          
-          // Eye glow effect
-          ctx.shadowColor = '#ff0000';
-          ctx.shadowBlur = 8;
-          ctx.fillStyle = '#ff4444';
-          ctx.beginPath();
-          ctx.ellipse(screenX + 20, enemy.y + 16, 1, 1, 0, 0, Math.PI * 2);
-          ctx.ellipse(screenX + 32, enemy.y + 16, 1, 1, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.shadowBlur = 0;
-          
-          // MENACING BROW - Furrowed with anger
-          ctx.fillStyle = "#8b6b47";
-          ctx.beginPath();
-          ctx.moveTo(screenX + 14, enemy.y + 12);
-          ctx.lineTo(screenX + 26, enemy.y + 10);
-          ctx.lineTo(screenX + 26, enemy.y + 13);
-          ctx.lineTo(screenX + 14, enemy.y + 15);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.moveTo(screenX + 28, enemy.y + 10);
-          ctx.lineTo(screenX + 38, enemy.y + 12);
-          ctx.lineTo(screenX + 38, enemy.y + 15);
-          ctx.lineTo(screenX + 28, enemy.y + 13);
-          ctx.fill();
-          
-          // WARDEN CAP - Military style with curves
-          ctx.fillStyle = "#1a1a1a";
-          ctx.beginPath();
-          ctx.ellipse(screenX + bossSize/2, enemy.y + 5, 22, 8, 0, 0, Math.PI * 2);
-          ctx.fill();
-          
-          // Cap visor - curved and imposing
-          ctx.fillStyle = "#0d0d0d";
-          ctx.beginPath();
-          ctx.ellipse(screenX + bossSize/2, enemy.y + 8, 20, 4, 0, 0, Math.PI);
-          ctx.fill();
-          
-          // Cap badge - Menacing skull with glow
-          ctx.fillStyle = "#ffd700";
-          ctx.beginPath();
-          ctx.ellipse(screenX + bossSize/2, enemy.y + 4, 6, 4, 0, 0, Math.PI * 2);
-          ctx.fill();
-          
-          // Skull details
-          ctx.fillStyle = "#000000";
-          ctx.fillRect(screenX + bossSize/2 - 2, enemy.y + 2, 2, 2); // Left eye socket
-          ctx.fillRect(screenX + bossSize/2 + 1, enemy.y + 2, 2, 2); // Right eye socket
-          ctx.fillRect(screenX + bossSize/2, enemy.y + 5, 1, 2); // Nasal cavity
-          
-          // IMPOSING MUSCULAR BODY - Organic shape with breathing
-          ctx.fillStyle = "#1a1a1a";
-          ctx.beginPath();
-          ctx.roundRect(
-            screenX + 8, 
-            enemy.y + 32 + breathingOffset, 
-            bossSize - 16, 
-            bossSize - 40 + breathingOffset * 2, 
-            8
-          );
-          ctx.fill();
-          
-          // Body shading for muscle definition
-          ctx.fillStyle = "#2a2a2a";
-          ctx.beginPath();
-          ctx.roundRect(screenX + 12, enemy.y + 36, bossSize - 24, bossSize - 50, 6);
-          ctx.fill();
-          
-          // Uniform rank stripes - glowing gold
-          ctx.fillStyle = "#ffd700";
-          ctx.shadowColor = '#ffaa00';
-          ctx.shadowBlur = 4;
-          for (let stripe = 0; stripe < 4; stripe++) {
-            ctx.beginPath();
-            ctx.roundRect(
-              screenX + 10, 
-              enemy.y + 38 + stripe * 6, 
-              12, 2, 1
-            );
-            ctx.fill();
+          // Eye whites
+          ctx.fillStyle = isRageMode ? "#ffcccc" : "#ffffff";
+          if (eyeHeight > 1) {
+            ctx.fillRect(screenX + 16*pixelSize, headY + 8*pixelSize, 4*pixelSize, 2*pixelSize);
+            ctx.fillRect(screenX + 26*pixelSize, headY + 8*pixelSize, 4*pixelSize, 2*pixelSize);
           }
-          ctx.shadowBlur = 0;
           
-          // TACTICAL BODY ARMOR - Curved plates
-          ctx.fillStyle = "#444444";
-          ctx.beginPath();
-          ctx.roundRect(screenX + 18, enemy.y + 40, 20, 16, 4);
-          ctx.fill();
+          // Evil red pupils with tracking
+          if (eyeHeight > 1) {
+            ctx.fillStyle = isRageMode ? "#ff0000" : "#cc0000";
+            ctx.fillRect(screenX + 17*pixelSize + pupilOffset, headY + 8*pixelSize, 2*pixelSize, 2*pixelSize);
+            ctx.fillRect(screenX + 27*pixelSize + pupilOffset, headY + 8*pixelSize, 2*pixelSize, 2*pixelSize);
+            
+            // Rage mode eye glow effect
+            if (isRageMode && eyeGlow > 0) {
+              ctx.fillStyle = "#ff4444";
+              ctx.fillRect(screenX + 16*pixelSize, headY + 7*pixelSize, 4*pixelSize, 4*pixelSize);
+              ctx.fillRect(screenX + 26*pixelSize, headY + 7*pixelSize, 4*pixelSize, 4*pixelSize);
+            }
+          }
           
-          // Armor highlights
-          ctx.fillStyle = "#666666";
-          ctx.beginPath();
-          ctx.roundRect(screenX + 20, enemy.y + 42, 6, 6, 2);
-          ctx.roundRect(screenX + 30, enemy.y + 42, 6, 6, 2);
-          ctx.fill();
+          // PIXEL ART ANGRY EYEBROWS
+          ctx.fillStyle = "#8b6b47";
+          ctx.fillRect(screenX + 15*pixelSize, headY + 6*pixelSize, 3*pixelSize, pixelSize);
+          ctx.fillRect(screenX + 14*pixelSize, headY + 7*pixelSize, 2*pixelSize, pixelSize);
+          ctx.fillRect(screenX + 28*pixelSize, headY + 6*pixelSize, 3*pixelSize, pixelSize);
+          ctx.fillRect(screenX + 30*pixelSize, headY + 7*pixelSize, 2*pixelSize, pixelSize);
           
-          // MASSIVE COMBAT SHOTGUN - Sleek and deadly
-          const weaponY = enemy.y + 36 + breathingOffset * 0.5;
-          ctx.fillStyle = "#333333";
-          ctx.beginPath();
-          ctx.roundRect(screenX - 12, weaponY, 24, 6, 3);
-          ctx.fill();
+          // PIXEL ART WARDEN CAP
+          ctx.fillStyle = "#1a1a1a";
+          // Cap main body
+          ctx.fillRect(screenX + 10*pixelSize, headY - 2*pixelSize, 25*pixelSize, 8*pixelSize);
+          // Cap top
+          ctx.fillRect(screenX + 8*pixelSize, headY - 4*pixelSize, 29*pixelSize, 4*pixelSize);
+          
+          // Cap visor
+          ctx.fillStyle = "#0d0d0d";
+          ctx.fillRect(screenX + 8*pixelSize, headY + 4*pixelSize, 29*pixelSize, 3*pixelSize);
+          
+          // Cap badge - Prison warden star
+          ctx.fillStyle = "#ffd700";
+          ctx.fillRect(screenX + 21*pixelSize, headY - 2*pixelSize, 3*pixelSize, 6*pixelSize);
+          ctx.fillRect(screenX + 19*pixelSize, headY, 7*pixelSize, 2*pixelSize);
+          
+          // Badge details (skull symbol)
+          ctx.fillStyle = "#000000";
+          ctx.fillRect(screenX + 21*pixelSize, headY - 1*pixelSize, pixelSize, pixelSize);
+          ctx.fillRect(screenX + 23*pixelSize, headY - 1*pixelSize, pixelSize, pixelSize);
+          ctx.fillRect(screenX + 22*pixelSize, headY + pixelSize, pixelSize, pixelSize);
+          
+          // PIXEL ART MUSTACHE - Intimidating warden mustache
+          ctx.fillStyle = "#2c3e50";
+          ctx.fillRect(screenX + 18*pixelSize, headY + 12*pixelSize, 9*pixelSize, 2*pixelSize);
+          ctx.fillRect(screenX + 16*pixelSize, headY + 13*pixelSize, 3*pixelSize, pixelSize);
+          ctx.fillRect(screenX + 26*pixelSize, headY + 13*pixelSize, 3*pixelSize, pixelSize);
+          
+          // Mustache highlights
+          ctx.fillStyle = "#4a5568";
+          ctx.fillRect(screenX + 19*pixelSize, headY + 12*pixelSize, 7*pixelSize, pixelSize);
+          
+          // PIXEL ART WARDEN UNIFORM - Dark blue with details
+          const bodyY = enemy.y + 18*pixelSize + Math.floor(breathingOffset);
+          
+          // Main uniform body
+          ctx.fillStyle = "#1a237e";
+          ctx.fillRect(screenX + 8*pixelSize, bodyY, 29*pixelSize, 28*pixelSize);
+          
+          // Uniform shading/highlights
+          ctx.fillStyle = "#0d47a1";
+          ctx.fillRect(screenX + 10*pixelSize, bodyY + 2*pixelSize, 25*pixelSize, 2*pixelSize); // Collar
+          ctx.fillRect(screenX + 32*pixelSize, bodyY + 4*pixelSize, 5*pixelSize, 24*pixelSize); // Right side shadow
+          
+          // Uniform buttons
+          ctx.fillStyle = "#ffd700";
+          for (let i = 0; i < 5; i++) {
+            ctx.fillRect(screenX + 21*pixelSize, bodyY + 6*pixelSize + i * 4*pixelSize, 2*pixelSize, 2*pixelSize);
+          }
+          
+          // Shoulder pads/epaulettes
+          ctx.fillStyle = "#0d47a1";
+          ctx.fillRect(screenX + 6*pixelSize, bodyY + 2*pixelSize, 4*pixelSize, 8*pixelSize);
+          ctx.fillRect(screenX + 35*pixelSize, bodyY + 2*pixelSize, 4*pixelSize, 8*pixelSize);
+          
+          // Rank stripes on sleeves
+          ctx.fillStyle = "#ffd700";
+          for (let i = 0; i < 3; i++) {
+            ctx.fillRect(screenX + 6*pixelSize, bodyY + 4*pixelSize + i * 2*pixelSize, 3*pixelSize, pixelSize);
+            ctx.fillRect(screenX + 36*pixelSize, bodyY + 4*pixelSize + i * 2*pixelSize, 3*pixelSize, pixelSize);
+          }
+          
+          // Chest badge/star
+          ctx.fillStyle = "#ffd700";
+          ctx.fillRect(screenX + 14*pixelSize, bodyY + 8*pixelSize, 3*pixelSize, 5*pixelSize);
+          ctx.fillRect(screenX + 12*pixelSize, bodyY + 10*pixelSize, 7*pixelSize, pixelSize);
+          
+          // Belt
+          ctx.fillStyle = "#4a4a4a";
+          ctx.fillRect(screenX + 8*pixelSize, bodyY + 24*pixelSize, 29*pixelSize, 4*pixelSize);
+          
+          // Belt buckle
+          ctx.fillStyle = "#ffd700";
+          ctx.fillRect(screenX + 20*pixelSize, bodyY + 25*pixelSize, 5*pixelSize, 2*pixelSize);
+          
+          // PIXEL ART SHOTGUN - Detailed weapon
+          const weaponY = bodyY + 12*pixelSize + Math.floor(breathingOffset * 0.3);
+          const direction = enemy.x < 600 ? 1 : -1;
+          const gunX = direction > 0 ? screenX + 37*pixelSize : screenX - 15*pixelSize;
+          
+          // Shotgun main body
+          ctx.fillStyle = "#2c3e50";
+          ctx.fillRect(gunX, weaponY, 12*pixelSize, 3*pixelSize);
           
           // Shotgun barrel
-          ctx.fillStyle = "#555555";
-          ctx.beginPath();
-          ctx.roundRect(screenX - 16, weaponY + 1, 6, 4, 2);
-          ctx.fill();
+          ctx.fillStyle = "#1a1a1a";
+          ctx.fillRect(gunX - 4*pixelSize, weaponY + pixelSize, 6*pixelSize, pixelSize);
           
-          // Weapon details
-          ctx.fillStyle = "#777777";
-          ctx.beginPath();
-          ctx.roundRect(screenX + 8, weaponY + 2, 6, 2, 1);
-          ctx.fill();
+          // Shotgun stock
+          ctx.fillStyle = "#8b4513";
+          ctx.fillRect(gunX + 10*pixelSize, weaponY - pixelSize, 3*pixelSize, 5*pixelSize);
           
-          // Muzzle flash effect (if recently fired) - Enhanced
-          if (Date.now() - enemy.lastShotTime < 200) {
-            const flashIntensity = Math.max(0, 1 - (Date.now() - enemy.lastShotTime) / 200);
-            
-            // Outer flash
-            ctx.fillStyle = `rgba(255, 255, 0, ${flashIntensity * 0.8})`;
-            ctx.beginPath();
-            ctx.ellipse(screenX - 18, weaponY + 3, 8 * flashIntensity, 4 * flashIntensity, 0, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Inner flash
-            ctx.fillStyle = `rgba(255, 140, 0, ${flashIntensity})`;
-            ctx.beginPath();
-            ctx.ellipse(screenX - 16, weaponY + 3, 4 * flashIntensity, 2 * flashIntensity, 0, 0, Math.PI * 2);
-            ctx.fill();
+          // Shotgun details
+          ctx.fillStyle = "#4a4a4a";
+          ctx.fillRect(gunX + 2*pixelSize, weaponY + pixelSize, 6*pixelSize, pixelSize);
+          
+          // Pixel art muzzle flash effect
+          if (Date.now() - enemy.lastShotTime < 150) {
+            const flashIntensity = Math.max(0, 1 - (Date.now() - enemy.lastShotTime) / 150);
+            if (flashIntensity > 0.5) {
+              ctx.fillStyle = "#ffff00";
+              const flashX = direction > 0 ? gunX - 6*pixelSize : gunX + 15*pixelSize;
+              ctx.fillRect(flashX, weaponY, 4*pixelSize, 3*pixelSize);
+              ctx.fillStyle = "#ff6600";
+              ctx.fillRect(flashX + pixelSize, weaponY + pixelSize, 2*pixelSize, pixelSize);
+            }
           }
           
-          // POWERFUL ARMS - Muscular and organic
-          ctx.fillStyle = "#a67c5a";
-          // Left arm (holding weapon)
-          ctx.beginPath();
-          ctx.ellipse(screenX - 2, enemy.y + 30, 8, 16, -0.3, 0, Math.PI * 2);
-          ctx.fill();
+          // PIXEL ART ARMS - Muscular warden arms
+          ctx.fillStyle = "#d4a574";
+          // Left arm
+          ctx.fillRect(screenX + 2*pixelSize, bodyY + 6*pixelSize, 6*pixelSize, 16*pixelSize);
+          // Right arm  
+          ctx.fillRect(screenX + 37*pixelSize, bodyY + 6*pixelSize, 6*pixelSize, 16*pixelSize);
           
-          // Right arm
-          ctx.beginPath();
-          ctx.ellipse(screenX + bossSize + 2, enemy.y + 30, 8, 16, 0.3, 0, Math.PI * 2);
-          ctx.fill();
+          // Arm shading
+          ctx.fillStyle = "#b8935f";
+          ctx.fillRect(screenX + 6*pixelSize, bodyY + 8*pixelSize, 2*pixelSize, 14*pixelSize);
+          ctx.fillRect(screenX + 41*pixelSize, bodyY + 8*pixelSize, 2*pixelSize, 14*pixelSize);
           
-          // Hands - clenched fists
-          ctx.fillStyle = "#957048";
-          ctx.beginPath();
-          ctx.ellipse(screenX - 6, enemy.y + 42, 5, 6, 0, 0, Math.PI * 2);
-          ctx.ellipse(screenX + bossSize + 6, enemy.y + 42, 5, 6, 0, 0, Math.PI * 2);
-          ctx.fill();
+          // PIXEL ART HANDS - Clenched fists
+          ctx.fillStyle = "#d4a574";
+          ctx.fillRect(screenX + pixelSize, bodyY + 20*pixelSize, 4*pixelSize, 6*pixelSize);
+          ctx.fillRect(screenX + 40*pixelSize, bodyY + 20*pixelSize, 4*pixelSize, 6*pixelSize);
           
-          // PRISON KEYS - Jangling with movement
-          const keySwing = Math.sin(time * 8) * 3;
+          // Hand details
+          ctx.fillStyle = "#b8935f";
+          ctx.fillRect(screenX + 2*pixelSize, bodyY + 22*pixelSize, 2*pixelSize, 3*pixelSize);
+          ctx.fillRect(screenX + 41*pixelSize, bodyY + 22*pixelSize, 2*pixelSize, 3*pixelSize);
+          
+          // PIXEL ART PRISON KEYS - Jangling with movement
+          const keySwing = Math.floor(Math.sin(time * 8) * 2);
           ctx.fillStyle = "#c0c0c0";
-          ctx.beginPath();
-          ctx.roundRect(screenX + 35 + keySwing, enemy.y + 50, 3, 10, 1);
-          ctx.fill();
+          ctx.fillRect(screenX + 28*pixelSize + keySwing, bodyY + 20*pixelSize, pixelSize, 6*pixelSize);
+          ctx.fillRect(screenX + 27*pixelSize + keySwing, bodyY + 22*pixelSize, pixelSize, 2*pixelSize);
           
           // Key ring
-          ctx.strokeStyle = "#c0c0c0";
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.arc(screenX + 36, enemy.y + 48, 3, 0, Math.PI * 2);
-          ctx.stroke();
+          ctx.fillStyle = "#999999";
+          ctx.fillRect(screenX + 27*pixelSize, bodyY + 18*pixelSize, 3*pixelSize, pixelSize);
+          ctx.fillRect(screenX + 27*pixelSize, bodyY + 18*pixelSize, pixelSize, 3*pixelSize);
+          ctx.fillRect(screenX + 29*pixelSize, bodyY + 18*pixelSize, pixelSize, 3*pixelSize);
+          
+          // PIXEL ART LEGS - Powerful warden legs with walking animation
+          const legY = bodyY + 28*pixelSize;
+          const legWalk = isMoving ? Math.floor(walkCycle) : 0;
+          
+          // Left leg
+          ctx.fillStyle = "#1a237e";
+          ctx.fillRect(screenX + 12*pixelSize, legY + legWalk, 8*pixelSize, 12*pixelSize);
+          // Right leg
+          ctx.fillRect(screenX + 25*pixelSize, legY - legWalk, 8*pixelSize, 12*pixelSize);
+          
+          // Leg shading
+          ctx.fillStyle = "#0d47a1";
+          ctx.fillRect(screenX + 18*pixelSize, legY + legWalk + 2*pixelSize, 2*pixelSize, 10*pixelSize);
+          ctx.fillRect(screenX + 31*pixelSize, legY - legWalk + 2*pixelSize, 2*pixelSize, 10*pixelSize);
+          
+          // PIXEL ART COMBAT BOOTS - Heavy duty with stomping animation
+          const bootY = legY + 12*pixelSize;
+          ctx.fillStyle = "#1a1a1a";
+          ctx.fillRect(screenX + 10*pixelSize, bootY + legWalk, 12*pixelSize, 6*pixelSize);
+          ctx.fillRect(screenX + 23*pixelSize, bootY - legWalk, 12*pixelSize, 6*pixelSize);
+          
+          // Boot details
+          ctx.fillStyle = "#333333";
+          ctx.fillRect(screenX + 11*pixelSize, bootY + legWalk + pixelSize, 10*pixelSize, 2*pixelSize);
+          ctx.fillRect(screenX + 24*pixelSize, bootY - legWalk + pixelSize, 10*pixelSize, 2*pixelSize);
+          
+          // Boot laces
+          ctx.fillStyle = "#8b4513";
+          for (let i = 0; i < 3; i++) {
+            ctx.fillRect(screenX + 13*pixelSize + i * 2*pixelSize, bootY + legWalk + 2*pixelSize, pixelSize, pixelSize);
+            ctx.fillRect(screenX + 26*pixelSize + i * 2*pixelSize, bootY - legWalk + 2*pixelSize, pixelSize, pixelSize);
+          }
+          
+          // ENHANCED RAGE MODE EFFECTS
+          if (isRageMode) {
+            // Electrical aura around boss
+            ctx.strokeStyle = `rgba(255, 255, 0, ${0.3 + ragePulse * 0.4})`;
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 4; i++) {
+              const angle = (time * 10 + i * Math.PI * 0.5) % (Math.PI * 2);
+              const x1 = screenX + bossSize/2 + Math.cos(angle) * (bossSize/2 + 8);
+              const y1 = enemy.y + bossSize/2 + Math.sin(angle) * (bossSize/2 + 8);
+              const x2 = screenX + bossSize/2 + Math.cos(angle + 0.1) * (bossSize/2 + 15);
+              const y2 = enemy.y + bossSize/2 + Math.sin(angle + 0.1) * (bossSize/2 + 15);
+              
+              ctx.beginPath();
+              ctx.moveTo(x1, y1);
+              ctx.lineTo(x2, y2);
+              ctx.stroke();
+            }
+            
+            // Enhanced aura glow
+            ctx.fillStyle = `rgba(255, 0, 0, ${ragePulse * 0.2})`;
+            ctx.fillRect(screenX - 5, enemy.y - 5, bossSize + 10, bossSize + 10);
+          }
+          
+          // MOVEMENT EFFECTS
+          if (isMoving && moveIntensity > 0.3) {
+            // Motion blur effect
+            ctx.fillStyle = `rgba(26, 26, 26, ${moveIntensity * 0.15})`;
+            const blurOffset = moveIntensity * 3 * Math.sign(enemy.velocityX || 1);
+            ctx.fillRect(screenX - blurOffset, enemy.y, bossSize, bossSize);
+            
+            // Dust clouds when moving fast
+            if (moveIntensity > 0.5) {
+              ctx.fillStyle = 'rgba(139, 69, 19, 0.3)';
+              ctx.fillRect(screenX - 5, enemy.y + bossSize - 2, bossSize + 10, 3);
+            }
+          }
+          
+          // CHARGING EFFECTS (when in charge pattern)
+          if (enemy.behaviorState?.currentPattern === 'charge' && moveIntensity > 0.5) {
+            // Speed lines behind charging boss
+            ctx.strokeStyle = `rgba(255, 200, 0, ${moveIntensity * 0.6})`;
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 3; i++) {
+              const lineX = screenX - (i + 1) * 12 * Math.sign(enemy.velocityX || 1);
+              ctx.beginPath();
+              ctx.moveTo(lineX, enemy.y + 15 + i * 20);
+              ctx.lineTo(lineX - 15 * Math.sign(enemy.velocityX || 1), enemy.y + 20 + i * 20);
+              ctx.stroke();
+            }
+          }
           
           break;
         }

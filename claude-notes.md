@@ -139,12 +139,104 @@ Removed title and subtitle elements from story slides:
 - 💀 Enhanced nameplate with "CORRUPT WARDEN JOHNSON"
 - 🩸 Ground crack effects in rage mode
 
+#### Problem Found:
+- Enhanced boss rendering code was in `rendering.ts` but main game uses its own `drawEnemy` function
+- User correctly observed "He looks exactly the same" because enhancements weren't actually being used
+
+#### Solution - Integrated Enhanced Visuals:
+Successfully integrated enhanced warden features into main game's existing boss rendering:
+
+1. **Enhanced Animation System**:
+   - **Movement-based effects**: `walkCycle` animation that intensifies with speed
+   - **Blinking animation**: Realistic eye closing/opening every few seconds  
+   - **Pupil tracking**: Eyes follow movement direction with `pupilOffset`
+   - **Breathing with walking**: Head bobs slightly when moving
+
+2. **Rage Mode Visual Enhancements**:
+   - **Electrical aura**: Rotating lightning bolts around boss in rage mode
+   - **Enhanced eye glow**: Pupils glow red and intensify during rage
+   - **Red aura overlay**: Pulsing red glow effect over entire boss
+   - **Dynamic rage pulse**: All effects intensify with `ragePulse` variable
+
+3. **Movement Visual Effects**:
+   - **Motion blur**: Trailing shadow effect when moving fast (`moveIntensity > 0.3`)
+   - **Dust clouds**: Ground dust when moving at high speed (`moveIntensity > 0.5`)
+   - **Speed lines**: Dynamic trailing lines during charge attacks
+   - **Directional effects**: All effects respect movement direction
+
+4. **Enhanced Responsiveness**:
+   - All animations tied to actual boss behavior state and movement
+   - Rage mode effects only appear when `enemy.phase > 1` 
+   - Charging effects only during charge behavior pattern
+   - Intensity scales with actual movement speed
+
 #### Result:
-- **Visually Impressive**: Detailed pixel art boss with arcade-style charm
-- **Dynamic Combat**: Multiple attack patterns that change based on health
-- **Smooth Animations**: Breathing, blinking, walking, and charging animations
-- **Enhanced Challenge**: Tactical movement patterns make the fight more engaging
-- **Better Feedback**: Visual and audio cues for different attack phases
+- **Visually Impressive**: Boss now has detailed dynamic animations that respond to behavior
+- **Enhanced Feedback**: Clear visual indicators for rage mode, movement, and attack patterns  
+- **Smooth Animations**: Breathing, blinking, walking, pupil tracking all work together
+- **Better Combat Feel**: Player can see boss's state and intentions through visual cues
+- **Integrated Successfully**: Enhanced visuals now appear in actual gameplay, not just in unused code
+
+### Latest Enhancement: Pixel Art Warden Design
+
+#### Problem:
+- User requested pixel art style to match the guards instead of organic/smooth rendering
+- Original enhanced warden used ellipses and curves which didn't fit the game's pixel aesthetic
+
+#### Solution - Complete Pixel Art Redesign:
+Completely redesigned the corrupt warden boss using pixel-perfect rectangles and squares:
+
+1. **Pixel Art Head & Face**:
+   - **Dynamic pixel scaling**: `pixelSize` based on boss size for consistent pixel look
+   - **Skin tone blocks**: Weathered prison guard complexion with proper shading
+   - **Animated pixel eyes**: Blinking animation with pupil tracking using pixel offsets
+   - **Facial scars**: Diagonal and vertical pixel scars for battle-hardened look
+   - **Angry eyebrows**: Sharp angular pixel eyebrows
+
+2. **Prison Warden Uniform**:
+   - **Dark blue uniform**: Official prison warden colors (#1a237e)
+   - **Gold buttons**: 5 precise pixel buttons down the front
+   - **Shoulder epaulettes**: Rank insignia with gold stripes on sleeves
+   - **Chest badge**: Pixel art sheriff star with skull symbol
+   - **Belt and buckle**: Tactical belt with gold rectangular buckle
+
+3. **Warden Cap & Badge**:
+   - **Official cap**: Multi-layer pixel design with visor
+   - **Cap badge**: Prison warden star with skull details
+   - **Proper proportions**: Scaled to boss size maintaining pixel precision
+
+4. **Detailed Equipment**:
+   - **Pixel shotgun**: Detailed weapon with stock, barrel, and grip
+   - **Prison keys**: Jangling key ring with movement animation
+   - **Combat boots**: Heavy duty boots with laces and stomping animation
+   - **Muscular arms**: Skin-toned arms with proper pixel shading
+
+5. **Enhanced Pixel Animations**:
+   - **Walking cycle**: Pixel-perfect leg alternation during movement
+   - **Breathing**: Subtle pixel position shifts for life-like effect
+   - **Blinking**: Eyes close to single pixel height periodically
+   - **Pupil tracking**: Eyes follow movement direction with pixel precision
+   - **Muzzle flash**: Pixel-based shotgun flash effects
+
+6. **Rage Mode Pixel Effects**:
+   - **Eye glow**: Red pixel overlay during rage mode
+   - **Electrical aura**: Pixel-based lightning effects
+   - **Enhanced animations**: All effects maintain pixel art aesthetic
+
+#### Technical Implementation:
+- Used `Math.floor()` on all animation offsets to maintain pixel boundaries
+- Dynamic `pixelSize` calculation: `Math.max(1, Math.floor(bossSize / 45))`
+- All shapes drawn with `ctx.fillRect()` for perfect pixel edges
+- Color palette designed to match existing guard pixel art
+- Maintained all existing behavior-based animations in pixel form
+
+#### Result:
+- **Perfect Pixel Art**: Boss now matches the game's pixel aesthetic completely
+- **Detailed Design**: Much more detailed than original simple rectangle
+- **Consistent Style**: Matches guard pixel art but with boss-level detail and size
+- **Smooth Animations**: All animations work with pixel-perfect precision
+- **Enhanced Presence**: Intimidating prison warden design that fits the prison theme
+- **Maintained Functionality**: All rage mode and movement effects preserved in pixel form
 
 ## Previous Status: Fixed responsive display issues
 
