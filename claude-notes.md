@@ -43,6 +43,18 @@ Removed title and subtitle elements from story slides:
 - **No more scrolling required**: Proper responsive layout that adapts to viewport height
 - **Tested on multiple screen sizes**: Mobile (320x568), Tablet (768x1024), Desktop (1920x1080)
 
+### Difficulty Adjustment
+
+#### Changes Made:
+1. **Player Health Reduction**: Reduced player max health from 15 to 10 lives
+   - Updated `PLAYER.MAX_HEALTH` in constants.ts
+   - Makes the game more challenging and requires more careful gameplay
+
+#### Result:
+- More challenging gameplay requiring better tactics
+- Players need to be more strategic about taking damage
+- Balanced difficulty increase without being unfair
+
 ## Previous Status: Fixed responsive display issues
 
 ### Responsive Display Fix
