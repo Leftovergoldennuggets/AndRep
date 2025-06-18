@@ -48,12 +48,15 @@ Removed title and subtitle elements from story slides:
 #### Changes Made:
 1. **Player Health Reduction**: Reduced player max health from 15 to 10 lives
    - Updated `PLAYER.MAX_HEALTH` in constants.ts
+   - Updated `GAME_CONFIG.player.maxHealth` in FlappyBirdGame.tsx (was the main issue)
+   - Fixed hardcoded max health value in rendering.ts health bar display
    - Makes the game more challenging and requires more careful gameplay
 
 #### Result:
 - More challenging gameplay requiring better tactics
 - Players need to be more strategic about taking damage
 - Balanced difficulty increase without being unfair
+- Health bar now correctly displays 10 max health
 
 ## Previous Status: Fixed responsive display issues
 

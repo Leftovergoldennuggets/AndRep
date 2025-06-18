@@ -131,7 +131,7 @@ const GAME_CONFIG = {
   },
   player: {
     size: 48,
-    maxHealth: 15,  // 50% more than original 10 - reasonable survivability
+    maxHealth: 10,  // Reduced for more challenging gameplay
     gravity: 0.6,  // Slightly easier than original 0.8
     jumpForce: -17,  // Slightly easier than original -20
     moveSpeed: 11,  // Slightly faster than original 10

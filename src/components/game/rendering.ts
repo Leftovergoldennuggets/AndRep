@@ -241,7 +241,7 @@ export function drawUI(
   const { player, level, score } = gameState;
   
   // Player health bar
-  drawHealthBar(ctx, 20, 20, 200, player.health, 150); // Using easier difficulty max health
+  drawHealthBar(ctx, 20, 20, 200, player.health, 10); // Updated to match reduced max health
   
   // Ammo counter
   ctx.fillStyle = '#FFFFFF';
