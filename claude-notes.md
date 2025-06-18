@@ -58,6 +58,27 @@ Removed title and subtitle elements from story slides:
 - Balanced difficulty increase without being unfair
 - Health bar now correctly displays 10 max health
 
+### End Screens UI Improvement
+
+#### Changes Made:
+1. **Removed Yellow Title and White Subtitle**: Cleaned up both Game Over and Victory screens
+   - Removed "GAME OVER" / "VICTORY" yellow titles
+   - Removed "THE LEGEND ENDS" / "THE LEGEND LIVES ON" white subtitles
+   - Kept mission status indicators ("MISSION FAILED" / "MISSION ACCOMPLISHED")
+
+2. **Fixed Button Visibility**: Applied same responsive layout approach as intro panels
+   - Updated both screens to use flex layout that prevents scrolling
+   - Ensured Try Again and Continue buttons are always visible
+   - Made button sizes responsive for all screen sizes
+   - Used viewport-relative image sizing (max-h-[40vh] sm:max-h-[45vh])
+
+#### Result:
+- Cleaner, more focused end screens
+- Better visual emphasis on the story illustrations  
+- No more scrolling required to access buttons
+- Consistent responsive design across all screen flows
+- Smoother transition between game states
+
 ## Previous Status: Fixed responsive display issues
 
 ### Responsive Display Fix

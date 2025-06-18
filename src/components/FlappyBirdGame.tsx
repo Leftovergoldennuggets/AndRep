@@ -3713,12 +3713,12 @@ export default function FlappyBirdGame() {
       )}
 
       {gameState === "gameOver" && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black">
-          <div className="text-center text-white max-w-4xl mx-4 px-4">
-            <div className="space-y-8">
-              {/* Chapter Indicator */}
+        <div className="absolute inset-0 z-10 bg-black flex flex-col">
+          <div className="flex-1 flex flex-col justify-center items-center p-4 min-h-0">
+            <div className="w-full max-w-4xl text-center text-white flex flex-col h-full">
+              {/* Mission Status */}
               <div 
-                className="text-lg sm:text-xl font-bold text-red-500"
+                className="text-base sm:text-lg font-bold text-red-500 mb-4 flex-shrink-0"
                 style={{
                   fontFamily: 'monospace',
                   letterSpacing: '3px'
@@ -3727,63 +3727,44 @@ export default function FlappyBirdGame() {
                 MISSION FAILED
               </div>
               
-              {/* Title */}
-              <div className="space-y-4">
-                <h2 
-                  className="text-3xl sm:text-4xl md:text-5xl font-bold text-red-400"
-                  style={{
-                    fontFamily: 'monospace',
-                    letterSpacing: '4px'
-                  }}
-                >
-                  GAME OVER
-                </h2>
-                <h3 
-                  className="text-xl sm:text-2xl md:text-3xl font-bold text-white"
-                  style={{
-                    fontFamily: 'monospace',
-                    letterSpacing: '2px'
-                  }}
-                >
-                  THE LEGEND ENDS
-                </h3>
+              {/* Content Container - Flexible */}
+              <div className="flex-1 flex flex-col justify-center min-h-0">
+                {/* Illustration */}
+                <div className="flex-shrink-0 mb-4">
+                  <img 
+                    src="/endscreengameover.png"
+                    alt="Game Over Screen"
+                    className="w-full h-auto max-h-[40vh] sm:max-h-[45vh] object-contain mx-auto"
+                    style={{
+                      filter: 'contrast(1.1) saturate(1.2)',
+                      imageRendering: 'crisp-edges'
+                    }}
+                    onError={(e) => {
+                      console.log('Failed to load image: /endscreengameover.png');
+                      e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkdBTUUgT1ZFUjwvdGV4dD48L3N2Zz4=';
+                    }}
+                  />
+                </div>
+                
+                {/* Story Text */}
+                <div className="flex-shrink-0">
+                  <p 
+                    className="text-sm sm:text-base md:text-lg leading-relaxed text-white italic"
+                    style={{
+                      fontFamily: 'monospace',
+                      letterSpacing: '1px'
+                    }}
+                  >
+                    "I'm coming, Wilbur... The truth will live on."
+                  </p>
+                </div>
               </div>
               
-              {/* Illustration */}
-              <div className="py-4">
-                <img 
-                  src="/endscreengameover.png"
-                  alt="Game Over - The Legend Ends"
-                  className="w-full h-auto max-h-96 object-contain"
-                  style={{
-                    filter: 'contrast(1.1) saturate(1.2)',
-                    imageRendering: 'crisp-edges'
-                  }}
-                  onError={(e) => {
-                    console.log('Failed to load image: /endscreengameover.png');
-                    e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkdBTUUgT1ZFUjwvdGV4dD48L3N2Zz4=';
-                  }}
-                />
-              </div>
-              
-              {/* Story Text */}
-              <div className="space-y-6">
-                <p 
-                  className="text-sm sm:text-base md:text-lg leading-relaxed text-white italic"
-                  style={{
-                    fontFamily: 'monospace',
-                    letterSpacing: '1px'
-                  }}
-                >
-                  "I'm coming, Wilbur... The truth will live on."
-                </p>
-              </div>
-              
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+              {/* Action Buttons - Always at bottom */}
+              <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6 flex-shrink-0">
                 <button
                   onClick={restartCurrentLevel}
-                  className="text-lg sm:text-xl md:text-2xl font-bold px-6 sm:px-8 py-3 sm:py-4 border-2 sm:border-4 text-yellow-300 border-yellow-300 bg-black bg-opacity-80 hover:bg-yellow-300 hover:text-black transition-colors"
+                  className="text-base sm:text-lg font-bold px-6 py-3 sm:px-8 sm:py-4 border-2 text-yellow-300 border-yellow-300 bg-black bg-opacity-80 hover:bg-yellow-300 hover:text-black transition-colors"
                   style={{
                     fontFamily: 'monospace',
                     letterSpacing: '2px',
@@ -3816,12 +3797,12 @@ export default function FlappyBirdGame() {
       )}
 
       {gameState === "victoryIllustration" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black">
-          <div className="text-center text-white max-w-4xl mx-4 px-4">
-            <div className="space-y-8">
-              {/* Chapter Indicator */}
+        <div className="absolute inset-0 z-10 bg-black flex flex-col">
+          <div className="flex-1 flex flex-col justify-center items-center p-4 min-h-0">
+            <div className="w-full max-w-4xl text-center text-white flex flex-col h-full">
+              {/* Mission Status */}
               <div 
-                className="text-lg sm:text-xl font-bold text-green-500"
+                className="text-base sm:text-lg font-bold text-green-500 mb-4 flex-shrink-0"
                 style={{
                   fontFamily: 'monospace',
                   letterSpacing: '3px'
@@ -3830,34 +3811,16 @@ export default function FlappyBirdGame() {
                 MISSION ACCOMPLISHED
               </div>
               
-              {/* Title */}
-              <div className="space-y-4">
-                <h2 
-                  className="text-3xl sm:text-4xl md:text-5xl font-bold text-yellow-300"
-                  style={{
-                    fontFamily: 'monospace',
-                    letterSpacing: '4px'
-                  }}
-                >
-                  VICTORY
-                </h2>
-                <h3 
-                  className="text-xl sm:text-2xl md:text-3xl font-bold text-white"
-                  style={{
-                    fontFamily: 'monospace',
-                    letterSpacing: '2px'
-                  }}
-                >
-                  THE LEGEND LIVES ON
-                </h3>
-              </div>
+              {/* Content Container - Flexible */}
+              <div className="flex-1 flex flex-col justify-center min-h-0">
               
-              {/* Illustration */}
-              <div className="py-4">
-                <img 
-                  src="/newendscreenvictory.png"
-                  alt="Victory - The Legend Lives On"
-                  className="w-full h-auto max-h-96 object-contain"
+              
+                {/* Illustration */}
+                <div className="flex-shrink-0 mb-4">
+                  <img 
+                    src="/newendscreenvictory.png"
+                    alt="Victory Screen"
+                    className="w-full h-auto max-h-[40vh] sm:max-h-[45vh] object-contain mx-auto"
                   style={{
                     filter: 'contrast(1.1) saturate(1.2)',
                     imageRendering: 'crisp-edges'
@@ -3868,29 +3831,30 @@ export default function FlappyBirdGame() {
                   }}
                 />
               </div>
-              
-              {/* Story Text */}
-              <div className="space-y-6">
-                <p 
-                  className="text-sm sm:text-base md:text-lg leading-relaxed text-white italic"
-                  style={{
-                    fontFamily: 'monospace',
-                    letterSpacing: '1px'
-                  }}
-                >
-                  "Justice served. The road ahead is mine, Wilbur."
-                </p>
+                
+                {/* Story Text */}
+                <div className="flex-shrink-0">
+                  <p 
+                    className="text-sm sm:text-base md:text-lg leading-relaxed text-white italic"
+                    style={{
+                      fontFamily: 'monospace',
+                      letterSpacing: '1px'
+                    }}
+                  >
+                    "Justice served. The road ahead is mine, Wilbur."
+                  </p>
+                </div>
               </div>
               
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+              {/* Action Buttons - Always at bottom */}
+              <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6 flex-shrink-0">
                 <button
                   onClick={() => {
                     const state = gameStateRef.current;
                     state.gameState = "missionComplete";
                     setGameState("missionComplete");
                   }}
-                  className="text-2xl sm:text-3xl md:text-4xl font-bold px-8 sm:px-12 py-4 sm:py-6 border-4 text-cyan-300 border-cyan-300 bg-black hover:bg-cyan-300 hover:text-black transition-colors"
+                  className="text-base sm:text-lg font-bold px-6 py-3 sm:px-8 sm:py-4 border-2 text-cyan-300 border-cyan-300 bg-black hover:bg-cyan-300 hover:text-black transition-colors"
                   style={{
                     fontFamily: 'monospace',
                     letterSpacing: '4px',
