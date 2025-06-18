@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useRef, useState, useCallback } from "react";
+import { Enemy } from "./game/types";
 
 interface GameState {
   player: {
@@ -798,7 +799,7 @@ export default function FlappyBirdGame() {
     // Boss spawns directly without intro screen
   }, []);
 
-  const updateBoss = useCallback((boss: typeof gameStateRef.current.enemies[0], _deltaTime: number) => {
+  const updateBoss = useCallback((boss: Enemy, _deltaTime: number) => {
     const state = gameStateRef.current;
     const player = state.player;
     const levelConfig = LEVELS[state.level.current as keyof typeof LEVELS];
@@ -808,37 +809,163 @@ export default function FlappyBirdGame() {
     const distanceToPlayer = Math.abs(boss.x - player.x);
     const playerInRange = distanceToPlayer < 600; // Increased from 400 - larger aggro range
     
-    // Boss movement and attack patterns
+    // Enhanced boss movement and attack patterns with creative behaviors
     switch (boss.bossType) {
-      case 'warden': // Level 1 - Corrupt Warden with shotgun - MUCH HARDER!
+      case 'warden': // Level 1 - Corrupt Warden with advanced tactical movement
         if (playerInRange) {
           const direction = player.x > boss.x ? 1 : -1;
-          const isRageMode = boss.health < boss.maxHealth * 0.4; // Trigger at 40% instead of 30%
+          const isRageMode = boss.health < boss.maxHealth * 0.4;
+          const currentTime = Date.now();
           
-          // Normal phase: More challenging than before
-          boss.x += direction * (isRageMode ? 5 : 5); // Consistent speed, but faster than original
-          
-          // Normal attack pattern - make it more frequent and threatening
-          const normalFireRate = isRageMode ? 350 : 300; // Faster in rage, but not crazy fast
-          if (Date.now() - boss.lastShotTime > normalFireRate) {
-            // More pellets in normal mode to make it challenging
-            const pelletCount = isRageMode ? 4 : 4; // Consistent pellet count
-            for (let i = 0; i < pelletCount; i++) {
-              state.enemyBullets.push({
-                x: boss.x + (i - pelletCount/2) * 15, // Better spread
-                y: boss.y + 20,
-                velocityX: direction * (6 + Math.random() * 2), // Consistent bullet speed
-                velocityY: -1 + Math.random() * 2, // Less chaotic spread
-              });
-            }
-            boss.lastShotTime = Date.now();
-            
-            // Camera shake for intimidation
-            state.camera.shake = Math.max(state.camera.shake, isRageMode ? 10 : 6);
+          // Initialize boss behavior state if not exists
+          if (!boss.behaviorState) {
+            boss.behaviorState = {
+              currentPattern: 'advance',
+              patternTimer: currentTime,
+              chargeStartTime: 0,
+              retreatTimer: 0,
+              lastDirection: direction,
+              stompPhase: 0
+            };
           }
           
-          // Rage mode effects are already included in the main attack pattern above
-          // No additional berserker mode needed - it's balanced into the normal pattern
+          const behavior = boss.behaviorState;
+          const timeSincePatternStart = currentTime - behavior.patternTimer;
+          
+          // Dynamic movement patterns based on health and situation
+          if (!isRageMode) {
+            // NORMAL PHASE: Tactical advance with cover and retreat
+            switch (behavior.currentPattern) {
+              case 'advance':
+                // Slow, menacing advance with stomping
+                const stompSpeed = 2 + Math.sin(currentTime * 0.01) * 0.5;
+                boss.x += direction * stompSpeed;
+                boss.velocityX = direction * stompSpeed;
+                
+                // Add stomping animation phase
+                behavior.stompPhase = (behavior.stompPhase + 0.2) % (Math.PI * 2);
+                
+                // Switch to retreat if too close or after 3 seconds
+                if (distanceToPlayer < 120 || timeSincePatternStart > 3000) {
+                  behavior.currentPattern = 'retreat';
+                  behavior.patternTimer = currentTime;
+                }
+                break;
+                
+              case 'retreat':
+                // Tactical retreat while maintaining aim
+                boss.x += -direction * 3;
+                boss.velocityX = -direction * 3;
+                
+                // Return to advance after 2 seconds or if far enough
+                if (distanceToPlayer > 300 || timeSincePatternStart > 2000) {
+                  behavior.currentPattern = 'advance';
+                  behavior.patternTimer = currentTime;
+                }
+                break;
+            }
+            
+            // Normal phase shooting - measured and threatening
+            const fireRate = 400;
+            if (currentTime - boss.lastShotTime > fireRate) {
+              const pelletCount = 3;
+              for (let i = 0; i < pelletCount; i++) {
+                state.enemyBullets.push({
+                  x: boss.x + (i - pelletCount/2) * 12,
+                  y: boss.y + 25,
+                  velocityX: direction * (5 + Math.random() * 1.5),
+                  velocityY: -0.5 + Math.random() * 1,
+                });
+              }
+              boss.lastShotTime = currentTime;
+              state.camera.shake = Math.max(state.camera.shake, 5);
+            }
+            
+          } else {
+            // RAGE PHASE: Aggressive charging and area denial
+            switch (behavior.currentPattern) {
+              case 'advance':
+              case 'retreat':
+                // Switch to charging behavior in rage mode
+                behavior.currentPattern = 'charge';
+                behavior.chargeStartTime = currentTime;
+                behavior.patternTimer = currentTime;
+                break;
+                
+              case 'charge':
+                // Powerful charging attack
+                const chargeDirection = behavior.lastDirection;
+                const chargeSpeed = 8;
+                boss.x += chargeDirection * chargeSpeed;
+                boss.velocityX = chargeDirection * chargeSpeed;
+                
+                // Create dramatic charge effects
+                if (currentTime - behavior.chargeStartTime < 1500) {
+                  // Charge forward aggressively
+                  state.camera.shake = Math.max(state.camera.shake, 8);
+                  
+                  // Leave dust trail particles during charge
+                  if (Math.random() < 0.3) {
+                    state.particles.push({
+                      x: boss.x + Math.random() * 90,
+                      y: boss.y + 70 + Math.random() * 20,
+                      velocityX: -chargeDirection * (2 + Math.random() * 3),
+                      velocityY: -Math.random() * 2,
+                      life: 30 + Math.random() * 20,
+                      maxLife: 50,
+                      size: 6 + Math.random() * 4,
+                      color: '#8B4513',
+                      type: 'smoke' as const
+                    });
+                  }
+                } else {
+                  // End charge, switch to area denial
+                  behavior.currentPattern = 'area_denial';
+                  behavior.patternTimer = currentTime;
+                  behavior.lastDirection = direction; // Update direction for next charge
+                }
+                break;
+                
+              case 'area_denial':
+                // Stop and create bullet hell pattern
+                boss.velocityX = 0;
+                
+                // Rapid fire spread pattern
+                const rapidFireRate = 200;
+                if (currentTime - boss.lastShotTime > rapidFireRate) {
+                  const spreadPattern = Math.sin(currentTime * 0.01) * 0.5;
+                  const pelletCount = 5;
+                  
+                  for (let i = 0; i < pelletCount; i++) {
+                    const spread = (i - pelletCount/2) * 0.3 + spreadPattern;
+                    state.enemyBullets.push({
+                      x: boss.x + 45,
+                      y: boss.y + 25,
+                      velocityX: direction * (4 + Math.abs(spread)) + spread,
+                      velocityY: -1 + spread * 0.5,
+                    });
+                  }
+                  boss.lastShotTime = currentTime;
+                  state.camera.shake = Math.max(state.camera.shake, 12);
+                }
+                
+                // Return to charging after 2 seconds
+                if (timeSincePatternStart > 2000) {
+                  behavior.currentPattern = 'charge';
+                  behavior.chargeStartTime = currentTime;
+                  behavior.patternTimer = currentTime;
+                }
+                break;
+            }
+          }
+          
+          // Store phase for visual effects
+          boss.phase = isRageMode ? 2 : 1;
+          
+        } else {
+          // Reset behavior when player is out of range
+          boss.behaviorState = undefined;
+          boss.velocityX = 0;
         }
         break;
         

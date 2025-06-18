@@ -79,6 +79,73 @@ Removed title and subtitle elements from story slides:
 - Consistent responsive design across all screen flows
 - Smoother transition between game states
 
+### Enhanced Corrupt Warden Boss
+
+#### Creative Visual Improvements:
+1. **Detailed Pixel Art Design**:
+   - Enhanced prison warden uniform with collar, buttons, shoulder pads, rank stripes
+   - More detailed hat with brim and animated badge
+   - Expressive animated eyes with pupils that track movement direction
+   - Blinking animation and rage-mode glowing red eyes
+   - Enhanced mustache with highlights and menacing grin/snarl
+   - Detailed combat boots with laces and stomping animation
+
+2. **Dynamic Weapon & Equipment**:
+   - Enhanced shotgun with detailed barrel, stock, and muzzle flash effects
+   - Belt with realistic buckle and detailed ammo shells with caps
+   - Weapon swaying animation and direction-based positioning
+   - Visual muzzle flash effects during attacks
+
+3. **Advanced Animation Systems**:
+   - Breathing animation that intensifies with movement
+   - Walking cycle with alternating foot stomping
+   - Rage mode effects: glowing badges, red aura, electrical effects
+   - Dust clouds during heavy stomping and charging
+   - Motion blur and speed lines during rapid movement
+   - Shadow casting and ground crack effects in rage mode
+
+#### Enhanced Movement Patterns:
+1. **Normal Phase - Tactical Behavior**:
+   - **Advance Pattern**: Slow, menacing advance with stomping sound effects
+   - **Retreat Pattern**: Tactical withdrawal while maintaining aim
+   - Dynamic pattern switching based on distance and timing
+   - Measured shotgun blasts with camera shake
+
+2. **Rage Phase - Aggressive Assault** (triggers at 40% health):
+   - **Charge Pattern**: Powerful charging attacks with dust trail particles
+   - **Area Denial**: Rapid-fire bullet hell patterns with spread shots
+   - Enhanced visual effects: electrical aura, speed lines, ground cracks
+   - Dynamic behavior state system with pattern transitions
+
+3. **Smart AI Features**:
+   - Direction-aware pupil tracking and weapon positioning
+   - Behavior state management with timing-based pattern switches
+   - Dynamic speed and intensity based on health percentage
+   - Dust particle trail generation during movement
+
+#### Technical Enhancements:
+- Added `BossBehaviorState` interface for complex AI patterns
+- Extended `Enemy` type with `velocityX` and `behaviorState` properties
+- Enhanced rendering with time-based animations and effects
+- Improved TypeScript typing for boss-specific features
+
+#### Visual Effects Added:
+- ⚡ Electrical aura in rage mode
+- 💨 Smoke/steam effects from head
+- 🔥 Muzzle flash during shooting
+- 👢 Dynamic stomping with dust clouds
+- 🌪️ Motion blur during high-speed movement
+- ⚡ Speed lines during charging attacks
+- 💀 Enhanced nameplate with "CORRUPT WARDEN JOHNSON"
+- 🩸 Ground crack effects in rage mode
+
+#### Result:
+- **Visually Impressive**: Detailed pixel art boss with arcade-style charm
+- **Dynamic Combat**: Multiple attack patterns that change based on health
+- **Smooth Animations**: Breathing, blinking, walking, and charging animations
+- **Enhanced Challenge**: Tactical movement patterns make the fight more engaging
+- **Better Feedback**: Visual and audio cues for different attack phases
+
 ## Previous Status: Fixed responsive display issues
 
 ### Responsive Display Fix

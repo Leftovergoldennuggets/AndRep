@@ -3,7 +3,7 @@ export type WeaponType = 'pistol' | 'rifle' | 'shotgun' | 'grenade';
 
 export type EnemyType = 'guard' | 'dog' | 'boss';
 
-export type BossType = 'warden';
+export type BossType = 'warden' | 'captain' | 'chief' | 'helicopter';
 
 export type AIState = 'patrol' | 'chase' | 'cover' | 'attack' | 'retreat';
 
@@ -45,7 +45,17 @@ export interface Player extends Entity {
   spawnImmunity: number;
 }
 
+export interface BossBehaviorState {
+  currentPattern: 'advance' | 'retreat' | 'charge' | 'area_denial';
+  patternTimer: number;
+  chargeStartTime: number;
+  retreatTimer: number;
+  lastDirection: number;
+  stompPhase: number;
+}
+
 export interface Enemy extends Entity {
+  velocityX?: number;
   velocityY: number;
   health: number;
   maxHealth: number;
@@ -62,6 +72,7 @@ export interface Enemy extends Entity {
   patrolDirection?: number;
   patrolStartX?: number;
   hitFlash?: number;
+  behaviorState?: BossBehaviorState;
 }
 
 export interface Bullet extends Entity {
