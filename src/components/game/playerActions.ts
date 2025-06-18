@@ -98,15 +98,11 @@ export function rebelDash(
       enemy.health -= dashDamage;
       
       // Create blood particles
-      gameState.particles.push(...createParticles({
-        x: enemy.x,
-        y: enemy.y,
-        count: 8,
-        type: 'blood',
-        speed: { min: 2, max: 6 },
-        lifetime: 800,
-        colors: ['#DC143C', '#8B0000', '#B22222']
-      }));
+      gameState.particles.push(...createParticles(
+        { x: enemy.x, y: enemy.y },
+        'blood',
+        8
+      ));
       
       if (enemy.health <= 0) {
         gameState.score += 50;
@@ -137,15 +133,11 @@ export function berserkerMode(
   berserkerEndTime.current = currentTime + SPECIAL_ABILITIES.BERSERKER_MODE.DURATION;
   
   // Visual effect - add red particles around player
-  gameState.particles.push(...createParticles({
-    x: gameState.player.x + 24,
-    y: gameState.player.y + 24,
-    count: 20,
-    type: 'spark',
-    speed: { min: 3, max: 8 },
-    lifetime: 1000,
-    colors: ['#FF0000', '#FF4500', '#DC143C']
-  }));
+  gameState.particles.push(...createParticles(
+    { x: gameState.player.x + 24, y: gameState.player.y + 24 },
+    'spark',
+    20
+  ));
   
   playSound('powerup');
 }

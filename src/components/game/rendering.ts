@@ -4,7 +4,7 @@ import { COLORS } from './constants';
 export function drawBackground(
   ctx: CanvasRenderingContext2D,
   theme: string,
-  cameraX: number,
+  _cameraX: number,
   canvasWidth: number,
   canvasHeight: number
 ): void {

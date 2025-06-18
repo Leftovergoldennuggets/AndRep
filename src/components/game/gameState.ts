@@ -1,5 +1,5 @@
 import { GameState, Obstacle, Enemy, Powerup, Objective } from './types';
-import { LEVELS, BOSS_CONFIGS, ANIMAL_TYPES, ANIMAL_SIZES } from './config';
+import { LEVELS, ANIMAL_TYPES, ANIMAL_SIZES } from './config';
 import { GAME_DIMENSIONS, PLAYER } from './constants';
 
 export function createInitialGameState(): Partial<GameState> {
@@ -52,7 +52,7 @@ export function createInitialGameState(): Partial<GameState> {
   };
 }
 
-export function generateObstacles(levelWidth: number, obstacleDensity: number): Obstacle[] {
+export function generateObstacles(levelWidth: number, _obstacleDensity: number): Obstacle[] {
   const obstacles: Obstacle[] = [];
   const groundLevel = GAME_DIMENSIONS.GROUND_HEIGHT;
   

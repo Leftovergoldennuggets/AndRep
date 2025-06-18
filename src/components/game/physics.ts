@@ -1,4 +1,4 @@
-import { Player, Enemy, Bullet, Obstacle, Particle } from './types';
+import { Player, Enemy, Bullet } from './types';
 import { PHYSICS } from './constants';
 
 export function checkCollision(
@@ -18,21 +18,19 @@ export function checkCollision(
   );
 }
 
-export function applyGravity(entity: Player | Enemy | Particle, groundLevel: number): void {
-  if (!entity.onGround || entity.y < groundLevel - (entity.size || 48)) {
+export function applyGravity(entity: Player | Enemy, groundLevel: number): void {
+  const entitySize = 'size' in entity ? 48 : 48; // Default size for entities
+  
+  if (!entity.onGround || entity.y < groundLevel - entitySize) {
     entity.velocityY += PHYSICS.GRAVITY;
     entity.y += entity.velocityY;
     
-    if (entity.y >= groundLevel - (entity.size || 48)) {
-      entity.y = groundLevel - (entity.size || 48);
+    if (entity.y >= groundLevel - entitySize) {
+      entity.y = groundLevel - entitySize;
       entity.velocityY = 0;
-      if ('onGround' in entity) {
-        entity.onGround = true;
-      }
+      entity.onGround = true;
     } else {
-      if ('onGround' in entity) {
-        entity.onGround = false;
-      }
+      entity.onGround = false;
     }
   }
 }
