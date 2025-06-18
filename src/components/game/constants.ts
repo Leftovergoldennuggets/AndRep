@@ -105,7 +105,7 @@ export const PARTICLES = {
 export const COLORS = {
   PLAYER: '#4A90E2',
   ENEMY: '#E25449',
-  BOSS: '#9B59B6',
+  BOSS: '#1a237e',  // Dark blue for warden uniform
   HEALTH: '#2ECC71',
   DAMAGE: '#E74C3C',
   AMMO: '#F39C12',

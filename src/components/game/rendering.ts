@@ -42,15 +42,126 @@ export function drawEnemy(
 ): void {
   const screenX = enemy.x - cameraX;
   
-  // Enemy body
-  ctx.fillStyle = enemy.hitFlash ? '#FF0000' : COLORS.ENEMY;
-  const size = enemy.type === 'boss' ? 90 : (enemy.type === 'dog' ? 38 : 42);
-  ctx.fillRect(screenX, enemy.y, size, size);
-  
-  // Health bar for boss
   if (enemy.type === 'boss') {
-    drawHealthBar(ctx, screenX, enemy.y - 20, size, enemy.health, enemy.maxHealth);
+    // Draw the Corrupt Warden boss with more detail
+    drawBoss(ctx, enemy, screenX);
+  } else {
+    // Enemy body
+    ctx.fillStyle = enemy.hitFlash ? '#FF0000' : COLORS.ENEMY;
+    const size = enemy.type === 'dog' ? 38 : 42;
+    ctx.fillRect(screenX, enemy.y, size, size);
   }
+}
+
+function drawBoss(
+  ctx: CanvasRenderingContext2D,
+  boss: Enemy,
+  screenX: number
+): void {
+  const bossWidth = 90;
+  const bossHeight = 90;
+  
+  // Save context state
+  ctx.save();
+  
+  // Boss body - dark blue prison warden uniform
+  ctx.fillStyle = boss.hitFlash ? '#FF0000' : '#1a237e';
+  ctx.fillRect(screenX, boss.y, bossWidth, bossHeight);
+  
+  // Warden's badge/star on chest
+  ctx.fillStyle = '#FFD700';
+  const badgeX = screenX + bossWidth / 2;
+  const badgeY = boss.y + 30;
+  drawStar(ctx, badgeX, badgeY, 12, 5, 0.5);
+  
+  // Warden's hat/cap
+  ctx.fillStyle = '#0d47a1';
+  ctx.fillRect(screenX + 10, boss.y - 10, bossWidth - 20, 15);
+  ctx.fillRect(screenX + 5, boss.y - 5, bossWidth - 10, 10);
+  
+  // Hat badge
+  ctx.fillStyle = '#FFD700';
+  ctx.fillRect(screenX + bossWidth/2 - 5, boss.y - 8, 10, 8);
+  
+  // Eyes - menacing red when in rage mode
+  ctx.fillStyle = boss.phase && boss.phase > 1 ? '#FF0000' : '#FFFFFF';
+  ctx.fillRect(screenX + 20, boss.y + 20, 10, 5);
+  ctx.fillRect(screenX + 60, boss.y + 20, 10, 5);
+  
+  // Angry eyebrows
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(screenX + 15, boss.y + 15);
+  ctx.lineTo(screenX + 30, boss.y + 18);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(screenX + 75, boss.y + 15);
+  ctx.lineTo(screenX + 60, boss.y + 18);
+  ctx.stroke();
+  
+  // Mustache
+  ctx.fillStyle = '#4A5568';
+  ctx.fillRect(screenX + 25, boss.y + 35, 40, 8);
+  ctx.fillRect(screenX + 20, boss.y + 38, 10, 5);
+  ctx.fillRect(screenX + 60, boss.y + 38, 10, 5);
+  
+  // Shotgun - held at side
+  ctx.fillStyle = '#2C3E50';
+  const gunX = boss.x < 600 ? screenX + bossWidth - 5 : screenX - 25; // Direction based
+  ctx.fillRect(gunX, boss.y + 40, 30, 8);
+  ctx.fillRect(gunX + 25, boss.y + 40, 5, 20);
+  
+  // Belt with ammo
+  ctx.fillStyle = '#8B4513';
+  ctx.fillRect(screenX + 5, boss.y + 65, bossWidth - 10, 8);
+  
+  // Ammo shells on belt
+  ctx.fillStyle = '#FFD700';
+  for (let i = 0; i < 5; i++) {
+    ctx.fillRect(screenX + 15 + i * 15, boss.y + 66, 4, 6);
+  }
+  
+  // Rage mode aura effect
+  if (boss.phase && boss.phase > 1) {
+    ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(screenX - 5, boss.y - 15, bossWidth + 10, bossHeight + 15);
+  }
+  
+  // Restore context
+  ctx.restore();
+  
+  // Health bar above boss
+  drawHealthBar(ctx, screenX, boss.y - 30, bossWidth, boss.health, boss.maxHealth);
+}
+
+// Helper function to draw a star
+function drawStar(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  outerRadius: number,
+  points: number,
+  innerRadiusRatio: number
+): void {
+  const innerRadius = outerRadius * innerRadiusRatio;
+  const angle = Math.PI / points;
+  
+  ctx.beginPath();
+  for (let i = 0; i < points * 2; i++) {
+    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+    const x = cx + Math.cos(i * angle - Math.PI / 2) * radius;
+    const y = cy + Math.sin(i * angle - Math.PI / 2) * radius;
+    
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  }
+  ctx.closePath();
+  ctx.fill();
 }
 
 export function drawBullet(
@@ -125,7 +236,7 @@ export function drawUI(
   ctx: CanvasRenderingContext2D,
   gameState: GameState,
   canvasWidth: number,
-  canvasHeight: number
+  _canvasHeight: number
 ): void {
   const { player, level, score } = gameState;
   
