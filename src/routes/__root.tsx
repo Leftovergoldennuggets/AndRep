@@ -21,7 +21,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen">
+      <div className="w-full h-screen overflow-hidden">
         <Outlet />
       </div>
       {import.meta.env.DEV && <TanStackRouterDevtools />}

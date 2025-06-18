@@ -255,6 +255,9 @@ const LEVELS = {
 
 export default function FlappyBirdGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [canvasScale, setCanvasScale] = useState(1);
+  const [canvasPosition, setCanvasPosition] = useState({ x: 0, y: 0 });
   const gameStateRef = useRef<GameState>({
     player: {
       x: 400, // World position (not relative to camera)
@@ -3478,6 +3481,44 @@ export default function FlappyBirdGame() {
     };
   }, [gameLoop]);
 
+  // Handle window resize for responsive canvas scaling
+  useEffect(() => {
+    const handleResize = () => {
+      if (!containerRef.current) return;
+      
+      const container = containerRef.current;
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
+      
+      const canvasAspectRatio = GAME_CONFIG.canvas.width / GAME_CONFIG.canvas.height;
+      const containerAspectRatio = containerWidth / containerHeight;
+      
+      let scale;
+      let x = 0;
+      let y = 0;
+      
+      if (containerAspectRatio > canvasAspectRatio) {
+        // Container is wider than canvas aspect ratio
+        scale = containerHeight / GAME_CONFIG.canvas.height;
+        x = (containerWidth - GAME_CONFIG.canvas.width * scale) / 2;
+      } else {
+        // Container is taller than canvas aspect ratio
+        scale = containerWidth / GAME_CONFIG.canvas.width;
+        y = (containerHeight - GAME_CONFIG.canvas.height * scale) / 2;
+      }
+      
+      setCanvasScale(scale);
+      setCanvasPosition({ x, y });
+    };
+    
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       keysRef.current.add(e.code);
@@ -3540,12 +3581,19 @@ export default function FlappyBirdGame() {
   }, [jump, shoot, rebelDash, berserkerMode, startGame, switchWeapon]);
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-black">
+    <div ref={containerRef} className="relative w-full h-screen overflow-hidden bg-black">
       <canvas
         ref={canvasRef}
         width={GAME_CONFIG.canvas.width}
         height={GAME_CONFIG.canvas.height}
-        className="block cursor-crosshair w-full h-full object-contain"
+        className="block cursor-crosshair"
+        style={{
+          width: `${GAME_CONFIG.canvas.width * canvasScale}px`,
+          height: `${GAME_CONFIG.canvas.height * canvasScale}px`,
+          position: 'absolute',
+          left: `${canvasPosition.x}px`,
+          top: `${canvasPosition.y}px`,
+        }}
       />
       
       {gameState === "start" && (

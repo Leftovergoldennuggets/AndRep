@@ -12,6 +12,8 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
+  height: 100%;
+  width: 100%;
 }
 
 html {
@@ -19,6 +21,13 @@ html {
   padding: 0;
   height: 100%;
   width: 100%;
+}
+
+/* Ensure root element takes full space */
+#root {
+  width: 100%;
+  height: 100%;
+  position: relative;
 }
 
 /* Arcade-style blinking animation */
