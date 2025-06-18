@@ -238,6 +238,29 @@ Completely redesigned the corrupt warden boss using pixel-perfect rectangles and
 - **Enhanced Presence**: Intimidating prison warden design that fits the prison theme
 - **Maintained Functionality**: All rage mode and movement effects preserved in pixel form
 
+### Warden Boss Balance Adjustments
+
+#### User Request:
+- Make warden shoot less bullets and have more health for better fight balance
+
+#### Changes Made:
+1. **Increased Boss Health**: 280 → 400 health points
+   - Updated in both `config.ts` BOSS_CONFIGS and main game LEVELS configuration
+   - Provides longer, more strategic boss fight
+   - Requires more tactical gameplay and weapon management
+
+2. **Reduced Firing Rate**: Less frequent bullet spam
+   - **Normal phase**: 400ms → 800ms between shots (50% slower)
+   - **Rage mode**: 200ms → 400ms between rapid fire bursts (50% slower)
+   - Gives player more time to dodge and strategize
+   - Reduces bullet hell difficulty while maintaining challenge
+
+#### Result:
+- **More Strategic Combat**: Players have time to position and plan attacks
+- **Better Balance**: Fight lasts longer but is more manageable
+- **Enhanced Gameplay**: Less frustrating bullet spam, more tactical engagement
+- **Maintained Challenge**: Still requires skill but more fair and enjoyable
+
 ## Previous Status: Fixed responsive display issues
 
 ### Responsive Display Fix

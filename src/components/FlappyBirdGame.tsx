@@ -229,7 +229,7 @@ const LEVELS = {
     boss: {
       type: 'warden' as const,
       name: "The Corrupt Warden",
-      health: 150, // Reduced from 300 for easier difficulty
+      health: 400, // Increased for longer, more strategic fight with less frequent shooting
       size: 90,
       attackPattern: "charge_and_shoot",
       description: "The corrupt warden blocks your escape with his massive shotgun!",
@@ -866,7 +866,7 @@ export default function FlappyBirdGame() {
             }
             
             // Normal phase shooting - measured and threatening
-            const fireRate = 400;
+            const fireRate = 800;  // Increased from 400 - shoots less frequently
             if (currentTime - boss.lastShotTime > fireRate) {
               const pelletCount = 3;
               for (let i = 0; i < pelletCount; i++) {
@@ -931,7 +931,7 @@ export default function FlappyBirdGame() {
                 boss.velocityX = 0;
                 
                 // Rapid fire spread pattern
-                const rapidFireRate = 200;
+                const rapidFireRate = 400;  // Increased from 200 - less frequent in rage mode
                 if (currentTime - boss.lastShotTime > rapidFireRate) {
                   const spreadPattern = Math.sin(currentTime * 0.01) * 0.5;
                   const pelletCount = 5;
