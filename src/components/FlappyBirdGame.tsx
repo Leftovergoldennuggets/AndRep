@@ -3581,24 +3581,28 @@ export default function FlappyBirdGame() {
   }, [jump, shoot, rebelDash, berserkerMode, startGame, switchWeapon]);
 
   return (
-    <div ref={containerRef} className="relative w-full h-screen overflow-hidden bg-black">
-      <canvas
-        ref={canvasRef}
-        width={GAME_CONFIG.canvas.width}
-        height={GAME_CONFIG.canvas.height}
-        className="block cursor-crosshair"
-        style={{
-          width: `${GAME_CONFIG.canvas.width * canvasScale}px`,
-          height: `${GAME_CONFIG.canvas.height * canvasScale}px`,
-          position: 'absolute',
-          left: `${canvasPosition.x}px`,
-          top: `${canvasPosition.y}px`,
-        }}
-      />
+    <div className="relative w-full h-screen overflow-hidden bg-black">
+      {/* Canvas container with scaling */}
+      <div ref={containerRef} className="absolute inset-0">
+        <canvas
+          ref={canvasRef}
+          width={GAME_CONFIG.canvas.width}
+          height={GAME_CONFIG.canvas.height}
+          className="block cursor-crosshair"
+          style={{
+            width: `${GAME_CONFIG.canvas.width * canvasScale}px`,
+            height: `${GAME_CONFIG.canvas.height * canvasScale}px`,
+            position: 'absolute',
+            left: `${canvasPosition.x}px`,
+            top: `${canvasPosition.y}px`,
+          }}
+        />
+      </div>
       
+      {/* UI Overlays - positioned above canvas */}
       {gameState === "start" && (
         <div 
-          className="absolute inset-0"
+          className="absolute inset-0 z-10"
           style={{
             backgroundImage: 'url(/background.png)',
             backgroundSize: 'contain',
@@ -3626,8 +3630,8 @@ export default function FlappyBirdGame() {
       )}
 
       {gameState === "story" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black">
-          <div className="text-center text-white max-w-4xl mx-4 px-4">
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black overflow-y-auto">
+          <div className="text-center text-white max-w-4xl mx-4 px-4 py-8">
             {(() => {
               const slide = STORY_SLIDES[storySlide];
               return (
@@ -3728,7 +3732,7 @@ export default function FlappyBirdGame() {
       )}
 
       {gameState === "paused" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75">
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black bg-opacity-75">
           <div className="text-center text-white">
             <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-yellow-400">PAUSED</h2>
             <p className="text-xl sm:text-2xl mb-8">Press ESC to Resume</p>
@@ -3745,7 +3749,7 @@ export default function FlappyBirdGame() {
       )}
 
       {gameState === "gameOver" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black">
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black">
           <div className="text-center text-white max-w-4xl mx-4 px-4">
             <div className="space-y-8">
               {/* Chapter Indicator */}
@@ -4038,7 +4042,7 @@ export default function FlappyBirdGame() {
 
       {/* Controls Overlay */}
       {showControls && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-90 z-50">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90">
           <div className="max-w-4xl mx-auto p-8 text-center">
             <div className="bg-gray-900 border-2 border-cyan-300 rounded-lg p-8 shadow-2xl">
               <h2 className="text-4xl font-bold mb-6 text-cyan-300" style={{ fontFamily: 'monospace' }}>
