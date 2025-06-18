@@ -3613,15 +3613,15 @@ export default function FlappyBirdGame() {
       )}
 
       {gameState === "story" && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black overflow-y-auto">
-          <div className="text-center text-white max-w-4xl mx-4 px-4 py-8">
+        <div className="absolute inset-0 z-10 bg-black flex flex-col">
+          <div className="flex-1 flex flex-col justify-center items-center p-4 min-h-0">
             {(() => {
               const slide = STORY_SLIDES[storySlide];
               return (
-                <div className="space-y-8">
+                <div className="w-full max-w-4xl text-center text-white flex flex-col h-full">
                   {/* Chapter Indicator */}
                   <div 
-                    className="text-lg sm:text-xl font-bold text-white"
+                    className="text-base sm:text-lg font-bold text-white mb-4 flex-shrink-0"
                     style={{
                       fontFamily: 'monospace',
                       letterSpacing: '3px'
@@ -3630,42 +3630,45 @@ export default function FlappyBirdGame() {
                     CHAPTER {storySlide + 1} / {STORY_SLIDES.length}
                   </div>
                   
-                  {/* Illustration */}
-                  <div className="py-4">
-                    <img 
-                      src={slide.image}
-                      alt={`Story panel ${storySlide + 1}`}
-                      className="w-full h-auto max-h-96 object-contain"
-                      style={{
-                        filter: 'contrast(1.1) saturate(1.2)',
-                        imageRendering: 'crisp-edges'
-                      }}
-                      onError={(e) => {
-                        console.log(`Failed to load image: ${slide.image}`);
-                        e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNPTUlORyBTT09OPC90ZXh0Pjwvc3ZnPg==';
-                      }}
-                    />
+                  {/* Content Container - Flexible */}
+                  <div className="flex-1 flex flex-col justify-center min-h-0">
+                    {/* Illustration */}
+                    <div className="flex-shrink-0 mb-4">
+                      <img 
+                        src={slide.image}
+                        alt={`Story panel ${storySlide + 1}`}
+                        className="w-full h-auto max-h-[40vh] sm:max-h-[45vh] object-contain mx-auto"
+                        style={{
+                          filter: 'contrast(1.1) saturate(1.2)',
+                          imageRendering: 'crisp-edges'
+                        }}
+                        onError={(e) => {
+                          console.log(`Failed to load image: ${slide.image}`);
+                          e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNPTUlORyBTT09OPC90ZXh0Pjwvc3ZnPg==';
+                        }}
+                      />
+                    </div>
+                    
+                    {/* Story Text */}
+                    <div className="flex-shrink-0">
+                      <p 
+                        className="text-sm sm:text-base md:text-lg text-white leading-relaxed"
+                        style={{
+                          fontFamily: 'monospace',
+                          letterSpacing: '1px',
+                          lineHeight: '1.6'
+                        }}
+                      >
+                        {slide.text}
+                      </p>
+                    </div>
                   </div>
                   
-                  {/* Story Text */}
-                  <div className="py-4">
-                    <p 
-                      className="text-lg sm:text-xl md:text-2xl text-white leading-relaxed"
-                      style={{
-                        fontFamily: 'monospace',
-                        letterSpacing: '1px',
-                        lineHeight: '1.8'
-                      }}
-                    >
-                      {slide.text}
-                    </p>
-                  </div>
-                  
-                  {/* Navigation Buttons */}
-                  <div className="flex flex-col sm:flex-row justify-between gap-4 pt-6">
+                  {/* Navigation Buttons - Always at bottom */}
+                  <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6 flex-shrink-0">
                     <button
                       onClick={skipStory}
-                      className="text-lg sm:text-xl font-bold px-6 py-3 border-2 text-gray-300 border-gray-300 bg-black hover:bg-gray-300 hover:text-black transition-colors"
+                      className="text-sm sm:text-base font-bold px-4 py-2 sm:px-6 sm:py-3 border-2 text-gray-300 border-gray-300 bg-black hover:bg-gray-300 hover:text-black transition-colors"
                       style={{
                         fontFamily: 'monospace',
                         letterSpacing: '2px'
@@ -3675,7 +3678,7 @@ export default function FlappyBirdGame() {
                     </button>
                     <button
                       onClick={nextStorySlide}
-                      className="text-xl sm:text-2xl font-bold px-8 py-4 border-2 text-yellow-300 border-yellow-300 bg-black hover:bg-yellow-300 hover:text-black transition-colors"
+                      className="text-base sm:text-lg font-bold px-6 py-3 sm:px-8 sm:py-4 border-2 text-yellow-300 border-yellow-300 bg-black hover:bg-yellow-300 hover:text-black transition-colors"
                       style={{
                         fontFamily: 'monospace',
                         letterSpacing: '3px'

@@ -26,6 +26,9 @@ Removed title and subtitle elements from story slides:
    - Removed "Keep running, rebel rooster! The prison never ends!" text
    - Updated all panel text to be more concise and impactful
    - Rewrote panel 4 to better set up the prison escape theme
+   - Fixed story layout to prevent scrolling issues on all screen sizes
+   - Redesigned story container with proper flex layout
+   - Ensured Continue/Skip buttons are always visible without scrolling
    
 #### Result:
 - Cleaner, more focused story slides
@@ -36,6 +39,9 @@ Removed title and subtitle elements from story slides:
 - Removed distracting footer text
 - More concise and punchy storytelling
 - Better transition from story to gameplay with escape theme
+- **Fixed screen fitting issues**: Buttons always visible on all screen sizes
+- **No more scrolling required**: Proper responsive layout that adapts to viewport height
+- **Tested on multiple screen sizes**: Mobile (320x568), Tablet (768x1024), Desktop (1920x1080)
 
 ## Previous Status: Fixed responsive display issues
 
